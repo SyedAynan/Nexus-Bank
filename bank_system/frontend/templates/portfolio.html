@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block page_title %}Investments & Portfolio{% endblock %}
+{% block content %}
+<div class="card glass">
+    <h3>Asset Allocation</h3>
+    <canvas id="allocationChart" height="160"></canvas>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/portfolio_page.js"></script>
+{% endblock %}
+

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block page_title %}Transactions{% endblock %}
+{% block content %}
+<div class="card glass">
+    <h3>Live Transactions Feed</h3>
+    <div id="transactionsTable"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/transactions.js"></script>
+{% endblock %}
+

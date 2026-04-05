@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>NexusBank AI Platform</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="logo">NexusBank<span>AI</span></div>
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/transactions">Transactions</a>
+            <a href="/analytics">Analytics & Insights</a>
+            <a href="/intelligence">AI Intelligence Center</a>
+            <a href="/ai/fraud">AI Fraud Detection</a>
+            <a href="/ai/forecasting">AI Forecasting</a>
+            <a href="/ai/health">Financial Health</a>
+            <a href="/ai/portfolio-intel">Portfolio Intelligence</a>
+            <a href="/loans">Loans & Credit</a>
+            <a href="/portfolio">Investments & Portfolio</a>
+            <a href="/aml">AML Network</a>
+            <a href="/security-logs">Security Logs</a>
+            <a href="/admin">Admin Panel</a>
+            <a href="/settings">Settings</a>
+        </nav>
+        <div class="theme-toggle" id="themeToggle">Toggle theme</div>
+    </aside>
+    <main class="main">
+        <header class="topbar">
+            <div class="title">{% block page_title %}{% endblock %}</div>
+            <div class="status-pill" id="wsStatus">Live</div>
+        </header>
+        <section class="content">
+            {% block content %}{% endblock %}
+        </section>
+    </main>
+</div>
+<div id="toastContainer" class="toast-container"></div>
+<script src="/static/js/dashboard.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
+

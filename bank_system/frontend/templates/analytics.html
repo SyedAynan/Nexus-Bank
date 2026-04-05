@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block page_title %}Analytics & Insights{% endblock %}
+{% block content %}
+<div class="card glass">
+    <h3>Spending & Income Trends</h3>
+    <canvas id="analyticsChart" height="160"></canvas>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/analytics_page.js"></script>
+{% endblock %}
+

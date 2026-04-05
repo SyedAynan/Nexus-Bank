@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>NEXA — Beyond Fintech</title>
+  <meta name="description" content="NEXA — Premium fintech platform with intelligent insights, secure payments, and personalized financial management.">
+  <link rel="stylesheet" href="nexus.css">
+</head>
+<body>
+  <canvas id="particleCanvas" class="nx-particles"></canvas>
+  <div class="nx-ambient"><div class="nx-orb nx-orb--1"></div><div class="nx-orb nx-orb--2"></div><div class="nx-orb nx-orb--3"></div></div>
+
+  <!-- ═══════ AUTH SCREEN ═══════ -->
+  <div class="nx-auth" id="authScreen">
+    <div class="nx-auth__card">
+      <div class="nx-auth__logo">
+        <div class="nx-auth__monogram">NX</div>
+        <div class="nx-auth__logo-text">NEXA</div>
+        <div class="nx-auth__logo-sub">Beyond Fintech</div>
+      </div>
+      <div id="authLogin">
+        <h3 class="nx-auth__title">Welcome back</h3>
+        <p class="nx-auth__subtitle">Sign in to your account</p>
+        <div class="nx-auth__error" id="authError"></div>
+        <div class="nx-form-group"><label class="nx-form-label">Email</label><input type="email" id="loginEmail" class="nx-form-input" placeholder="Enter your email" value="alex@nexa.com"></div>
+        <div class="nx-form-group"><label class="nx-form-label">Password</label><input type="password" id="loginPass" class="nx-form-input" placeholder="Enter your password" value="nexa123"></div>
+        <button class="nx-form-btn" id="loginBtn">Sign In</button>
+        <div class="nx-auth__footer">Don't have an account? <a id="showSignup">Create one</a></div>
+        <div class="nx-auth__demo"><div class="nx-auth__demo-label">Demo Credentials</div><div class="nx-auth__demo-cred">alex@nexa.com / nexa123</div></div>
+      </div>
+      <div id="authSignup" style="display:none">
+        <h3 class="nx-auth__title">Create Account</h3>
+        <p class="nx-auth__subtitle">Join NEXA today</p>
+        <div class="nx-form-group"><label class="nx-form-label">Full Name</label><input type="text" id="signupName" class="nx-form-input" placeholder="Your full name"></div>
+        <div class="nx-form-group"><label class="nx-form-label">Email</label><input type="email" id="signupEmail" class="nx-form-input" placeholder="Your email"></div>
+        <div class="nx-form-group"><label class="nx-form-label">Password</label><input type="password" id="signupPass" class="nx-form-input" placeholder="Create a password"></div>
+        <button class="nx-form-btn" id="signupBtn">Create Account</button>
+        <div class="nx-auth__footer">Already have an account? <a id="showLogin">Sign in</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ TOPBAR ═══════ -->
+  <header class="nx-topbar" id="topbar" style="display:none">
+    <div class="nx-topbar__left">
+      <div class="nx-logo" id="logoHome">
+        <div class="nx-logo__mark">NX</div>
+        <div><span class="nx-logo__text">NEXA</span><span class="nx-logo__sub">Beyond Fintech</span></div>
+      </div>
+    </div>
+    <div class="nx-ticker-wrap"><div class="nx-ticker" id="tickerBar"></div></div>
+    <div class="nx-topbar__right">
+      <div class="nx-live-pill"><span class="nx-live-dot"></span>Live</div>
+      <span class="nx-updated" id="lastUpdated">Updated just now</span>
+      <div class="nx-secure-pill">◈ Secure</div>
+      <button class="nx-topbar-btn" id="themeToggle" type="button" title="Toggle Theme">☽</button>
+      <button class="nx-topbar-btn" id="cmdHint" type="button" title="Quick Actions (Ctrl+K)">⌘K</button>
+      <button class="nx-notif-btn" id="notifBtn" type="button">🔔<span class="nx-notif-badge" id="notifBadge">3</span></button>
+      <div class="nx-user-pill" id="userPill"><span class="nx-user-pill__avatar" id="userAvatar">AH</span><span id="userName">Account</span></div>
+    </div>
+  </header>
+
+  <!-- ═══════ SIDEBAR ═══════ -->
+  <aside class="nx-sidebar" id="sidebar" style="display:none">
+    <nav class="nx-nav">
+      <div class="nx-nav__section">Overview</div>
+      <button class="nx-nav__item active" data-page="dashboard"><span class="nx-nav__icon">⬡</span><span class="nx-nav__label">Dashboard</span></button>
+      <button class="nx-nav__item" data-page="markets"><span class="nx-nav__icon">↗</span><span class="nx-nav__label">Markets</span></button>
+      <button class="nx-nav__item" data-page="portfolio"><span class="nx-nav__icon">◈</span><span class="nx-nav__label">Portfolio</span></button>
+      <button class="nx-nav__item" data-page="globe"><span class="nx-nav__icon">⊕</span><span class="nx-nav__label">Global Finance</span></button>
+      <div class="nx-nav__section">Finance</div>
+      <button class="nx-nav__item" data-page="transactions"><span class="nx-nav__icon">⇄</span><span class="nx-nav__label">Transactions</span></button>
+      <button class="nx-nav__item" data-page="accounts"><span class="nx-nav__icon">▣</span><span class="nx-nav__label">Accounts</span></button>
+      <button class="nx-nav__item" data-page="transfers"><span class="nx-nav__icon">→</span><span class="nx-nav__label">Send Money</span></button>
+      <div class="nx-nav__section">You</div>
+      <button class="nx-nav__item" data-page="profile"><span class="nx-nav__icon">○</span><span class="nx-nav__label">Profile</span></button>
+      <button class="nx-nav__item" data-page="support"><span class="nx-nav__icon">?</span><span class="nx-nav__label">Support</span></button>
+      <button class="nx-nav__item" data-page="security"><span class="nx-nav__icon">⛨</span><span class="nx-nav__label">Security</span></button>
+      <button class="nx-nav__item" data-page="settings"><span class="nx-nav__icon">✦</span><span class="nx-nav__label">Settings</span></button>
+      <div class="nx-nav__section" id="adminSection" style="display:none">Admin</div>
+      <button class="nx-nav__item" data-page="admin_dash" id="navAdminDash" style="display:none"><span class="nx-nav__icon">◉</span><span class="nx-nav__label">Admin Dashboard</span></button>
+      <button class="nx-nav__item" data-page="admin_users" id="navAdminUsers" style="display:none"><span class="nx-nav__icon">⊡</span><span class="nx-nav__label">User Management</span></button>
+      <button class="nx-nav__item" data-page="admin_tx" id="navAdminTx" style="display:none"><span class="nx-nav__icon">⇌</span><span class="nx-nav__label">Transaction Control</span></button>
+      <button class="nx-nav__item" data-page="admin_risk" id="navAdminRisk" style="display:none"><span class="nx-nav__icon">⚡</span><span class="nx-nav__label">Risk & Security</span></button>
+      <button class="nx-nav__item" data-page="admin_compliance" id="navAdminComp" style="display:none"><span class="nx-nav__icon">☐</span><span class="nx-nav__label">Compliance</span></button>
+      <button class="nx-nav__item" data-page="admin_analytics" id="navAdminAnalytics" style="display:none"><span class="nx-nav__icon">▤</span><span class="nx-nav__label">Analytics</span></button>
+    </nav>
+    <div class="nx-sidebar__footer">
+      <div class="nx-sidebar__brand">NEXA</div>
+      <div class="nx-sidebar__tagline">Beyond Fintech</div>
+    </div>
+  </aside>
+
+  <!-- ═══════ MAIN CONTENT ═══════ -->
+  <main class="nx-main" id="main" style="display:none">
+
+    <!-- DASHBOARD -->
+    <section class="nx-page active" id="page-dashboard">
+      <div class="nx-page__header"><div><h1 class="nx-title" id="greetTitle">Good morning</h1><p class="nx-subtitle" id="aiSummary">Loading your financial overview...</p></div><div class="nx-system-status"><span class="nx-live-dot"></span>All systems operational</div></div>
+      <div class="nx-kpi-row" id="dashKpis"></div>
+      <div class="nx-grid-2" style="margin-top:18px">
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Performance</span><div class="nx-time-filters" data-chart="perfChart"><button class="active">1D</button><button>1W</button><button>1M</button><button>1Y</button></div></div><canvas id="perfChart" height="280"></canvas></div>
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Smart Insights</span><span class="nx-badge nx-badge--gold">PERSONALIZED</span></div><div id="dashInsights" class="nx-card__body nx-scroll"></div></div>
+      </div>
+      <div class="nx-grid-4" style="margin-top:18px">
+        <div class="nx-currency-card" id="usdInrCard"></div>
+        <div class="nx-currency-card" id="usdEurCard"></div>
+        <div class="nx-eco-card" id="inflationCard"></div>
+        <div class="nx-eco-card" id="interestCard"></div>
+      </div>
+      <div class="nx-grid-2" style="margin-top:18px">
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Financial Goals</span><span class="nx-badge nx-badge--emerald">TRACKING</span></div><div id="goalTracker" class="nx-card__body" style="display:flex;gap:18px;flex-wrap:wrap;justify-content:center"></div></div>
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Recent Transactions</span><span class="nx-badge nx-badge--blue">LATEST</span></div><div id="dashRecentTx" class="nx-card__body nx-scroll"></div></div>
+      </div>
+    </section>
+
+    <!-- MARKETS -->
+    <section class="nx-page" id="page-markets">
+      <div class="nx-page__header"><div><h1 class="nx-title">Markets</h1><p class="nx-subtitle">Market trends and performance tracking</p></div><div id="marketMood" class="nx-system-status"></div></div>
+      <div class="nx-kpi-row" id="indexKpis"></div>
+      <div class="nx-grid-2" style="margin-top:18px">
+        <div class="nx-card nx-card--lift nx-card--tall"><div class="nx-card__head"><span id="stockChartTitle">AAPL — Apple Inc.</span><div class="nx-time-filters" data-chart="stockChart"><button class="active">1D</button><button>1W</button><button>1M</button><button>1Y</button></div></div><canvas id="stockChart" height="340"></canvas></div>
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Watchlist</span></div><div id="stockList" class="nx-card__body nx-scroll"></div></div>
+      </div>
+      <div class="nx-card nx-card--lift" style="margin-top:18px"><div class="nx-card__head"><span>Sector Overview</span><span class="nx-badge nx-badge--cyan">LIVE</span></div><canvas id="heatmapCanvas" height="180"></canvas></div>
+    </section>
+
+    <!-- PORTFOLIO -->
+    <section class="nx-page" id="page-portfolio">
+      <div class="nx-page__header"><div><h1 class="nx-title">Portfolio</h1><p class="nx-subtitle">Your investment overview and allocation</p></div></div>
+      <div class="nx-kpi-row" id="portKpis"></div>
+      <div class="nx-grid-2" style="margin-top:18px">
+        <div class="nx-card nx-card--lift nx-card--tall"><div class="nx-card__head"><span>Growth</span><div class="nx-time-filters" data-chart="portChart"><button class="active">1D</button><button>1W</button><button>1M</button><button>1Y</button></div></div><canvas id="portChart" height="340"></canvas></div>
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Allocation</span></div><canvas id="allocChart" width="360" height="250"></canvas><div id="allocLegend" style="padding:0 22px 18px"></div></div>
+      </div>
+      <div class="nx-grid-2" style="margin-top:18px">
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Holdings</span></div><div id="holdingsList" class="nx-card__body"></div></div>
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Recommendations</span><span class="nx-badge nx-badge--gold">PERSONALIZED</span></div><div id="portRecs" class="nx-card__body"></div></div>
+      </div>
+    </section>
+
+    <!-- GLOBAL FINANCE -->
+    <section class="nx-page" id="page-globe">
+      <div class="nx-page__header"><div><h1 class="nx-title">Global Finance</h1><p class="nx-subtitle">Worldwide financial activity — drag to rotate, scroll to zoom</p></div></div>
+      <div class="nx-kpi-row" id="globeKpis"></div>
+      <div class="nx-card nx-card--globe" style="margin-top:18px"><canvas id="globeCanvas" height="480"></canvas></div>
+      <div class="nx-card nx-card--lift" style="margin-top:18px"><div class="nx-card__head"><span>Currency Overview</span><span class="nx-badge nx-badge--blue">LIVE</span></div><div id="currencyGrid" class="nx-card__body" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px"></div></div>
+      <div class="nx-card nx-card--lift" style="margin-top:18px"><div class="nx-card__head"><span>Live Transaction Feed</span><span class="nx-badge nx-badge--cyan">LIVE</span></div><div id="globeTxFeed" class="nx-card__body"></div></div>
+    </section>
+
+    <!-- TRANSACTIONS -->
+    <section class="nx-page" id="page-transactions">
+      <div class="nx-page__header"><div><h1 class="nx-title">Transactions</h1><p class="nx-subtitle">Your complete transaction history</p></div><button class="nx-form-btn nx-form-btn--sm" id="newTxBtn">+ New Transaction</button></div>
+      <div class="nx-grid-2" style="margin-bottom:18px">
+        <div class="nx-form-group"><input type="text" class="nx-form-input" id="txSearch" placeholder="Search transactions..."></div>
+        <div style="display:flex;gap:8px">
+          <select class="nx-form-select" id="txFilterType"><option value="">All Types</option><option value="credit">Income</option><option value="debit">Expense</option></select>
+          <select class="nx-form-select" id="txFilterStatus"><option value="">All Status</option><option value="completed">Completed</option><option value="pending">Pending</option><option value="flagged">Flagged</option></select>
+        </div>
+      </div>
+      <div class="nx-card"><div id="txList" class="nx-card__body"></div></div>
+    </section>
+
+    <!-- ACCOUNTS -->
+    <section class="nx-page" id="page-accounts">
+      <div class="nx-page__header"><div><h1 class="nx-title">Accounts</h1><p class="nx-subtitle">Manage your financial accounts</p></div></div>
+      <div class="nx-kpi-row" id="acctKpis"></div>
+      <div id="acctCards" class="nx-card-grid" style="margin-top:18px"></div>
+      <div class="nx-grid-2" style="margin-top:18px">
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Financial Profile</span><span class="nx-badge nx-badge--violet">YOUR DNA</span></div><canvas id="radarChart" width="320" height="280"></canvas><div id="wealthDNA" style="padding:0 20px 16px"></div></div>
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Spending Summary</span></div><div id="spendInsights" class="nx-card__body"></div></div>
+      </div>
+    </section>
+
+    <!-- SEND MONEY / TRANSFERS -->
+    <section class="nx-page" id="page-transfers">
+      <div class="nx-page__header"><div><h1 class="nx-title">Send Money</h1><p class="nx-subtitle">Transfer funds securely</p></div></div>
+      <div class="nx-grid-2">
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>New Transfer</span></div>
+          <div class="nx-card__body">
+            <div class="nx-form-group"><label class="nx-form-label">Recipient</label><input type="text" id="tfRecipient" class="nx-form-input" placeholder="Name or account number"></div>
+            <div class="nx-form-group"><label class="nx-form-label">Amount</label><input type="number" id="tfAmount" class="nx-form-input" placeholder="0.00"></div>
+            <div class="nx-form-group"><label class="nx-form-label">Note</label><input type="text" id="tfNote" class="nx-form-input" placeholder="Optional note"></div>
+            <button class="nx-form-btn" id="tfSend">Send Money</button>
+          </div>
+        </div>
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Recent Transfers</span></div><div id="transferList" class="nx-card__body nx-scroll"></div></div>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="nx-page" id="page-profile">
+      <div class="nx-page__header"><div><h1 class="nx-title">Profile</h1><p class="nx-subtitle">Manage your personal information</p></div></div>
+      <div class="nx-profile-header" id="profileHeader"></div>
+      <div class="nx-grid-2">
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Personal Details</span></div>
+          <div class="nx-card__body">
+            <div class="nx-form-group"><label class="nx-form-label">Full Name</label><input type="text" id="profName" class="nx-form-input"></div>
+            <div class="nx-form-group"><label class="nx-form-label">Email</label><input type="email" id="profEmail" class="nx-form-input"></div>
+            <div class="nx-form-group"><label class="nx-form-label">Phone</label><input type="tel" id="profPhone" class="nx-form-input"></div>
+            <button class="nx-form-btn" id="profSave">Save Changes</button>
+          </div>
+        </div>
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Activity Log</span></div><div id="profActivity" class="nx-card__body nx-scroll"></div></div>
+      </div>
+    </section>
+
+    <!-- SUPPORT -->
+    <section class="nx-page" id="page-support">
+      <div class="nx-page__header"><div><h1 class="nx-title">Support</h1><p class="nx-subtitle">We're here to help</p></div></div>
+      <div class="nx-grid-2">
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Submit a Request</span></div>
+          <div class="nx-card__body">
+            <div class="nx-form-group"><label class="nx-form-label">Subject</label><input type="text" id="supportSubject" class="nx-form-input" placeholder="What do you need help with?"></div>
+            <div class="nx-form-group"><label class="nx-form-label">Category</label><select class="nx-form-select" id="supportCat"><option>Account Issue</option><option>Transaction Dispute</option><option>Technical Problem</option><option>Security Concern</option><option>General Inquiry</option></select></div>
+            <div class="nx-form-group"><label class="nx-form-label">Description</label><textarea class="nx-form-textarea" id="supportDesc" placeholder="Please describe your issue in detail..."></textarea></div>
+            <button class="nx-form-btn" id="supportSubmit">Submit Request</button>
+          </div>
+        </div>
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Your Tickets</span></div><div id="supportTickets" class="nx-card__body"></div></div>
+      </div>
+    </section>
+
+    <!-- SECURITY -->
+    <section class="nx-page" id="page-security">
+      <div class="nx-page__header"><div><h1 class="nx-title">Security</h1><p class="nx-subtitle">Your account protection</p></div></div>
+      <div class="nx-security-hero"><div style="font-size:48px;margin-bottom:12px">◈</div><h2 style="font-size:20px;color:var(--emerald);margin-bottom:5px">Your account is secure</h2><p style="font-size:12px;color:var(--textM);max-width:360px;margin:0 auto">Bank-grade encryption and continuous monitoring protect your account.</p></div>
+      <div class="nx-grid-3" style="margin-top:18px" id="securityCards"></div>
+      <div class="nx-card nx-card--lift" style="margin-top:18px"><div class="nx-card__head"><span>Security Log</span><span class="nx-badge nx-badge--cyan">LIVE</span></div><div id="auditLog" class="nx-card__body nx-scroll"></div></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="nx-page" id="page-settings">
+      <div class="nx-page__header"><div><h1 class="nx-title">Settings</h1><p class="nx-subtitle">Customize your experience</p></div></div>
+      <div class="nx-grid-2">
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Features</span></div><div id="featureFlags" class="nx-card__body"></div></div>
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Preferences</span></div><div id="preferences" class="nx-card__body"></div>
+          <div style="padding:0 20px 20px"><button class="nx-form-btn nx-form-btn--danger" id="logoutBtn" style="margin-top:12px">Sign Out</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════ ADMIN PAGES ═══════ -->
+    <!-- Admin Dashboard -->
+    <section class="nx-page" id="page-admin_dash">
+      <div class="nx-page__header"><div><h1 class="nx-title">Admin Dashboard</h1><p class="nx-subtitle">System overview and real-time monitoring</p></div><span class="nx-badge nx-badge--gold">ADMIN</span></div>
+      <div class="nx-grid-4" id="adminStats"></div>
+      <div class="nx-grid-2" style="margin-top:18px">
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Revenue Trend</span></div><canvas id="adminRevenueChart" height="220"></canvas></div>
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Live Activity Feed</span><span class="nx-badge nx-badge--cyan">LIVE</span></div><div id="adminActivityFeed" class="nx-card__body nx-scroll"></div></div>
+      </div>
+    </section>
+
+    <!-- Admin Users -->
+    <section class="nx-page" id="page-admin_users">
+      <div class="nx-page__header"><div><h1 class="nx-title">User Management</h1><p class="nx-subtitle">Manage platform users</p></div><span class="nx-badge nx-badge--gold">ADMIN</span></div>
+      <div class="nx-card"><div class="nx-card__body" style="overflow-x:auto"><table class="nx-admin-table" id="adminUserTable"><thead><tr><th>User</th><th>Email</th><th>Role</th><th>KYC</th><th>Status</th><th>Actions</th></tr></thead><tbody id="adminUserBody"></tbody></table></div></div>
+    </section>
+
+    <!-- Admin Transactions -->
+    <section class="nx-page" id="page-admin_tx">
+      <div class="nx-page__header"><div><h1 class="nx-title">Transaction Control</h1><p class="nx-subtitle">Monitor and manage all transactions</p></div><span class="nx-badge nx-badge--gold">ADMIN</span></div>
+      <div class="nx-kpi-row" id="adminTxKpis"></div>
+      <div class="nx-card" style="margin-top:18px"><div class="nx-card__head"><span>All Transactions</span></div><div class="nx-card__body" style="overflow-x:auto"><table class="nx-admin-table" id="adminTxTable"><thead><tr><th>ID</th><th>Type</th><th>Merchant</th><th>Amount</th><th>Status</th><th>Risk</th><th>Actions</th></tr></thead><tbody id="adminTxBody"></tbody></table></div></div>
+    </section>
+
+    <!-- Admin Risk -->
+    <section class="nx-page" id="page-admin_risk">
+      <div class="nx-page__header"><div><h1 class="nx-title">Risk & Security</h1><p class="nx-subtitle">Security monitoring and risk management</p></div><span class="nx-badge nx-badge--gold">ADMIN</span></div>
+      <div class="nx-grid-3" id="riskDistribution"></div>
+      <div class="nx-card nx-card--lift" style="margin-top:18px"><div class="nx-card__head"><span>Security Audit Log</span></div><div id="adminAuditLog" class="nx-card__body nx-scroll"></div></div>
+    </section>
+
+    <!-- Admin Compliance -->
+    <section class="nx-page" id="page-admin_compliance">
+      <div class="nx-page__header"><div><h1 class="nx-title">Compliance</h1><p class="nx-subtitle">KYC verification and regulatory compliance</p></div><span class="nx-badge nx-badge--gold">ADMIN</span></div>
+      <div class="nx-card"><div class="nx-card__head"><span>KYC Queue</span><span class="nx-badge nx-badge--amber">PENDING</span></div><div class="nx-card__body" style="overflow-x:auto"><table class="nx-admin-table"><thead><tr><th>Name</th><th>Document</th><th>Submitted</th><th>Risk</th><th>Actions</th></tr></thead><tbody id="kycQueueBody"></tbody></table></div></div>
+    </section>
+
+    <!-- Admin Analytics -->
+    <section class="nx-page" id="page-admin_analytics">
+      <div class="nx-page__header"><div><h1 class="nx-title">Analytics</h1><p class="nx-subtitle">Platform insights and trends</p></div><span class="nx-badge nx-badge--gold">ADMIN</span></div>
+      <div class="nx-grid-4" id="analyticsKpis"></div>
+      <div class="nx-grid-2" style="margin-top:18px">
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>User Retention</span></div><canvas id="retentionChart" height="200"></canvas></div>
+        <div class="nx-card nx-card--lift"><div class="nx-card__head"><span>Risk Distribution</span></div><canvas id="riskChart" height="200"></canvas></div>
+      </div>
+    </section>
+
+    <footer class="nx-footer"><div class="nx-footer__brand">NEXA</div><div class="nx-footer__tagline">Beyond Fintech</div></footer>
+  </main>
+
+  <!-- NOTIFICATION DRAWER -->
+  <div class="nx-notif-drawer" id="notifDrawer">
+    <div class="nx-notif-drawer__header"><span>Notifications</span><button class="nx-notif-drawer__close" id="notifClose" type="button">✕</button></div>
+    <div class="nx-notif-drawer__list" id="notifList"></div>
+  </div>
+
+  <!-- CMD PALETTE -->
+  <div class="nx-cmd-overlay" id="cmdOverlay">
+    <div class="nx-cmd-palette"><div class="nx-cmd-palette__header"><input type="text" id="cmdInput" class="nx-cmd-palette__input" placeholder="Search actions, pages..."><span class="nx-cmd-palette__esc">ESC</span></div><div class="nx-cmd-palette__results" id="cmdResults"></div></div>
+  </div>
+
+  <!-- COPILOT FAB -->
+  <div class="nx-guide" id="nexusGuide"><button class="nx-guide__fab" id="guideFab" type="button" title="NEXA Assistant">✦</button></div>
+
+  <div id="toastContainer" class="nx-toasts"></div>
+  <div id="chartTooltip" class="nx-tooltip"></div>
+  <script src="nexus-data.js"></script>
+  <script src="nexus-engine.js"></script>
+</body>
+</html>

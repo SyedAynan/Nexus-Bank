@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block page_title %}AI Fraud Detection{% endblock %}
+{% block content %}
+<div class="grid grid-2">
+    <div class="card glass">
+        <h3>Fraud Risk Overview</h3>
+        <div id="fraudSummary"></div>
+    </div>
+    <div class="card glass">
+        <h3>Open Fraud Alerts</h3>
+        <div id="fraudAlertsTable"></div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/ai_fraud.js"></script>
+{% endblock %}
+

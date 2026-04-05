@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block page_title %}Admin Control Panel{% endblock %}
+{% block content %}
+<div class="grid grid-2">
+    <div class="card glass">
+        <h3>Live Users</h3>
+        <ul id="adminLiveUsers"></ul>
+    </div>
+    <div class="card glass">
+        <h3>Fraud Alerts</h3>
+        <div id="adminFraudTable"></div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/admin.js"></script>
+{% endblock %}
+

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block page_title %}AI Forecasting{% endblock %}
+{% block content %}
+<div class="card glass">
+    <h3>Cashflow & Trend Forecasts</h3>
+    <canvas id="aiForecastChart" height="170"></canvas>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/ai_forecasting.js"></script>
+{% endblock %}
+

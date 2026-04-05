@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block page_title %}Smart Dashboard{% endblock %}
+{% block content %}
+<div class="grid grid-3">
+    <div class="card kpi-card glass">
+        <h3>Total Balance</h3>
+        <div id="kpiBalance" class="metric"></div>
+    </div>
+    <div class="card kpi-card glass">
+        <h3>24h Transactions</h3>
+        <div id="kpiTx" class="metric"></div>
+    </div>
+    <div class="card kpi-card glass">
+        <h3>Open Fraud Alerts</h3>
+        <div id="kpiFraud" class="metric"></div>
+    </div>
+</div>
+<div class="grid grid-2">
+    <div class="card glass">
+        <h3>Net Cashflow Forecast</h3>
+        <canvas id="forecastChart" height="140"></canvas>
+    </div>
+    <div class="card glass">
+        <h3>Live Activity Feed</h3>
+        <ul id="liveFeed" class="live-feed"></ul>
+    </div>
+</div>
+{% endblock %}
+

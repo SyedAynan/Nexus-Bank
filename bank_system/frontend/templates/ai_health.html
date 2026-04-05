@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block page_title %}Financial Health Engine{% endblock %}
+{% block content %}
+<div class="card glass">
+    <h3>Your Financial Health</h3>
+    <div id="healthScore" class="metric"></div>
+    <p id="healthDetail"></p>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/ai_health.js"></script>
+{% endblock %}
+

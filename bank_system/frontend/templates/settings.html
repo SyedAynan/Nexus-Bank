@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block page_title %}Settings{% endblock %}
+{% block content %}
+<div class="grid grid-2">
+    <div class="card glass">
+        <h3>Register New User</h3>
+        <form id="registerForm">
+            <label>Username
+                <input type="text" name="username" required>
+            </label>
+            <label>Email
+                <input type="email" name="email" required>
+            </label>
+            <label>Password
+                <input type="password" name="password" required>
+            </label>
+            <label>Role
+                <select name="role">
+                    <option value="user">User</option>
+                    <option value="analyst">Analyst</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </label>
+            <button type="submit" class="primary">Create</button>
+        </form>
+    </div>
+    <div class="card glass">
+        <h3>Session</h3>
+        <button id="logoutBtn" class="secondary">Logout</button>
+    </div>
+</div>
+{% endblock %}
+

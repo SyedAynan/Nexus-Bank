@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block page_title %}AML Network Visualization{% endblock %}
+{% block content %}
+<div class="card glass">
+    <h3>Transaction Graph</h3>
+    <pre id="amlJson" class="aml-json"></pre>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/aml.js"></script>
+{% endblock %}
+

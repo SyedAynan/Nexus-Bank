@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block page_title %}Portfolio Intelligence{% endblock %}
+{% block content %}
+<div class="card glass">
+    <h3>Risk vs Return Profile</h3>
+    <canvas id="aiPortfolioChart" height="170"></canvas>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/ai_portfolio.js"></script>
+{% endblock %}
+

@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IMPERIAL CAPITAL — Private Banking Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* ═══ CSS VARIABLES ═══ */
+    :root {
+      --void: #030508;
+      --abyss: #060a10;
+      --obsidian: #080d18;
+      --midnight: #0a0f1e;
+      --onyx: #0d1428;
+      --graphite: #111b30;
+      --elevated: #162038;
+      --gold: #d4af37;
+      --gold-bright: #f0d060;
+      --gold-pale: #b8962e;
+      --gold-dim: #8a6e20;
+      --gold-faint: rgba(212,175,55,0.06);
+      --gold-subtle: rgba(212,175,55,0.12);
+      --gold-medium: rgba(212,175,55,0.22);
+      --gold-strong: rgba(212,175,55,0.45);
+      --gold-glow: 0 0 30px rgba(212,175,55,0.12), 0 0 80px rgba(212,175,55,0.05);
+      --gold-grad: linear-gradient(135deg,#d4af37,#f0d060 45%,#c49b2e 75%,#d4af37);
+      --jade: #1a6b44;
+      --jade-bright: #22a86a;
+      --jade-dim: rgba(26,107,68,0.12);
+      --ruby: #9b1a2f;
+      --ruby-bright: #c4253d;
+      --ruby-dim: rgba(155,26,47,0.12);
+      --sapphire: #1a3d80;
+      --sapphire-bright: #3d7df5;
+      --sapphire-dim: rgba(26,61,128,0.12);
+      --amethyst: #5a2d8e;
+      --amethyst-bright: #9b5de5;
+      --amethyst-dim: rgba(90,45,142,0.12);
+      --copper: #8b4a1a;
+      --copper-bright: #d4732a;
+      --copper-dim: rgba(139,74,26,0.12);
+      --parchment: #ede0c4;
+      --vellum: #c8b896;
+      --aged: #8a7a62;
+      --weathered: #5a4e3c;
+      --faded: #3a3028;
+      --rim: 1px solid rgba(212,175,55,0.18);
+      --rim-h: 1px solid rgba(212,175,55,0.42);
+      --rim-dim: 1px solid rgba(212,175,55,0.07);
+      --font-display: 'Cinzel Decorative', serif;
+      --font-heading: 'Cinzel', serif;
+      --font-body: 'Cormorant Garamond', serif;
+      --font-data: 'Courier Prime', monospace;
+    }
+
+    /* ═══ RESET & BASE ═══ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.9;
+      color: var(--parchment);
+      background: radial-gradient(ellipse at 25% 15%, #0f1830 0%, #08111f 35%, #030508 100%) fixed;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 200px;
+      opacity: 0.038;
+      pointer-events: none;
+      z-index: 1;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(45deg, transparent 0, transparent 80px, rgba(212,175,55,0.018) 80px, rgba(212,175,55,0.018) 81px);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .orb { position: fixed; z-index: 0; pointer-events: none; border-radius: 50%; }
+    .orb-a { top: 8%; left: 3%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(212,175,55,0.04) 0%, transparent 70%); filter: blur(50px); }
+    .orb-b { top: 55%; right: 8%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(155,26,47,0.035) 0%, transparent 70%); filter: blur(45px); }
+    .orb-c { bottom: 8%; left: 25%; width: 450px; height: 450px; background: radial-gradient(circle, rgba(26,61,128,0.03) 0%, transparent 70%); filter: blur(48px); }
+
+    /* ═══ TYPOGRAPHY ═══ */
+    .font-display { font-family: var(--font-display); }
+    .font-heading { font-family: var(--font-heading); }
+    .font-body { font-family: var(--font-body); }
+    .font-data { font-family: var(--font-data); }
+    .ornament-rule { color: rgba(212,175,55,0.3); font-size: 14px; letter-spacing: 2px; margin: 16px 0; text-align: center; }
+
+    /* ═══ LAYOUT: HEADER ═══ */
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 68px;
+      background: rgba(6,10,16,0.97);
+      backdrop-filter: blur(24px) saturate(180%);
+      border-bottom: 1px solid rgba(212,175,55,0.2);
+      box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 300;
+    }
+    .header-left { display: flex; flex-direction: column; }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 20px;
+      letter-spacing: 6px;
+      background: var(--gold-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .logo-tagline { font-family: var(--font-heading); font-size: 8px; letter-spacing: 5px; color: var(--aged); margin-top: 3px; }
+    .header-center {
+      flex: 1;
+      max-width: 400px;
+      overflow: hidden;
+      white-space: nowrap;
+      margin: 0 24px;
+    }
+    .ticker-wrap { display: inline-block; animation: tickerScroll 24s linear infinite; }
+    .ticker-wrap span { font-family: var(--font-data); font-size: 10px; color: var(--aged); padding-right: 80px; }
+    @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-family: var(--font-data);
+      font-size: 14px;
+      color: var(--gold-pale);
+    }
+    .status-dot { width: 8px; height: 8px; background: var(--jade-bright); border-radius: 50%; animation: pulse 4s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .admin-trigger { cursor: pointer; font-family: var(--font-heading); font-size: 10px; color: var(--vellum); }
+    .admin-dropdown {
+      display: none;
+      position: absolute;
+      top: 68px;
+      right: 0;
+      width: 220px;
+      background: var(--onyx);
+      border: var(--rim);
+      border-radius: 2px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      z-index: 350;
+    }
+    .admin-dropdown.show { display: block; }
+    .admin-dropdown a, .admin-dropdown button {
+      display: block;
+      width: 100%;
+      padding: 12px 20px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--vellum);
+      background: none;
+      border: none;
+      text-align: left;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .admin-dropdown a:hover, .admin-dropdown button:hover { color: var(--gold); }
+
+    /* ═══ LAYOUT: SIDEBAR ═══ */
+    .sidebar {
+      position: fixed;
+      top: 68px;
+      left: 0;
+      width: 268px;
+      height: calc(100vh - 68px);
+      background: var(--obsidian);
+      border-right: 1px solid rgba(212,175,55,0.14);
+      display: flex;
+      flex-direction: column;
+      z-index: 200;
+      transition: width 0.4s ease;
+    }
+    .sidebar.collapsed { width: 60px; }
+    .sidebar.collapsed .nav-label,
+    .sidebar.collapsed .nav-section,
+    .sidebar.collapsed .crest-label,
+    .sidebar.collapsed .sidebar-footer-text,
+    .sidebar.collapsed .nav-arrow { display: none; }
+    .crest {
+      padding: 24px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .crest-outer {
+      width: 64px;
+      height: 64px;
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .crest-inner {
+      width: 52px;
+      height: 52px;
+      border: 1px solid rgba(212,175,55,0.15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-heading);
+      font-size: 20px;
+      color: var(--gold);
+    }
+    .crest-label { font-family: var(--font-heading); font-size: 10px; color: var(--aged); margin-top: 8px; letter-spacing: 2px; }
+    .nav { flex: 1; overflow-y: auto; padding: 16px 0; }
+    .nav-section {
+      font-family: var(--font-heading);
+      font-size: 8px;
+      letter-spacing: 4px;
+      color: var(--aged);
+      padding: 16px 20px 8px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 20px 11px 24px;
+      border-left: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--aged);
+      position: relative;
+    }
+    .nav-item:hover { background: rgba(212,175,55,0.03); border-left-color: rgba(212,175,55,0.25); color: var(--vellum); }
+    .nav-item.active {
+      background: rgba(212,175,55,0.06);
+      border-left-color: var(--gold);
+      color: var(--gold);
+    }
+    .nav-item.active .nav-label { font-family: var(--font-heading); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+    .nav-icon { width: 20px; text-align: center; font-size: 18px; flex-shrink: 0; }
+    .nav-arrow { position: absolute; right: 16px; font-family: var(--font-heading); font-size: 14px; color: var(--gold-pale); }
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px 20px;
+      border-top: var(--rim-dim);
+    }
+    .sidebar-footer-text { font-family: var(--font-heading); font-size: 8px; color: var(--faded); letter-spacing: 3px; text-align: center; }
+    .sidebar-toggle { margin-top: 12px; width: 100%; padding: 8px; font-family: var(--font-heading); font-size: 12px; color: var(--aged); background: transparent; border: var(--rim-dim); cursor: pointer; border-radius: 2px; }
+
+    /* ═══ LAYOUT: MAIN ═══ */
+    .main { margin-left: 268px; padding-top: 68px; min-height: 100vh; position: relative; z-index: 2; transition: margin-left 0.4s ease; }
+    .sidebar.collapsed ~ .main { margin-left: 60px; }
+    .page { display: none; padding: 36px 40px; }
+    .page.active { display: block; animation: pageEnter 0.7s ease; }
+    @keyframes pageEnter {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ═══ COMPONENTS: PANELS ═══ */
+    .panel {
+      background: var(--onyx);
+      border: var(--rim);
+      border-radius: 2px;
+      box-shadow: 0 0 0 1px rgba(212,175,55,0.04), 0 8px 16px rgba(0,0,0,0.35), 0 24px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(212,175,55,0.07);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.4s ease, box-shadow 0.4s ease;
+    }
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(212,175,55,0.45), transparent);
+    }
+    .panel:hover {
+      border-color: rgba(212,175,55,0.32);
+      box-shadow: var(--gold-glow), 0 24px 60px rgba(0,0,0,0.55);
+    }
+
+    /* ═══ COMPONENTS: BUTTONS ═══ */
+    .btn {
+      font-family: var(--font-heading);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 10px 28px;
+      border-radius: 2px;
+      border: 1px solid;
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+      transition: left 0.5s ease;
+    }
+    .btn:hover::after { left: 100%; }
+    .btn-gold { border-color: var(--gold-strong); color: var(--gold); }
+    .btn-gold:hover { background: var(--gold-faint); }
+    .btn-jade { border-color: rgba(26,107,68,0.5); color: var(--jade-bright); }
+    .btn-jade:hover { background: var(--jade-dim); }
+    .btn-ruby { border-color: rgba(155,26,47,0.5); color: var(--ruby-bright); }
+    .btn-ruby:hover { background: var(--ruby-dim); }
+    .btn-sapphire { border-color: rgba(26,61,128,0.5); color: var(--sapphire-bright); }
+    .btn-sapphire:hover { background: var(--sapphire-dim); }
+    .btn-amethyst { border-color: rgba(90,45,142,0.5); color: var(--amethyst-bright); }
+    .btn-amethyst:hover { background: var(--amethyst-dim); }
+    .btn-copper { border-color: rgba(139,74,26,0.5); color: var(--copper-bright); }
+    .btn-copper:hover { background: var(--copper-dim); }
+    .btn-sm { padding: 6px 16px; font-size: 9px; }
+    .btn-lg { padding: 14px 32px; font-size: 11px; width: 100%; }
+
+    /* ═══ COMPONENTS: INPUTS ═══ */
+    .input-royal {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(212,175,55,0.25);
+      border-radius: 0;
+      color: var(--parchment);
+      font-family: var(--font-data);
+      font-size: 13px;
+      padding: 10px 4px;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-royal:focus {
+      border-bottom-color: var(--gold);
+      box-shadow: 0 2px 0 rgba(212,175,55,0.15);
+    }
+    .input-royal::placeholder { font-family: var(--font-body); font-style: italic; color: var(--aged); }
+
+    /* ═══ COMPONENTS: BADGES ═══ */
+    .badge {
+      font-family: var(--font-heading);
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 2px;
+      border: 1px solid;
+      display: inline-block;
+    }
+    .badge-active { border-color: rgba(26,107,68,0.5); color: var(--jade-bright); }
+    .badge-frozen { border-color: rgba(155,26,47,0.5); color: var(--ruby-bright); }
+    .badge-pending { border-color: rgba(139,74,26,0.5); color: var(--copper-bright); }
+    .badge-closed { border-color: rgba(138,122,98,0.5); color: var(--aged); }
+    .badge-premium, .badge-vip { border-color: var(--gold-strong); color: var(--gold); }
+    .badge-vip { color: var(--gold-bright); }
+    .badge-credit { border-color: rgba(26,107,68,0.5); color: var(--jade-bright); }
+    .badge-debit { border-color: rgba(155,26,47,0.5); color: var(--ruby-bright); }
+    .badge-transfer { border-color: rgba(26,61,128,0.5); color: var(--sapphire-bright); }
+    .badge-loan { border-color: rgba(90,45,142,0.5); color: var(--amethyst-bright); }
+    .badge-success { border-color: rgba(26,107,68,0.5); color: var(--jade-bright); }
+    .badge-reversed { border-color: var(--aged); color: var(--aged); }
+
+    /* ═══ COMPONENTS: TABLES ═══ */
+    .table-royal { width: 100%; border-collapse: collapse; }
+    .table-royal th {
+      font-family: var(--font-heading);
+      font-size: 9px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--aged);
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid rgba(212,175,55,0.15);
+    }
+    .table-royal td {
+      font-family: var(--font-body);
+      font-size: 14px;
+      padding: 13px 16px;
+      border-bottom: 1px solid rgba(212,175,55,0.06);
+    }
+    .table-royal tr:hover { background: rgba(212,175,55,0.04); border-left: 2px solid rgba(212,175,55,0.3); }
+    .table-royal tr:nth-child(odd) { background: rgba(255,255,255,0.008); }
+    .table-royal tr:nth-child(odd):hover { background: rgba(212,175,55,0.04); }
+
+    /* ═══ SCROLLBAR ═══ */
+    ::-webkit-scrollbar { width: 3px; height: 3px; }
+    ::-webkit-scrollbar-track { background: var(--abyss); }
+    ::-webkit-scrollbar-thumb { background: var(--gold-pale); border-radius: 2px; }
+
+    /* ═══ PAGE COMMON ═══ */
+    .page-eyebrow { font-family: var(--font-heading); font-size: 9px; letter-spacing: 4px; color: var(--aged); margin-bottom: 8px; }
+    .page-title { font-family: var(--font-heading); font-size: 30px; font-weight: 600; letter-spacing: 5px; color: var(--parchment); margin-bottom: 8px; }
+    .page-subtitle { font-family: var(--font-body); font-size: 15px; font-style: italic; color: var(--aged); margin-bottom: 24px; }
+
+    /* ═══ TOASTS ═══ */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast {
+      padding: 14px 24px;
+      border-radius: 2px;
+      border: 1px solid;
+      font-family: var(--font-body);
+      font-size: 14px;
+      min-width: 280px;
+      animation: toastIn 0.35s ease;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .toast.success { border-color: rgba(26,107,68,0.5); background: var(--jade-dim); color: var(--jade-bright); }
+    .toast.error { border-color: rgba(155,26,47,0.5); background: var(--ruby-dim); color: var(--ruby-bright); }
+    .toast.info { border-color: var(--gold-strong); background: var(--gold-faint); color: var(--gold); }
+    .toast.warning { border-color: rgba(139,74,26,0.5); background: var(--copper-dim); color: var(--copper-bright); }
+    @keyframes toastIn { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* ═══ MODAL ═══ */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(3,5,8,0.85);
+      backdrop-filter: blur(4px);
+      z-index: 800;
+      align-items: center;
+      justify-content: center;
+      animation: backdropIn 0.35s ease;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal {
+      background: var(--onyx);
+      border: var(--rim);
+      border-radius: 2px;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow: auto;
+      animation: modalIn 0.35s ease;
+      box-shadow: var(--gold-glow);
+    }
+    @keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    /* ═══ GRID HELPERS ═══ */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+    .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; }
+    .mb-24 { margin-bottom: 24px; }
+    .mt-24 { margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+  <div class="orb orb-c"></div>
+
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">♛ IMPERIAL CAPITAL</div>
+      <div class="logo-tagline">PRIVATE BANKING MANAGEMENT</div>
+    </div>
+    <div class="header-center">
+      <div class="ticker-wrap">
+        <span id="tickerText">14:32:01 · New account opened: Aryan Sharma · 14:31:55 · Transfer processed: ₹18,500 · 14:31:48 · Loan payment received: ACC-0321 · 14:31:40 · Account frozen: Compliance review · </span>
+        <span id="tickerText2"></span>
+      </div>
+    </div>
+    <div class="header-right">
+      <span id="liveClock" class="font-data">00:00:00</span>
+      <span style="color: var(--aged);">◆</span>
+      <span><span class="status-dot"></span> <span style="color: var(--jade-bright); font-family: var(--font-heading); font-size: 9px;">OPERATIONAL</span></span>
+      <span style="color: var(--aged);">◆</span>
+      <div style="position: relative;">
+        <span class="admin-trigger" id="adminTrigger">♛ ADMINISTRATOR ▾</span>
+        <div class="admin-dropdown panel" id="adminDropdown">
+          <a href="#">My Profile</a>
+          <a href="#">Change Password</a>
+          <a href="#">Activity Log</a>
+          <div class="ornament-rule" style="margin: 8px 0;">────◆────</div>
+          <button type="button" id="signOutBtn">Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="crest">
+      <div class="crest-outer">
+        <div class="crest-inner">IC</div>
+      </div>
+      <div class="crest-label">────────◆────────</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">§ BANKING</div>
+      <div class="nav-item active" data-page="dashboard"><span class="nav-icon">◈</span><span class="nav-label">Dashboard</span><span class="nav-arrow">›</span></div>
+      <div class="nav-item" data-page="clients"><span class="nav-icon">⬡</span><span class="nav-label">Clients</span><span class="nav-arrow">›</span></div>
+      <div class="nav-item" data-page="transactions"><span class="nav-icon">⇄</span><span class="nav-label">Transactions</span><span class="nav-arrow">›</span></div>
+      <div class="nav-item" data-page="loans"><span class="nav-icon">◎</span><span class="nav-label">Loans & Credit</span><span class="nav-arrow">›</span></div>
+      <div class="nav-item" data-page="statements"><span class="nav-icon">≡</span><span class="nav-label">Statements</span><span class="nav-arrow">›</span></div>
+      <div class="nav-section">§ MANAGEMENT</div>
+      <div class="nav-item" data-page="reports"><span class="nav-icon">⊞</span><span class="nav-label">Reports & Analytics</span><span class="nav-arrow">›</span></div>
+      <div class="nav-item" data-page="compliance"><span class="nav-icon">⚠</span><span class="nav-label">Compliance & Risk</span><span class="nav-arrow">›</span></div>
+      <div class="nav-item" data-page="communications"><span class="nav-icon">✉</span><span class="nav-label">Communications</span><span class="nav-arrow">›</span></div>
+      <div class="nav-section">§ ADMINISTRATION</div>
+      <div class="nav-item" data-page="admin"><span class="nav-icon">◉</span><span class="nav-label">Admin Control Panel</span><span class="nav-arrow">›</span></div>
+      <div class="nav-item" data-page="audit"><span class="nav-icon">§</span><span class="nav-label">Audit Trail</span><span class="nav-arrow">›</span></div>
+      <div class="nav-item" data-page="settings"><span class="nav-icon">✦</span><span class="nav-label">Settings</span><span class="nav-arrow">›</span></div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="ornament-rule">────────◆────────</div>
+      <div class="sidebar-footer-text">v2.0 · MMXXV</div>
+      <button type="button" class="sidebar-toggle" id="sidebarToggle" title="Collapse sidebar">‹ ›</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div id="page-dashboard" class="page active"></div>
+    <div id="page-clients" class="page"></div>
+    <div id="page-transactions" class="page"></div>
+    <div id="page-loans" class="page"></div>
+    <div id="page-statements" class="page"></div>
+    <div id="page-reports" class="page"></div>
+    <div id="page-compliance" class="page"></div>
+    <div id="page-communications" class="page"></div>
+    <div id="page-admin" class="page"></div>
+    <div id="page-audit" class="page"></div>
+    <div id="page-settings" class="page"></div>
+  </main>
+
+  <div id="toastContainer" class="toast-container"></div>
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal" id="modalContent"></div>
+  </div>
+
+  <script>
+  // Imperial Capital — thin client: all data and logic from Python backend (DSA in Python only).
+  const API = '/api/imperial';
+  let IMPERIAL = { accounts: [], transactions: [], loans: [], alerts: [], auditLog: [], settings: {}, ui: {}, analytics: {} };
+  let RISK_HEATMAP = null;
+  let FORECAST = null;
+  let REG_KPI = null;
+  let PORTFOLIO = null;
+  let INSIGHTS = null;
+  let AML_SUMMARY = null;
+  let SECURITY_EVENTS = null;
+
+  function showToast(msg, type) {
+    const c = document.getElementById('toastContainer');
+    if (!c) return;
+    const t = document.createElement('div');
+    t.className = 'toast ' + (type || 'info');
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(function() { t.remove(); }, 3500);
+  }
+
+  function fetchState() {
+    return fetch(API + '/state').then(function(r) {
+      if (!r.ok) throw new Error('Failed to load state');
+      return r.json();
+    }).then(function(data) {
+      IMPERIAL = data;
+      return data;
+    });
+  }
+
+  function renderDashboard() {
+    const el = document.getElementById('page-dashboard');
+    if (!el) return;
+    const a = IMPERIAL.analytics || {};
+    const acc = IMPERIAL.accounts || [];
+    const tx = IMPERIAL.transactions || [];
+    const cur = IMPERIAL.settings.currency || '₹';
+    let html =
+      '<div class="page-eyebrow">§ BANKING · OVERVIEW</div>' +
+      '<div class="page-title">THE COMMAND SANCTUM</div>' +
+      '<div class="page-subtitle">Complete real-time overview of all private banking operations</div>' +
+      '<div class="ornament-rule">──────────◆──────────</div>' +
+      '<div class="grid-5 mb-24">' +
+        '<div class="panel" style="padding:20px;"><div style="font-family:var(--font-heading);font-size:9px;color:var(--aged);">REGISTERED CLIENTS</div><div class="font-display" style="font-size:40px;color:var(--gold);">' + (a.totalClients || acc.length) + '</div></div>' +
+        '<div class="panel" style="padding:20px;"><div style="font-family:var(--font-heading);font-size:9px;color:var(--aged);">TOTAL ASSETS</div><div class="font-display" style="font-size:40px;color:var(--jade-bright);">' + cur + (a.totalBalance != null ? Number(a.totalBalance).toLocaleString('en-IN') : '0') + '</div></div>' +
+        '<div class="panel" style="padding:20px;"><div style="font-family:var(--font-heading);font-size:9px;color:var(--aged);">TRANSACTIONS TODAY</div><div class="font-display" style="font-size:40px;color:var(--sapphire-bright);">' + (a.transactionsToday != null ? a.transactionsToday : tx.length) + '</div></div>' +
+        '<div class="panel" style="padding:20px;"><div style="font-family:var(--font-heading);font-size:9px;color:var(--aged);">CREDIT FACILITIES</div><div class="font-display" style="font-size:40px;color:var(--amethyst-bright);">' + (a.activeLoans != null ? a.activeLoans : (IMPERIAL.loans || []).length) + '</div></div>' +
+        '<div class="panel" style="padding:20px;"><div style="font-family:var(--font-heading);font-size:9px;color:var(--aged);">COMPLIANCE ALERTS</div><div class="font-display" style="font-size:40px;color:var(--ruby-bright);">' + (a.riskAlerts != null ? a.riskAlerts : (IMPERIAL.alerts || []).length) + '</div></div>' +
+      '</div>' +
+      '<div class="panel mb-24" style="padding:24px;">' +
+        '<div style="font-family:var(--font-heading);font-size:12px;color:var(--aged);margin-bottom:16px;">Recent Transactions</div>' +
+        '<table class="table-royal"><thead><tr><th>Time</th><th>Client</th><th>Account</th><th>Type</th><th>Amount</th></tr></thead><tbody>' +
+        (tx.slice(0, 8).map(function(t) {
+          return '<tr><td class="font-data">' + (t.time || '') + '</td><td>' + (t.clientName || '') + '</td><td class="font-data">' + (t.fromAcc || '') + '</td><td><span class="badge badge-' + (t.type === 'credit' ? 'credit' : t.type === 'debit' ? 'debit' : 'transfer') + '">' + (t.type || '').toUpperCase() + '</span></td><td class="font-data" style="color:' + (t.type === 'credit' ? 'var(--jade-bright)' : 'var(--ruby-bright)') + '">' + (t.type === 'credit' ? '+' : '-') + cur + Number(t.amount).toLocaleString('en-IN') + '</td></tr>';
+        }).join('')) +
+        '</tbody></table></div>' +
+      '<div class="panel" style="padding:24px;">' +
+        '<div style="font-family:var(--font-heading);font-size:12px;color:var(--aged);margin-bottom:16px;">Compliance Alerts</div>' +
+        '<ul style="list-style:none;">' +
+        ((IMPERIAL.alerts || []).slice(0, 5).map(function(al) {
+          return '<li style="border-left:3px solid var(--ruby);padding:12px;margin-bottom:8px;background:var(--ruby-dim);"><span style="color:var(--ruby-bright);">' + (al.clientName || '') + '</span> · ' + (al.description || '') + '</li>';
+        }).join('') || '<li class="font-body" style="color:var(--aged);">No active alerts</li>') +
+        '</ul></div>';
+
+    // Risk heatmap + liquidity snapshot row
+    html += '<div class="grid-2 mt-24">';
+    // Risk heatmap
+    html += '<div class="panel" style="padding:24px;">' +
+            '<div style="font-family:var(--font-heading);font-size:12px;color:var(--aged);margin-bottom:12px;">Risk Distribution</div>';
+    if (RISK_HEATMAP) {
+      const b = RISK_HEATMAP.buckets || {};
+      html += '<div class="grid-2">' +
+              '<div><div class="font-body" style="color:var(--jade-bright);">LOW</div><div class="font-display" style="font-size:24px;">' + (b.low || 0) + '</div></div>' +
+              '<div><div class="font-body" style="color:var(--gold);">MEDIUM</div><div class="font-display" style="font-size:24px;">' + (b.medium || 0) + '</div></div>' +
+              '<div><div class="font-body" style="color:var(--ruby-bright);">HIGH</div><div class="font-display" style="font-size:24px;">' + (b.high || 0) + '</div></div>' +
+              '<div><div class="font-body" style="color:var(--ruby-bright);">CRITICAL</div><div class="font-display" style="font-size:24px;">' + (b.critical || 0) + '</div></div>' +
+              '</div>' +
+              '<div class="font-data" style="color:var(--aged);margin-top:12px;">Average index: ' + (RISK_HEATMAP.average_score || 0) + ' · Max: ' + (RISK_HEATMAP.max_score || 0) + '</div>';
+    } else {
+      html += '<div class="font-body" style="color:var(--aged);">Risk data will appear here once available.</div>';
+    }
+    html += '</div>';
+
+    // Liquidity / forecast card
+    html += '<div class="panel" style="padding:24px;">' +
+            '<div style="font-family:var(--font-heading);font-size:12px;color:var(--aged);margin-bottom:12px;">Liquidity & Forecast</div>';
+    if (FORECAST && REG_KPI) {
+      const cf = FORECAST.cashflow_forecast || {};
+      const k = REG_KPI || {};
+      html += '<div class="font-body" style="color:var(--vellum);">Net cashflow (30d): <span class="font-data">' + cur + (cf["30"] || 0).toLocaleString('en-IN') + '</span></div>' +
+              '<div class="font-body" style="color:var(--vellum);">Default probability: <span class="font-data">' + ((FORECAST.default_probability || 0) * 100).toFixed(1) + '%</span></div>' +
+              '<div class="font-body" style="color:var(--vellum);">Client churn probability: <span class="font-data">' + ((FORECAST.churn_probability || 0) * 100).toFixed(1) + '%</span></div>' +
+              '<div class="font-body" style="color:var(--vellum);margin-top:8px;">Liquidity coverage ratio: <span class="font-data">' + (k.liquidity_coverage_ratio || 0).toFixed(2) + '%</span></div>';
+    } else {
+      html += '<div class="font-body" style="color:var(--aged);">Forecast will appear after sufficient history is available.</div>';
+    }
+    html += '</div>';
+    html += '</div>';
+
+    // Intelligence messages
+    html += '<div class="panel mt-24" style="padding:24px;">' +
+            '<div style="font-family:var(--font-heading);font-size:12px;color:var(--aged);margin-bottom:12px;">Intelligence Highlights</div>';
+    if (INSIGHTS && (INSIGHTS.messages || []).length) {
+      html += '<ul style="padding-left:18px;">' + INSIGHTS.messages.map(function(m) {
+        return '<li class="font-body" style="color:var(--vellum);margin-bottom:4px;">' + m + '</li>';
+      }).join('') + '</ul>';
+    } else {
+      html += '<div class="font-body" style="color:var(--aged);">No special insights at the moment.</div>';
+    }
+    html += '</div>';
+
+    el.innerHTML = html;
+  }
+
+  function renderClients() {
+    const el = document.getElementById('page-clients');
+    if (!el) return;
+    const acc = IMPERIAL.accounts || [];
+    const cur = IMPERIAL.settings.currency || '₹';
+    const sel = IMPERIAL.ui.selectedAccount || (acc[0] && acc[0].id);
+    el.innerHTML =
+      '<div class="page-eyebrow">§ BANKING · CLIENTS</div>' +
+      '<div class="page-title">CLIENT REGISTRY</div>' +
+      '<div class="page-subtitle">Complete client and account management</div>' +
+      '<div class="ornament-rule">──────────◆──────────</div>' +
+      '<div class="grid-3 mb-24">' +
+        '<div class="panel" style="padding:16px;max-height:400px;overflow-y:auto;">' +
+          acc.slice(0, 15).map(function(a) {
+            return '<div class="panel ' + (a.id === sel ? 'border:1px solid var(--gold)' : '') + '" style="padding:12px;margin-bottom:8px;cursor:pointer;border-left:3px solid var(--jade);" data-account-id="' + a.id + '"><div class="font-data" style="font-size:11px;color:var(--aged);">' + a.id + '</div><div style="font-family:var(--font-heading);font-size:16px;">' + (a.name || '') + '</div><div class="font-display" style="font-size:22px;color:var(--jade-bright);">' + cur + Number(a.balance).toLocaleString('en-IN') + '</div></div>';
+          }).join('') +
+        '</div>' +
+        '<div class="panel" style="padding:24px;">' +
+          (function() {
+            const a = acc.find(function(x) { return x.id === sel; }) || acc[0];
+            if (!a) return '<p class="font-body" style="color:var(--aged);">Select a client</p>';
+            return '<div style="font-family:var(--font-heading);font-size:22px;">' + (a.name || '') + '</div><div class="font-data" style="color:var(--aged);">' + a.id + '</div><div class="font-display" style="font-size:36px;color:var(--gold);margin:16px 0;">' + cur + Number(a.balance).toLocaleString('en-IN') + '</div><div class="font-body" style="color:var(--aged);">' + (a.type || '') + ' · ' + (a.branch || '') + '</div>';
+          })() +
+        '</div>' +
+        '<div class="panel" style="padding:24px;">' +
+          '<div style="font-family:var(--font-heading);font-size:9px;color:var(--aged);margin-bottom:12px;">RECENT TRANSACTIONS</div>' +
+          ((IMPERIAL.transactions || []).filter(function(t) { return t.fromAcc === sel; }).slice(0, 5).map(function(t) {
+            return '<div class="font-body" style="margin-bottom:8px;">' + (t.date || '') + ' · ' + (t.type || '') + ' ' + cur + t.amount + '</div>';
+          }).join('') || '<div class="font-body" style="color:var(--aged);">No transactions</div>') +
+        '</div>' +
+      '</div>' +
+      '<div class="panel" style="padding:24px;"><table class="table-royal"><thead><tr><th>Account</th><th>Client</th><th>Type</th><th>Balance</th><th>Status</th></tr></thead><tbody>' +
+      acc.map(function(a) {
+        return '<tr><td class="font-data">' + a.id + '</td><td>' + (a.name || '') + '</td><td>' + (a.type || '') + '</td><td class="font-data" style="color:var(--jade-bright);">' + cur + Number(a.balance).toLocaleString('en-IN') + '</td><td><span class="badge badge-active">' + (a.status || 'active') + '</span></td></tr>';
+      }).join('') + '</tbody></table></div>';
+    el.querySelectorAll('[data-account-id]').forEach(function(node) {
+      node.addEventListener('click', function() {
+        IMPERIAL.ui.selectedAccount = node.getAttribute('data-account-id');
+        renderClients();
+      });
+    });
+  }
+
+  function renderTransactions() {
+    const el = document.getElementById('page-transactions');
+    if (!el) return;
+    const tx = IMPERIAL.transactions || [];
+    const cur = IMPERIAL.settings.currency || '₹';
+    el.innerHTML =
+      '<div class="page-eyebrow">§ BANKING · TRANSACTIONS</div>' +
+      '<div class="page-title">TRANSACTION CENTRE</div>' +
+      '<div class="page-subtitle">All credits, debits, and transfers · Processed in real-time</div>' +
+      '<div class="ornament-rule">──────────◆──────────</div>' +
+      '<div class="panel" style="padding:24px;"><table class="table-royal"><thead><tr><th>Ref</th><th>Date</th><th>Account</th><th>Client</th><th>Type</th><th>Amount</th><th>Balance After</th></tr></thead><tbody>' +
+      tx.slice(0, 20).map(function(t) {
+        return '<tr><td class="font-data">' + (t.ref || '') + '</td><td class="font-data">' + (t.date || '') + ' ' + (t.time || '') + '</td><td class="font-data">' + (t.fromAcc || '') + '</td><td>' + (t.clientName || '') + '</td><td><span class="badge badge-' + (t.type === 'credit' ? 'credit' : t.type === 'debit' ? 'debit' : 'transfer') + '">' + (t.type || '').toUpperCase() + '</span></td><td class="font-data" style="color:' + (t.type === 'credit' ? 'var(--jade-bright)' : 'var(--ruby-bright)') + '">' + (t.type === 'credit' ? '+' : '-') + cur + Number(t.amount).toLocaleString('en-IN') + '</td><td class="font-data">' + cur + Number(t.balanceAfter || 0).toLocaleString('en-IN') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+
+  function renderLoans() {
+    const el = document.getElementById('page-loans');
+    if (!el) return;
+    const loans = IMPERIAL.loans || [];
+    const cur = IMPERIAL.settings.currency || '₹';
+    el.innerHTML =
+      '<div class="page-eyebrow">§ BANKING · LOANS & CREDIT</div>' +
+      '<div class="page-title">CREDIT SANCTUM</div>' +
+      '<div class="page-subtitle">Complete loan portfolio management</div>' +
+      '<div class="ornament-rule">──────────◆──────────</div>' +
+      '<div class="grid-3 mb-24">' +
+        '<div class="panel" style="padding:24px;max-height:400px;overflow-y:auto;">' +
+          loans.slice(0, 8).map(function(l) {
+            return '<div class="panel" style="padding:16px;margin-bottom:12px;border-left:3px solid var(--amethyst);"><div style="font-family:var(--font-heading);">' + (l.clientName || '') + '</div><div class="font-data" style="font-size:11px;color:var(--aged);">' + (l.id || '') + '</div><div class="font-display" style="font-size:26px;color:var(--amethyst-bright);">' + cur + Number(l.principal).toLocaleString('en-IN') + '</div><div class="font-body" style="color:var(--aged);">' + (l.type || '') + ' · ' + (l.status || '') + '</div></div>';
+          }).join('') +
+        '</div>' +
+        '<div class="panel" style="padding:24px;"><div style="font-family:var(--font-heading);font-size:12px;color:var(--aged);">EMI CALCULATOR</div><p class="font-body" style="color:var(--vellum);margin-top:12px;">Use Admin Panel to apply and process loans. All calculations run on the server.</p></div>' +
+        '<div class="panel" style="padding:24px;"><div style="font-family:var(--font-heading);font-size:12px;color:var(--aged);">Portfolio summary</div><p class="font-body" style="margin-top:12px;">Total loans: ' + loans.length + '</p></div>' +
+      '</div>';
+  }
+
+  function renderAudit() {
+    const el = document.getElementById('page-audit');
+    if (!el) return;
+    const log = IMPERIAL.auditLog || [];
+    let html =
+      '<div class="page-eyebrow">§ ADMINISTRATION · AUDIT</div>' +
+      '<div class="page-title">THE CHRONICLE</div>' +
+      '<div class="page-subtitle">Immutable record of all system actions</div>' +
+      '<div class="ornament-rule">──────────◆──────────</div>' +
+      '<div class="grid-2 mb-24">' +
+      '<div class="panel" style="padding:24px;"><div style="font-family:var(--font-heading);font-size:12px;color:var(--aged);margin-bottom:12px;">Audit Log</div><table class="table-royal"><thead><tr><th>Timestamp</th><th>Category</th><th>Action</th><th>Performed By</th></tr></thead><tbody>' +
+      log.slice(0, 20).map(function(e) {
+        return '<tr><td class="font-data">' + (e.timestamp || '') + '</td><td><span class="badge">' + (e.category || '') + '</span></td><td>' + (e.action || '') + '</td><td>' + (e.performedBy || '') + '</td></tr>';
+      }).join('') + '</tbody></table></div>' +
+      '<div class="panel" style="padding:24px;"><div style="font-family:var(--font-heading);font-size:12px;color:var(--aged);margin-bottom:12px;">Security & Integrity</div>';
+    // Audit verification not fetched separately; we infer from chain integrity via Python API (optional).
+    if (SECURITY_EVENTS && SECURITY_EVENTS.length) {
+      html += '<div class="font-body" style="color:var(--vellum);margin-bottom:8px;">Recent security events:</div><ul style="list-style:none;max-height:220px;overflow-y:auto;">' +
+              SECURITY_EVENTS.map(function(e) {
+                return '<li style="margin-bottom:8px;"><span class="font-data" style="color:var(--aged);">' + (e.timestamp || '') + '</span><br><span class="badge" style="margin-right:6px;">' + (e.severity || '') + '</span><span class="font-body" style="color:var(--vellum);">' + (e.message || '') + ' — ' + (e.username || '') + '</span></li>';
+              }).join('') + '</ul>';
+    } else {
+      html += '<div class="font-body" style="color:var(--aged);">Security events will appear here for administrators and auditors.</div>';
+    }
+    html += '</div></div>';
+    el.innerHTML = html;
+  }
+
+  function renderReports() {
+    const el = document.getElementById('page-reports');
+    if (!el) return;
+    const cur = IMPERIAL.settings.currency || '₹';
+    let html =
+      '<div class="page-eyebrow">§ MANAGEMENT · REPORTS</div>' +
+      '<div class="page-title">INTELLIGENCE CHAMBER</div>' +
+      '<div class="page-subtitle">Strategic analytics · Financial performance intelligence</div>' +
+      '<div class="ornament-rule">──────────◆──────────</div>' +
+      '<div class="grid-2 mb-24">';
+    // Forecast
+    html += '<div class="panel" style="padding:24px;"><div style="font-family:var(--font-heading);font-size:12px;color:var(--aged);margin-bottom:12px;">Cashflow & Behaviour Forecast</div>';
+    if (FORECAST) {
+      const cf = FORECAST.cashflow_forecast || {};
+      html += '<div class="font-body" style="color:var(--vellum);">Net cashflow 30d: <span class="font-data">' + cur + (cf["30"] || 0).toLocaleString('en-IN') + '</span></div>' +
+              '<div class="font-body" style="color:var(--vellum);">Net cashflow 90d: <span class="font-data">' + cur + (cf["90"] || 0).toLocaleString('en-IN') + '</span></div>' +
+              '<div class="font-body" style="color:var(--vellum);">Net cashflow 180d: <span class="font-data">' + cur + (cf["180"] || 0).toLocaleString('en-IN') + '</span></div>' +
+              '<div class="font-body" style="color:var(--vellum);margin-top:8px;">Default probability: <span class="font-data">' + ((FORECAST.default_probability || 0) * 100).toFixed(1) + '%</span></div>' +
+              '<div class="font-body" style="color:var(--vellum);">Client churn probability: <span class="font-data">' + ((FORECAST.churn_probability || 0) * 100).toFixed(1) + '%</span></div>';
+    } else {
+      html += '<div class="font-body" style="color:var(--aged);">Forecast not available yet.</div>';
+    }
+    html += '</div>';
+    // Regulatory KPIs
+    html += '<div class="panel" style="padding:24px;"><div style="font-family:var(--font-heading);font-size:12px;color:var(--aged);margin-bottom:12px;">Regulatory-style KPIs</div>';
+    if (REG_KPI) {
+      html += '<div class="grid-2">' +
+              '<div><div class="font-body" style="color:var(--aged);">CET1 Ratio</div><div class="font-display" style="font-size:24px;color:var(--jade-bright);">' + (REG_KPI.cet1_ratio || 0).toFixed(2) + '%</div></div>' +
+              '<div><div class="font-body" style="color:var(--aged);">Capital Adequacy</div><div class="font-display" style="font-size:24px;color:var(--jade-bright);">' + (REG_KPI.capital_adequacy_ratio || 0).toFixed(2) + '%</div></div>' +
+              '<div><div class="font-body" style="color:var(--aged);">NPL Ratio</div><div class="font-display" style="font-size:24px;color:var(--ruby-bright);">' + (REG_KPI.npl_ratio || 0).toFixed(2) + '%</div></div>' +
+              '<div><div class="font-body" style="color:var(--aged);">LCR</div><div class="font-display" style="font-size:24px;color:var(--gold);">' + (REG_KPI.liquidity_coverage_ratio || 0).toFixed(2) + '%</div></div>' +
+              '</div>';
+    } else {
+      html += '<div class="font-body" style="color:var(--aged);">KPI snapshot not available.</div>';
+    }
+    html += '</div></div>';
+    // Portfolio metrics
+    html += '<div class="panel mb-24" style="padding:24px;"><div style="font-family:var(--font-heading);font-size:12px;color:var(--aged);margin-bottom:12px;">Portfolio Metrics</div>';
+    if (PORTFOLIO) {
+      const alloc = PORTFOLIO.allocation || {};
+      html += '<div class="grid-3">' + Object.keys(alloc).map(function(k) {
+        return '<div><div class="font-body" style="color:var(--aged);text-transform:uppercase;">' + k.replace('_', ' ') + '</div><div class="font-display" style="font-size:22px;">' + (alloc[k] * 100).toFixed(1) + '%</div></div>';
+      }).join('') + '</div>' +
+      '<div class="font-body" style="color:var(--vellum);margin-top:8px;">Diversification index: <span class="font-data">' + (PORTFOLIO.diversification_index || 0).toFixed(3) + '</span> · VaR(95%): <span class="font-data">' + (PORTFOLIO.value_at_risk_95 || 0).toFixed(3) + '</span></div>';
+    } else {
+      html += '<div class="font-body" style="color:var(--aged);">Portfolio view not initialised.</div>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+  }
+
+  function renderCompliance() {
+    const el = document.getElementById('page-compliance');
+    if (!el) return;
+    let html =
+      '<div class="page-eyebrow">§ MANAGEMENT · COMPLIANCE</div>' +
+      '<div class="page-title">THE SENTINEL</div>' +
+      '<div class="page-subtitle">Risk management · Compliance monitoring · Account controls</div>' +
+      '<div class="ornament-rule">──────────◆──────────</div>' +
+      '<div class="grid-2 mb-24">';
+    // AML patterns
+    html += '<div class="panel" style="padding:24px;"><div style="font-family:var(--font-heading);font-size:12px;color:var(--aged);margin-bottom:12px;">AML Patterns</div>';
+    if (AML_SUMMARY && (AML_SUMMARY.patterns || []).length) {
+      html += '<table class="table-royal"><thead><tr><th>Account</th><th>Description</th></tr></thead><tbody>' +
+              AML_SUMMARY.patterns.slice(0, 10).map(function(p) {
+                return '<tr><td class="font-data">' + (p.account_id || '') + '</td><td class="font-body">' + (p.description || '') + '</td></tr>';
+              }).join('') + '</tbody></table>';
+    } else {
+      html += '<div class="font-body" style="color:var(--aged);">No structuring patterns detected in recent activity.</div>';
+    }
+    html += '</div>';
+    // Watchlist
+    html += '<div class="panel" style="padding:24px;"><div style="font-family:var(--font-heading);font-size:12px;color:var(--aged);margin-bottom:12px;">Watchlist Matches</div>';
+    if (AML_SUMMARY && (AML_SUMMARY.watchlist_hits || []).length) {
+      html += '<table class="table-royal"><thead><tr><th>Account</th><th>Client</th><th>Matched Entry</th><th>Score</th></tr></thead><tbody>' +
+              AML_SUMMARY.watchlist_hits.slice(0, 10).map(function(w) {
+                return '<tr><td class="font-data">' + (w.account_id || '') + '</td><td>' + (w.owner_name || '') + '</td><td>' + (w.matched_entry || '') + '</td><td class="font-data">' + (w.match_score || 0) + '</td></tr>';
+              }).join('') + '</tbody></table>';
+    } else {
+      html += '<div class="font-body" style="color:var(--aged);">No watchlist-style name matches found.</div>';
+    }
+    html += '</div></div>';
+    el.innerHTML = html;
+  }
+
+  function renderPage(name) {
+    if (name === 'dashboard') renderDashboard();
+    else if (name === 'clients') renderClients();
+    else if (name === 'transactions') renderTransactions();
+    else if (name === 'loans') renderLoans();
+    else if (name === 'reports') renderReports();
+    else if (name === 'compliance') renderCompliance();
+    else if (name === 'audit') renderAudit();
+    else {
+      var el = document.getElementById('page-' + name);
+      if (el) el.innerHTML = '<div class="page-title">' + name.toUpperCase() + '</div><div class="font-body" style="color:var(--aged);">Data loaded from Python backend. This page uses the same state.</div>';
+    }
+  }
+
+  function refreshAll() {
+    Promise.all([
+      fetchState(),
+      fetch(API + '/risk/heatmap').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }),
+      fetch(API + '/analytics/forecast').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }),
+      fetch(API + '/analytics/kpi').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }),
+      fetch(API + '/portfolio/metrics').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }),
+      fetch(API + '/intelligence/insights').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }),
+      fetch(API + '/compliance/aml').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }),
+      fetch(API + '/security/events').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; })
+    ]).then(function(results) {
+      RISK_HEATMAP = results[1];
+      FORECAST = results[2];
+      REG_KPI = results[3];
+      PORTFOLIO = results[4];
+      INSIGHTS = results[5];
+      AML_SUMMARY = results[6];
+      SECURITY_EVENTS = results[7];
+      document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); p.innerHTML = ''; });
+      var cur = IMPERIAL.ui.currentPage || 'dashboard';
+      document.querySelectorAll('.nav-item').forEach(function(n) {
+        n.classList.toggle('active', n.getAttribute('data-page') === cur);
+      });
+      var pageEl = document.getElementById('page-' + cur);
+      if (pageEl) { pageEl.classList.add('active'); renderPage(cur); }
+    }).catch(function(e) {
+      showToast('Failed to load data: ' + e.message, 'error');
+    });
+  }
+
+  setInterval(function() {
+    var clock = document.getElementById('liveClock');
+    if (clock) {
+      var d = new Date();
+      clock.textContent = d.toTimeString().split(' ')[0];
+    }
+  }, 1000);
+
+  document.getElementById('tickerText2').textContent = document.getElementById('tickerText').textContent;
+
+  document.querySelectorAll('.nav-item').forEach(function(n) {
+    n.addEventListener('click', function() {
+      var page = n.getAttribute('data-page');
+      IMPERIAL.ui.currentPage = page;
+      document.querySelectorAll('.nav-item').forEach(function(x) { x.classList.remove('active'); });
+      n.classList.add('active');
+      document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+      var el = document.getElementById('page-' + page);
+      if (el) { el.classList.add('active'); renderPage(page); }
+    });
+  });
+
+  document.getElementById('adminTrigger').addEventListener('click', function() {
+    document.getElementById('adminDropdown').classList.toggle('show');
+  });
+  document.getElementById('signOutBtn').addEventListener('click', function() {
+    window.location.href = '/';
+  });
+  document.getElementById('sidebarToggle').addEventListener('click', function() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+  });
+
+  refreshAll();
+  </script>
+</body>
+</html>

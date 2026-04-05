@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block page_title %}Security & Activity Logs{% endblock %}
+{% block content %}
+<div class="card glass">
+    <h3>Recent Security Events</h3>
+    <div id="securityTable"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/security_logs.js"></script>
+{% endblock %}
+
