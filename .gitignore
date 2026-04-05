@@ -1,89 +1,73 @@
-# Python
+# ═══════════════════════════════════════════
+# NEXUS Bank — .gitignore
+# ═══════════════════════════════════════════
+
+# ── Python ──
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 *.egg-info/
-dist/
-build/
 *.egg
 
-# Virtual environments
+# ── Virtual Environments ──
+.venv/
 venv/
 env/
-.env
+Include/
+Lib/
+Scripts/
+scripts/*.exe
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-desktop.ini
-Thumbs.db
-.DS_Store
-
-# Archives
-*.zip
-
-# Testing
-.pytest_cache/
-htmlcov/
-.coverage
-test.db
-
-# Node
-node_modules/
-frontend/dist/
-
-# Docker
-*.log
-
-# Auto-generated entries
-# Dependencies
+# ── Node ──
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Build outputs
+# ── Build Outputs ──
 dist/
 build/
-*.log
+frontend/dist/
 
-# Environment files
+# ── Environment & Secrets ──
 .env
+.env.local
+.env.production
 .env.*
 !.env.example
 
-# IDE files
+# ── Databases ──
+*.db
+*.sqlite3
+
+# ── Testing ──
+.pytest_cache/
+htmlcov/
+.coverage
+test.db
+
+# ── IDE ──
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS files
-.DS_Store
+# ── OS Files ──
+desktop.ini
 Thumbs.db
+.DS_Store
 
-# Temporary files
+# ── Logs ──
+*.log
+
+# ── Archives ──
+*.zip
+
+# ── Temporary Files ──
 *.tmp
 *.temp
 .cache/
 
-# Sensitive files (auto-detected)
-.env
-.env.local
-node_modules
-
-# Virtual environment
-.venv/
-
-# Local databases
-*.db
-
-# Tool-generated / system
+# ── Tool-Generated ──
 antigravity/
-Include/
-Lib/
