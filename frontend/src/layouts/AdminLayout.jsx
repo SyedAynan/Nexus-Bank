@@ -2,13 +2,13 @@ import { Outlet, NavLink, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LayoutDashboard, Users, ArrowLeftRight, Shield, FileCheck, ScrollText, Settings, ArrowLeft, Bell, Sun, Moon, ShieldCheck, AlertTriangle, Activity, CheckCircle } from 'lucide-react'
+import { LayoutDashboard, Users, ArrowLeftRight, Shield, FileCheck, ScrollText, Settings, ArrowLeft, Bell, Sun, Moon, ShieldCheck, AlertTriangle, Activity, CheckCircle, Database, Gauge, BarChart3, Flag, Globe, HardDrive, Map, Code2 } from 'lucide-react'
 
 /* ─── Demo Notifications ─── */
 const ADMIN_NOTIFICATIONS = [
     { id: 1, type: 'alert', title: 'High-risk transaction flagged', desc: 'TX-4821 — $12,400 flagged for review', time: '5m ago', unread: true, icon: AlertTriangle, color: '#fb7185' },
     { id: 2, type: 'security', title: 'Brute force attempt blocked', desc: 'IP 192.168.42.15 — 5 failed logins', time: '22m ago', unread: true, icon: Shield, color: '#fbbf24' },
-    { id: 3, type: 'system', title: 'New user registered', desc: 'marcus_williams joined NEXA', time: '1h ago', unread: true, icon: Users, color: '#22d3ee' },
+    { id: 3, type: 'system', title: 'New user registered', desc: 'marcus_williams joined NEXUS', time: '1h ago', unread: true, icon: Users, color: '#22d3ee' },
     { id: 4, type: 'compliance', title: 'KYC verification complete', desc: 'emily_chen passed identity check', time: '2h ago', unread: false, icon: CheckCircle, color: '#34d399' },
     { id: 5, type: 'system', title: 'System health: Optimal', desc: 'All services running normally', time: '4h ago', unread: false, icon: Activity, color: '#a78bfa' },
 ]
@@ -81,6 +81,20 @@ export default function AdminLayout() {
         { label: 'Settings', to: '/admin/settings', icon: Settings },
     ]
 
+    const engineeringNav = [
+        { label: 'DSA Showcase', to: '/admin/dsa', icon: Database },
+        { label: 'Rate Limiting', to: '/admin/rate-limiting', icon: Gauge },
+        { label: 'Monitoring', to: '/admin/monitoring', icon: BarChart3 },
+        { label: 'Feature Flags', to: '/admin/features', icon: Flag },
+    ]
+
+    const infraNav = [
+        { label: 'Backups', to: '/admin/backups', icon: HardDrive },
+        { label: 'Open Banking', to: '/admin/open-banking', icon: Globe },
+        { label: 'Roadmap', to: '/admin/roadmap', icon: Map },
+        { label: 'Project', to: '/admin/project', icon: Code2 },
+    ]
+
     return (
         <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
             <div className="nx-nebula-bg" />
@@ -102,16 +116,34 @@ export default function AdminLayout() {
                             <span style={{ color: 'var(--nx-violet)', fontWeight: 800, fontSize: 12, fontFamily: 'var(--font-display)' }}>NX</span>
                         </motion.div>
                         <div>
-                            <span style={{ color: 'var(--nx-text)', fontWeight: 700, fontSize: 14, letterSpacing: '0.1em', fontFamily: 'var(--font-display)' }}>NEXA</span>
+                            <span style={{ color: 'var(--nx-text)', fontWeight: 700, fontSize: 14, letterSpacing: '0.1em', fontFamily: 'var(--font-display)' }}>NEXUS</span>
                             <span className="nx-badge nx-badge-violet" style={{ marginLeft: 8, fontSize: 9 }}>ADMIN</span>
                         </div>
                     </Link>
                 </div>
 
                 <div className="nx-sidebar-section">Console</div>
-                <nav style={{ flex: 1 }}>
+                <nav>
                     {sections.map(s => (
                         <NavLink key={s.to} to={s.to} end={s.to === '/admin'} className={({ isActive }) => `nx-sidebar-link ${isActive ? 'active' : ''}`}>
+                            <s.icon size={16} /> {s.label}
+                        </NavLink>
+                    ))}
+                </nav>
+
+                <div className="nx-sidebar-section" style={{ marginTop: 8 }}>Engineering</div>
+                <nav>
+                    {engineeringNav.map(s => (
+                        <NavLink key={s.to} to={s.to} className={({ isActive }) => `nx-sidebar-link ${isActive ? 'active' : ''}`}>
+                            <s.icon size={16} /> {s.label}
+                        </NavLink>
+                    ))}
+                </nav>
+
+                <div className="nx-sidebar-section" style={{ marginTop: 8 }}>Infrastructure</div>
+                <nav style={{ flex: 1 }}>
+                    {infraNav.map(s => (
+                        <NavLink key={s.to} to={s.to} className={({ isActive }) => `nx-sidebar-link ${isActive ? 'active' : ''}`}>
                             <s.icon size={16} /> {s.label}
                         </NavLink>
                     ))}

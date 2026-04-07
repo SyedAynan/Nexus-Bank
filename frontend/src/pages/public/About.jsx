@@ -14,7 +14,7 @@ export default function About() {
             <div style={{ maxWidth: 800, margin: '0 auto' }}>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
                     <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--nx-text)', marginBottom: 8, fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}>
-                        ABOUT <span className="nx-cyan nx-text-glow-cyan">NEXA</span>
+                        ABOUT <span className="nx-cyan nx-text-glow-cyan">NEXUS</span>
                     </h1>
                     <p style={{ color: 'var(--nx-text-muted)', fontSize: 15, marginBottom: 40, maxWidth: 560 }}>
                         An enterprise digital banking platform built for trust, compliance, and intelligent financial management.

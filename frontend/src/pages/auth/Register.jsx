@@ -112,7 +112,7 @@ export default function Register() {
                         <UserPlus size={22} color="#34d399" style={{ filter: 'drop-shadow(0 0 8px rgba(52,211,153,0.5))' }} />
                     </motion.div>
                     <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--nx-text)', fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}>
-                        JOIN <span className="nx-cyan nx-text-glow-cyan">NEXA</span>
+                        JOIN <span className="nx-cyan nx-text-glow-cyan">NEXUS</span>
                     </h1>
                     <p style={{ fontSize: 13, color: 'var(--nx-text-muted)', marginTop: 5 }}>Create your account</p>
                 </div>

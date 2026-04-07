@@ -113,7 +113,7 @@ export default function Landing() {
                         AI-Powered • Enterprise Security • Real-Time Analytics
                     </p>
                     <p style={{ fontSize: 14, color: 'var(--nx-text-dim)', maxWidth: 520, margin: '0 auto 2.5rem', lineHeight: 1.7 }}>
-                        NEXA is an enterprise digital banking platform built for security, compliance, and intelligent financial management.
+                        NEXUS is an AI-powered financial intelligence platform built for security, compliance, and intelligent financial management.
                     </p>
 
                     {/* CTAs */}
@@ -294,7 +294,7 @@ export default function Landing() {
                         fontFamily: 'var(--font-display)', letterSpacing: '0.06em',
                     }}>READY TO BEGIN?</h2>
                     <p style={{ fontSize: 14, color: 'var(--nx-text-muted)', marginBottom: 28, maxWidth: 400, margin: '0 auto 28px' }}>
-                        Join thousands of businesses banking with NEXA. Start your journey today.
+                        Join thousands of businesses banking with NEXUS. Start your journey today.
                     </p>
                     <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
                         <Link to="/register" className="nx-btn nx-btn-primary" style={{ padding: '0.85rem 2.5rem', fontSize: 14 }}>

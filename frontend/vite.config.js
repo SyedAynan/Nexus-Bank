@@ -10,9 +10,9 @@ export default defineConfig({
       usePolling: true,
     },
     proxy: {
-      '/api': 'http://web:8000',
+      '/api': 'http://localhost:8000',
       '/ws': {
-        target: 'ws://web:8000',
+        target: 'ws://localhost:8000',
         ws: true,
       },
     },

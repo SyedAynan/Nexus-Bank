@@ -46,12 +46,35 @@ const Transactions = lazy(() => import('./pages/customer/Transactions'))
 const Loans = lazy(() => import('./pages/customer/Loans'))
 const Profile = lazy(() => import('./pages/customer/Profile'))
 
+// ─── NEXUS Upgrade: New Pages ───
+const Markets = lazy(() => import('./pages/customer/Markets'))
+const Globe = lazy(() => import('./pages/customer/Globe'))
+const Portfolio = lazy(() => import('./pages/customer/Portfolio'))
+const AIAssistant = lazy(() => import('./pages/customer/AIAssistant'))
+const FirstTransaction = lazy(() => import('./pages/customer/FirstTransaction'))
+const TransactionLifecycle = lazy(() => import('./pages/customer/TransactionLifecycle'))
+const BillPay = lazy(() => import('./pages/customer/BillPay'))
+const MultiCurrency = lazy(() => import('./pages/customer/MultiCurrency'))
+const Investments = lazy(() => import('./pages/customer/Investments'))
+const Analytics = lazy(() => import('./pages/customer/Analytics'))
+const Notifications = lazy(() => import('./pages/customer/Notifications'))
+const Goals = lazy(() => import('./pages/customer/Goals'))
+const Cards = lazy(() => import('./pages/customer/Cards'))
+
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const UserManagement = lazy(() => import('./pages/admin/UserManagement'))
 const AuditLogs = lazy(() => import('./pages/admin/AuditLogs'))
 const FraudMonitoring = lazy(() => import('./pages/admin/FraudMonitoring'))
 const Compliance = lazy(() => import('./pages/admin/Compliance'))
 const SystemSettings = lazy(() => import('./pages/admin/SystemSettings'))
+const DSAShowcase = lazy(() => import('./pages/admin/DSAShowcase'))
+const DevelopmentRoadmap = lazy(() => import('./pages/admin/DevelopmentRoadmap'))
+const BackupManager = lazy(() => import('./pages/admin/BackupManager'))
+const FeatureFlags = lazy(() => import('./pages/admin/FeatureFlags'))
+const Monitoring = lazy(() => import('./pages/admin/Monitoring'))
+const OpenBanking = lazy(() => import('./pages/admin/OpenBanking'))
+const RateLimiting = lazy(() => import('./pages/admin/RateLimiting'))
+const ProjectDescription = lazy(() => import('./pages/admin/ProjectDescription'))
 
 function ProtectedRoute({ children }) {
     const { isAuthenticated } = useAuth()
@@ -89,6 +112,20 @@ export default function App() {
                     <Route path="/transactions" element={<Transactions />} />
                     <Route path="/loans" element={<Loans />} />
                     <Route path="/profile" element={<Profile />} />
+                    {/* NEXUS Upgrade: New Routes */}
+                    <Route path="/markets" element={<Markets />} />
+                    <Route path="/globe" element={<Globe />} />
+                    <Route path="/portfolio" element={<Portfolio />} />
+                    <Route path="/ai" element={<AIAssistant />} />
+                    <Route path="/first-transaction" element={<FirstTransaction />} />
+                    <Route path="/transaction-lifecycle" element={<TransactionLifecycle />} />
+                    <Route path="/bill-pay" element={<BillPay />} />
+                    <Route path="/multi-currency" element={<MultiCurrency />} />
+                    <Route path="/investments" element={<Investments />} />
+                    <Route path="/analytics" element={<Analytics />} />
+                    <Route path="/notifications" element={<Notifications />} />
+                    <Route path="/goals" element={<Goals />} />
+                    <Route path="/cards" element={<Cards />} />
                 </Route>
 
                 {/* Admin (Admin Only) */}
@@ -100,6 +137,15 @@ export default function App() {
                     <Route path="/admin/compliance" element={<Compliance />} />
                     <Route path="/admin/logs" element={<AuditLogs />} />
                     <Route path="/admin/settings" element={<SystemSettings />} />
+                    {/* NEXUS Upgrade: Extended Admin Routes */}
+                    <Route path="/admin/dsa" element={<DSAShowcase />} />
+                    <Route path="/admin/roadmap" element={<DevelopmentRoadmap />} />
+                    <Route path="/admin/backups" element={<BackupManager />} />
+                    <Route path="/admin/features" element={<FeatureFlags />} />
+                    <Route path="/admin/monitoring" element={<Monitoring />} />
+                    <Route path="/admin/open-banking" element={<OpenBanking />} />
+                    <Route path="/admin/rate-limiting" element={<RateLimiting />} />
+                    <Route path="/admin/project" element={<ProjectDescription />} />
                 </Route>
 
                 {/* Catch-all */}

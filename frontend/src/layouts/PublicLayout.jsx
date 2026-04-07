@@ -34,7 +34,7 @@ export default function PublicLayout() {
                         >
                             <span style={{ color: '#22d3ee', fontWeight: 800, fontSize: 13, fontFamily: 'var(--font-display)' }}>NX</span>
                         </motion.div>
-                        <span style={{ color: 'var(--nx-text)', fontWeight: 700, fontSize: 16, letterSpacing: '0.14em', fontFamily: 'var(--font-display)' }}>NEXA</span>
+                        <span style={{ color: 'var(--nx-text)', fontWeight: 700, fontSize: 16, letterSpacing: '0.14em', fontFamily: 'var(--font-display)' }}>NEXUS</span>
                     </Link>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
@@ -72,7 +72,7 @@ export default function PublicLayout() {
                 background: 'rgba(5, 8, 22, 0.5)',
             }}>
                 <p style={{ fontSize: 12, color: 'var(--nx-text-dim)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
-                    © 2026 NEXA — Beyond Fintech. All rights reserved.
+                    © 2026 NEXUS — The Future of Intelligent Finance. All rights reserved.
                 </p>
             </footer>
         </div>

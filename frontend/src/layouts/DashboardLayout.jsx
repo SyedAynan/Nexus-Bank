@@ -2,15 +2,17 @@ import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BarChart3, Wallet, CreditCard, ScrollText, TrendingUp, User, Shield, LogOut, Bell, Sun, Moon, ShieldCheck, AlertTriangle, DollarSign, CheckCircle, X } from 'lucide-react'
+import { BarChart3, Wallet, CreditCard, ScrollText, TrendingUp, User, Shield, LogOut, Bell, Sun, Moon, ShieldCheck, AlertTriangle, DollarSign, CheckCircle, X, Activity, Globe, Briefcase, Sparkles, Zap, Receipt, Coins, PieChart, Target } from 'lucide-react'
+import NexusCopilot from '../components/NexusCopilot'
 
 /* ─── Demo Notifications ─── */
 const DEMO_NOTIFICATIONS = [
-    { id: 1, type: 'security', title: 'Login from new device', desc: 'Windows · Chrome · New York, US', time: '2m ago', unread: true, icon: ShieldCheck, color: '#22d3ee' },
-    { id: 2, type: 'transaction', title: 'Deposit received', desc: '+$3,200.00 — Freelance payment', time: '15m ago', unread: true, icon: DollarSign, color: '#34d399' },
-    { id: 3, type: 'alert', title: 'Unusual activity detected', desc: 'Transaction flagged for review', time: '1h ago', unread: true, icon: AlertTriangle, color: '#fbbf24' },
-    { id: 4, type: 'transaction', title: 'Transfer completed', desc: '$500.00 to Savings account', time: '3h ago', unread: false, icon: CheckCircle, color: '#a78bfa' },
-    { id: 5, type: 'security', title: 'MFA verification successful', desc: 'OTP verified for login', time: '5h ago', unread: false, icon: Shield, color: '#22d3ee' },
+    { id: 1, type: 'ai', title: 'AI Insight: Portfolio rebalance', desc: 'Tech allocation exceeds target by 9%', time: '1m ago', unread: true, icon: Sparkles, color: '#a78bfa' },
+    { id: 2, type: 'security', title: 'Login from new device', desc: 'Windows · Chrome · New York, US', time: '2m ago', unread: true, icon: ShieldCheck, color: '#22d3ee' },
+    { id: 3, type: 'transaction', title: 'Deposit received', desc: '+$3,200.00 — Freelance payment', time: '15m ago', unread: true, icon: DollarSign, color: '#34d399' },
+    { id: 4, type: 'market', title: 'Market Alert: NVDA +1.8%', desc: 'NVIDIA surged on AI demand forecast', time: '30m ago', unread: true, icon: TrendingUp, color: '#22d3ee' },
+    { id: 5, type: 'alert', title: 'Unusual activity detected', desc: 'Transaction flagged for review', time: '1h ago', unread: false, icon: AlertTriangle, color: '#fbbf24' },
+    { id: 6, type: 'transaction', title: 'Transfer completed', desc: '$500.00 to Savings account', time: '3h ago', unread: false, icon: CheckCircle, color: '#a78bfa' },
 ]
 
 /* ─── Notification Center ─── */
@@ -133,13 +135,31 @@ export default function DashboardLayout() {
 
     const handleLogout = () => { logout(); navigate('/') }
 
-    const navItems = [
+    const bankingNav = [
         { to: '/dashboard', icon: BarChart3, label: 'Dashboard' },
         { to: '/accounts', icon: Wallet, label: 'Accounts' },
         { to: '/transfer', icon: CreditCard, label: 'Payments' },
+        { to: '/cards', icon: CreditCard, label: 'Cards' },
+        { to: '/first-transaction', icon: Zap, label: 'Quick TX' },
         { to: '/transactions', icon: ScrollText, label: 'Transactions' },
         { to: '/loans', icon: TrendingUp, label: 'Credit' },
         { to: '/profile', icon: User, label: 'Profile' },
+    ]
+
+    const intelligenceNav = [
+        { to: '/markets', icon: Activity, label: 'Markets' },
+        { to: '/portfolio', icon: Briefcase, label: 'Portfolio' },
+        { to: '/investments', icon: PieChart, label: 'Investments' },
+        { to: '/analytics', icon: BarChart3, label: 'Analytics' },
+        { to: '/globe', icon: Globe, label: 'Global Finance' },
+        { to: '/ai', icon: Sparkles, label: 'AI Assistant' },
+    ]
+
+    const servicesNav = [
+        { to: '/bill-pay', icon: Receipt, label: 'Bill Pay' },
+        { to: '/multi-currency', icon: Coins, label: 'Multi-Currency' },
+        { to: '/goals', icon: Target, label: 'Savings Goals' },
+        { to: '/notifications', icon: Bell, label: 'Notifications' },
     ]
 
     return (
@@ -162,10 +182,10 @@ export default function DashboardLayout() {
                                 boxShadow: '0 0 12px rgba(34,211,238,0.2)',
                             }}
                         >
-                            <span style={{ color: '#22d3ee', fontWeight: 800, fontSize: 12, fontFamily: 'var(--font-display)' }}>NX</span>
+                            <span style={{ color: '#22d3ee', fontWeight: 800, fontSize: 11, fontFamily: 'var(--font-display)' }}>NX</span>
                         </motion.div>
                         <div>
-                            <span style={{ color: 'var(--nx-text)', fontWeight: 700, fontSize: 15, letterSpacing: '0.12em', fontFamily: 'var(--font-display)' }}>NEXA</span>
+                            <span style={{ color: 'var(--nx-text)', fontWeight: 700, fontSize: 15, letterSpacing: '0.12em', fontFamily: 'var(--font-display)' }}>NEXUS</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <span className="nx-live-dot" />
                                 <span style={{ fontSize: 10, color: 'var(--nx-cyan)' }}>Online</span>
@@ -174,10 +194,30 @@ export default function DashboardLayout() {
                     </Link>
                 </div>
 
-                {/* Nav */}
+                {/* Banking Nav */}
                 <div className="nx-sidebar-section">Banking</div>
-                <nav style={{ flex: 1 }}>
-                    {navItems.map(item => (
+                <nav>
+                    {bankingNav.map(item => (
+                        <NavLink key={item.to} to={item.to} className={({ isActive }) => `nx-sidebar-link ${isActive ? 'active' : ''}`}>
+                            <item.icon size={16} /> {item.label}
+                        </NavLink>
+                    ))}
+                </nav>
+
+                {/* Intelligence Nav — NEXUS Upgrade */}
+                <div className="nx-sidebar-section" style={{ marginTop: 8 }}>Intelligence</div>
+                <nav>
+                    {intelligenceNav.map(item => (
+                        <NavLink key={item.to} to={item.to} className={({ isActive }) => `nx-sidebar-link ${isActive ? 'active' : ''}`}>
+                            <item.icon size={16} /> {item.label}
+                        </NavLink>
+                    ))}
+                </nav>
+
+                {/* Services Nav */}
+                <div className="nx-sidebar-section" style={{ marginTop: 8 }}>Services</div>
+                <nav>
+                    {servicesNav.map(item => (
                         <NavLink key={item.to} to={item.to} className={({ isActive }) => `nx-sidebar-link ${isActive ? 'active' : ''}`}>
                             <item.icon size={16} /> {item.label}
                         </NavLink>
@@ -228,6 +268,9 @@ export default function DashboardLayout() {
                     background: 'rgba(10, 15, 46, 0.3)',
                     backdropFilter: 'blur(8px)',
                 }}>
+                    <div className="nx-live-indicator" style={{ marginRight: 'auto' }}>
+                        <div className="dot" /> NEXUS Intelligence Active
+                    </div>
                     <ThemeToggle />
                     <NotificationCenter />
                 </div>
@@ -235,6 +278,9 @@ export default function DashboardLayout() {
                     <Outlet />
                 </div>
             </main>
+
+            {/* NEXUS Copilot — Floating AI Assistant */}
+            <NexusCopilot />
         </div>
     )
 }

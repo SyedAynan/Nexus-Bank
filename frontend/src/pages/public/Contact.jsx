@@ -10,7 +10,7 @@ export default function Contact() {
         <div className="animate-in" style={{ padding: '5rem 1.5rem' }}>
             <motion.div style={{ maxWidth: 480, margin: '0 auto' }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
                 <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--nx-text)', marginBottom: 8, fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}>CONTACT US</h1>
-                <p style={{ color: 'var(--nx-text-muted)', fontSize: 14, marginBottom: 32 }}>Get in touch with the NEXA team.</p>
+                <p style={{ color: 'var(--nx-text-muted)', fontSize: 14, marginBottom: 32 }}>Get in touch with the NEXUS team.</p>
 
                 {submitted && <div className="nx-alert nx-alert-success" style={{ marginBottom: 16 }}>✓ Message sent successfully</div>}
 

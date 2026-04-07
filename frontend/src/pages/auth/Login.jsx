@@ -161,7 +161,7 @@ export default function Login() {
                         <span style={{ color: '#22d3ee', fontWeight: 800, fontSize: 18, fontFamily: 'var(--font-display)' }}>NX</span>
                     </motion.div>
                     <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--nx-text)', fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}>
-                        WELCOME TO <span className="nx-cyan nx-text-glow-cyan">NEXA</span>
+                        WELCOME TO <span className="nx-cyan nx-text-glow-cyan">NEXUS</span>
                     </h1>
                     <p style={{ fontSize: 13, color: 'var(--nx-text-muted)', marginTop: 5 }}>Sign in to your account</p>
                 </div>

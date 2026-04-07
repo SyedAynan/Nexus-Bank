@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api'
 import { motion } from 'framer-motion'
-import { Shield, CreditCard, BarChart3, Users, Database, Zap, TrendingUp, Activity, Lock, Eye, Star } from 'lucide-react'
+import { Shield, CreditCard, BarChart3, Users, Database, Zap, TrendingUp, Activity, Lock, Eye, Star, Sparkles, AlertTriangle, ArrowRight, Globe, Target } from 'lucide-react'
 import { AreaChart, Area, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts'
 
 /* ─── Particles Background ─── */
@@ -38,42 +38,6 @@ function ParticlesField() {
                 />
             ))}
         </div>
-    )
-}
-
-/* ─── SVG Connecting Lines ─── */
-function ConnectingLines() {
-    return (
-        <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-            <defs>
-                <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="rgba(34,211,238,0.0)" />
-                    <stop offset="50%" stopColor="rgba(34,211,238,0.4)" />
-                    <stop offset="100%" stopColor="rgba(34,211,238,0.0)" />
-                </linearGradient>
-                <linearGradient id="violetGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="rgba(167,139,250,0.0)" />
-                    <stop offset="50%" stopColor="rgba(167,139,250,0.4)" />
-                    <stop offset="100%" stopColor="rgba(167,139,250,0.0)" />
-                </linearGradient>
-                <filter id="lineGlow">
-                    <feGaussianBlur stdDeviation="2" result="blur" />
-                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                </filter>
-            </defs>
-            {/* Top-left to center */}
-            <motion.path d="M 80 60 Q 200 100 320 140" stroke="url(#cyanGrad)" strokeWidth="1.5" fill="none" filter="url(#lineGlow)"
-                initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 2, ease: 'easeInOut' }} />
-            {/* Top-right to center */}
-            <motion.path d="M 620 60 Q 500 100 380 140" stroke="url(#violetGrad)" strokeWidth="1.5" fill="none" filter="url(#lineGlow)"
-                initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 2, delay: 0.3, ease: 'easeInOut' }} />
-            {/* Bottom-left to center */}
-            <motion.path d="M 80 340 Q 200 280 320 220" stroke="url(#cyanGrad)" strokeWidth="1.5" fill="none" filter="url(#lineGlow)"
-                initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 2, delay: 0.6, ease: 'easeInOut' }} />
-            {/* Bottom-right to center */}
-            <motion.path d="M 620 340 Q 500 280 380 220" stroke="url(#violetGrad)" strokeWidth="1.5" fill="none" filter="url(#lineGlow)"
-                initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 2, delay: 0.9, ease: 'easeInOut' }} />
-        </svg>
     )
 }
 
@@ -204,7 +168,7 @@ export default function Dashboard() {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}
                 >
                     <div>
                         <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--nx-text)', fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}>
@@ -221,6 +185,55 @@ export default function Dashboard() {
                     </Link>
                 </motion.div>
 
+                {/* ─── AI Daily Summary (NEW) ─── */}
+                <motion.div className="nx-ai-summary" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }}
+                    style={{ marginBottom: 20 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{
+                                width: 36, height: 36, borderRadius: 10,
+                                background: 'linear-gradient(135deg, rgba(167,139,250,0.2), rgba(34,211,238,0.15))',
+                                border: '1px solid rgba(167,139,250,0.3)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                                <Sparkles size={18} color="#a78bfa" />
+                            </div>
+                            <div>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--nx-text)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
+                                    NEXUS AI DAILY BRIEFING
+                                </div>
+                                <div style={{ fontSize: 11, color: 'var(--nx-text-dim)', marginTop: 2 }}>
+                                    Personalized insights generated just now
+                                </div>
+                            </div>
+                        </div>
+                        <Link to="/ai" style={{ fontSize: 11, color: 'var(--nx-cyan)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            View full analysis <ArrowRight size={12} />
+                        </Link>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 16 }}>
+                        {[
+                            { icon: TrendingUp, text: 'Your portfolio is up 4.2% this month. Savings rate: 33% — above recommended 20%.', color: '#34d399', label: 'Performance' },
+                            { icon: AlertTriangle, text: 'Tech sector allocation at 64% — consider diversifying. NVDA concentration risk elevated.', color: '#fbbf24', label: 'Risk Alert' },
+                            { icon: Globe, text: 'Asia-Pacific markets showing strong momentum. Capital flows increased 8% this quarter.', color: '#22d3ee', label: 'Market Intel' },
+                        ].map((item, i) => (
+                            <div key={i} style={{ display: 'flex', gap: 10 }}>
+                                <div style={{
+                                    width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                                    background: `${item.color}12`, border: `1px solid ${item.color}20`,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}>
+                                    <item.icon size={14} color={item.color} />
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: 10, fontWeight: 700, color: item.color, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>{item.label}</div>
+                                    <div style={{ fontSize: 11, color: 'var(--nx-text-muted)', lineHeight: 1.5 }}>{item.text}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
+
                 {/* ─── KPI Cards ─── */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
                     {[
@@ -234,7 +247,7 @@ export default function Dashboard() {
                             className={`nx-kpi ${k.accent}`}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: i * 0.1 }}
+                            transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                                 <div style={{ fontSize: 11, color: 'var(--nx-text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, fontFamily: 'var(--font-display)' }}>{k.label}</div>
@@ -269,7 +282,7 @@ export default function Dashboard() {
                             >
                                 <div style={{ textAlign: 'center' }}>
                                     <Database size={28} color="#22d3ee" style={{ filter: 'drop-shadow(0 0 10px rgba(34,211,238,0.6))' }} />
-                                    <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--nx-cyan)', marginTop: 4, fontFamily: 'var(--font-display)', letterSpacing: '0.15em' }}>NEXA CORE</div>
+                                    <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--nx-cyan)', marginTop: 4, fontFamily: 'var(--font-display)', letterSpacing: '0.15em' }}>NEXUS CORE</div>
                                 </div>
                             </motion.div>
                             <span className="nx-badge nx-badge-cyan" style={{ fontSize: 9 }}>
@@ -289,7 +302,10 @@ export default function Dashboard() {
                             <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--nx-text)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
                                 CASH FLOW — 7 DAYS
                             </h3>
-                            <span className="nx-badge nx-badge-cyan">Live</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span className="nx-badge nx-badge-cyan">Live</span>
+                                <div className="nx-live-indicator"><div className="dot" /> Auto-refresh</div>
+                            </div>
                         </div>
                         <ResponsiveContainer width="100%" height={200}>
                             <AreaChart data={last7}>

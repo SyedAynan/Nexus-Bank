@@ -43,7 +43,7 @@ const sCard = {
 
 export default function AIAssistant() {
     const [messages, setMessages] = useState([
-        { id: 1, role: 'assistant', text: '👋 Hi! I\'m **NEXA AI**, your intelligent banking assistant. I can help you with balance checks, transfers, fraud monitoring, loan applications, and much more.\n\nHow can I help you today?', time: new Date() }
+        { id: 1, role: 'assistant', text: '👋 Hi! I\'m **NEXUS AI**, your intelligent banking assistant. I can help you with balance checks, transfers, fraud monitoring, loan applications, and much more.\n\nHow can I help you today?', time: new Date() }
     ])
     const [input, setInput] = useState('')
     const [typing, setTyping] = useState(false)
@@ -90,7 +90,7 @@ export default function AIAssistant() {
                     AI ASSISTANT
                 </h1>
                 <p style={{ fontSize: 13, color: 'var(--nx-text-muted)', marginTop: 6 }}>
-                    Your intelligent banking copilot — powered by NEXA intelligence engine
+                    Your intelligent banking copilot — powered by NEXUS intelligence engine
                 </p>
             </div>
 
@@ -165,7 +165,7 @@ export default function AIAssistant() {
                             value={input}
                             onChange={e => setInput(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && send(input)}
-                            placeholder="Ask NEXA AI anything..."
+                            placeholder="Ask NEXUS AI anything..."
                             style={{
                                 flex: 1, background: 'var(--nx-bg-2)', border: '1px solid var(--nx-border)',
                                 borderRadius: 8, padding: '10px 14px', color: 'var(--nx-text)',
@@ -241,10 +241,10 @@ export default function AIAssistant() {
 
                     <div style={{ ...sCard, padding: '16px', background: '#a78bfa08', borderColor: '#a78bfa22' }}>
                         <div style={{ fontSize: 11, color: '#a78bfa', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                            <Sparkles size={12} /> NEXA AI v3.0
+                            <Sparkles size={12} /> NEXUS AI v4.0
                         </div>
                         <div style={{ fontSize: 10, color: 'var(--nx-text-dim)', lineHeight: 1.5 }}>
-                            Powered by NEXA's intelligence engine with fraud detection, financial analytics, and natural language understanding.
+                            Powered by NEXUS intelligence engine with fraud detection, financial analytics, and natural language understanding.
                         </div>
                     </div>
                 </div>
