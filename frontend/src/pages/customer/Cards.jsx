@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CreditCard, Lock, Unlock, Plus, Eye, EyeOff, Shield, Snowflake, AlertTriangle, Copy, Check, Zap, ShoppingBag, Globe, Wifi, DollarSign } from 'lucide-react'
+import { CreditCard, Lock, Unlock, Plus, Eye, EyeOff, Shield, Snowflake, AlertTriangle, Copy, Check, Zap, ShoppingBag, Globe, Wifi, DollarSign, Gift, TrendingUp, Star } from 'lucide-react'
 
 /* ═══════ Cards Data ═══════ */
 const INITIAL_CARDS = [
@@ -44,6 +44,13 @@ const LIMIT_CATEGORIES = [
     { name: 'International', icon: Globe, limit: 5000, spent: 2592, color: '#22d3ee' },
     { name: 'Contactless', icon: Wifi, limit: 500, spent: 187, color: '#34d399' },
     { name: 'Daily Max', icon: DollarSign, limit: 3000, spent: 1411, color: '#fbbf24' },
+]
+
+const REWARDS_DATA = [
+    { label: 'Cash Back Earned', value: '$342.50', color: '#34d399', icon: DollarSign },
+    { label: 'Points Balance', value: '24,850', color: '#a78bfa', icon: Star },
+    { label: 'Tier Status', value: 'Platinum', color: '#22d3ee', icon: Shield },
+    { label: 'Referral Bonus', value: '$75.00', color: '#fbbf24', icon: Gift },
 ]
 
 /* ═══════ 3D Card Component ═══════ */
@@ -185,7 +192,7 @@ export default function Cards() {
         <div className="animate-in">
             {/* Header */}
             <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
                 <div>
                     <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--nx-text)', fontFamily: 'var(--font-display)', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 10 }}>
                         <CreditCard size={26} color="#22d3ee" /> CARD MANAGER
@@ -199,7 +206,20 @@ export default function Cards() {
                 </motion.button>
             </motion.div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 20 }}>
+            {/* Rewards Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
+                {REWARDS_DATA.map((r, i) => (
+                    <motion.div key={i} className="nx-kpi cyan" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                            <div style={{ fontSize: 10, color: 'var(--nx-text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--font-display)' }}>{r.label}</div>
+                            <r.icon size={14} color={r.color} style={{ opacity: 0.6 }} />
+                        </div>
+                        <div className="nx-mono" style={{ fontSize: 18, fontWeight: 700, color: r.color, marginTop: 4 }}>{r.value}</div>
+                    </motion.div>
+                ))}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
                 {/* Left: Card + Controls */}
                 <div>
                     {/* Card Selector Tabs */}

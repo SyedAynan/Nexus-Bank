@@ -1,9 +1,11 @@
 import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BarChart3, Wallet, CreditCard, ScrollText, TrendingUp, User, Shield, LogOut, Bell, Sun, Moon, ShieldCheck, AlertTriangle, DollarSign, CheckCircle, X, Activity, Globe, Briefcase, Sparkles, Zap, Receipt, Coins, PieChart, Target } from 'lucide-react'
+import { BarChart3, Wallet, CreditCard, ScrollText, TrendingUp, User, Shield, LogOut, Bell, Sun, Moon, ShieldCheck, AlertTriangle, DollarSign, CheckCircle, X, Activity, Globe, Briefcase, Sparkles, Zap, Receipt, Coins, PieChart, Target, Menu } from 'lucide-react'
 import NexusCopilot from '../components/NexusCopilot'
+import { getLiveIndices } from '../data/simulationEngine'
 
 /* ─── Demo Notifications ─── */
 const DEMO_NOTIFICATIONS = [
@@ -14,6 +16,34 @@ const DEMO_NOTIFICATIONS = [
     { id: 5, type: 'alert', title: 'Unusual activity detected', desc: 'Transaction flagged for review', time: '1h ago', unread: false, icon: AlertTriangle, color: '#fbbf24' },
     { id: 6, type: 'transaction', title: 'Transfer completed', desc: '$500.00 to Savings account', time: '3h ago', unread: false, icon: CheckCircle, color: '#a78bfa' },
 ]
+
+/* ─── Global Stock Ticker ─── */
+function GlobalTicker() {
+    const [indices, setIndices] = useState(getLiveIndices())
+
+    useEffect(() => {
+        const intv = setInterval(() => setIndices(getLiveIndices()), 5000)
+        return () => clearInterval(intv)
+    }, [])
+
+    const doubled = [...indices, ...indices]
+
+    return (
+        <div className="nx-global-ticker">
+            <div className="nx-ticker-track" style={{ display: 'flex', gap: 32, animation: 'ticker-scroll 45s linear infinite', width: 'max-content' }}>
+                {doubled.map((idx, i) => (
+                    <div key={i} className="nx-ticker-item" style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', fontSize: 11 }}>
+                        <span style={{ fontWeight: 600, color: 'var(--nx-text)', fontFamily: 'var(--font-mono)' }}>{idx.symbol}</span>
+                        <span style={{ color: 'var(--nx-text-muted)', fontFamily: 'var(--font-mono)' }}>{idx.value}</span>
+                        <span style={{ color: idx.up ? 'var(--nx-emerald)' : 'var(--nx-rose)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>
+                            {idx.change}
+                        </span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
 
 /* ─── Notification Center ─── */
 function NotificationCenter() {
@@ -32,34 +62,16 @@ function NotificationCenter() {
 
     return (
         <div ref={ref} style={{ position: 'relative' }}>
-            <motion.div
-                className="nx-notif-bell"
-                onClick={() => setOpen(!open)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-            >
+            <motion.div className="nx-notif-bell" onClick={() => setOpen(!open)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Bell size={16} color="var(--nx-text-muted)" />
                 {unread > 0 && <span className="nx-notif-badge">{unread}</span>}
             </motion.div>
-
             <AnimatePresence>
                 {open && (
-                    <motion.div
-                        className="nx-notif-dropdown"
-                        initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                        transition={{ duration: 0.2 }}
-                    >
+                    <motion.div className="nx-notif-dropdown" initial={{ opacity: 0, y: -8, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.95 }} transition={{ duration: 0.2 }}>
                         <div className="nx-notif-header">
-                            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--nx-text)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
-                                NOTIFICATIONS
-                            </span>
-                            {unread > 0 && (
-                                <button onClick={markAllRead} style={{ background: 'none', border: 'none', color: 'var(--nx-cyan)', fontSize: 11, cursor: 'pointer', fontWeight: 500 }}>
-                                    Mark all read
-                                </button>
-                            )}
+                            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--nx-text)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>NOTIFICATIONS</span>
+                            {unread > 0 && <button onClick={markAllRead} style={{ background: 'none', border: 'none', color: 'var(--nx-cyan)', fontSize: 11, cursor: 'pointer' }}>Mark all read</button>}
                         </div>
                         <div className="nx-notif-list">
                             {items.map(n => (
@@ -82,19 +94,12 @@ function NotificationCenter() {
     )
 }
 
-/* ─── Theme Toggle ─── */
+/* ─── Theme Toggle (real) ─── */
 function ThemeToggle() {
-    const [dark, setDark] = useState(true)
-
+    const { isDark, toggleTheme } = useTheme()
     return (
-        <motion.div
-            className="nx-theme-toggle"
-            onClick={() => setDark(!dark)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-            {dark ? <Moon size={15} /> : <Sun size={15} color="#fbbf24" />}
+        <motion.div className="nx-theme-toggle" onClick={toggleTheme} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
+            {isDark ? <Moon size={15} /> : <Sun size={15} color="#d97706" />}
         </motion.div>
     )
 }
@@ -119,6 +124,7 @@ export default function DashboardLayout() {
     const { user, logout, isAdmin } = useAuth()
     const navigate = useNavigate()
     const [wsNotifs, setWsNotifs] = useState([])
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const wsRef = useRef(null)
 
     useEffect(() => {
@@ -162,23 +168,31 @@ export default function DashboardLayout() {
         { to: '/notifications', icon: Bell, label: 'Notifications' },
     ]
 
+    const closeMobile = () => setMobileMenuOpen(false)
+
     return (
         <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
             <div className="nx-nebula-bg" />
             <LiveToast notifications={wsNotifs} />
 
+            {/* Mobile Menu Button */}
+            <button className="nx-mobile-toggle" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+            {/* Mobile Backdrop */}
+            <div className={`nx-sidebar-backdrop ${mobileMenuOpen ? 'open' : ''}`} onClick={closeMobile} />
+
             {/* Sidebar */}
-            <aside className="nx-sidebar" style={{ position: 'relative', zIndex: 2 }}>
+            <aside className={`nx-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{ position: 'relative', zIndex: 2 }}>
                 {/* Logo */}
                 <div style={{ padding: '0 1.5rem 1.5rem', borderBottom: '1px solid var(--nx-border)' }}>
-                    <Link to="/dashboard" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Link to="/dashboard" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }} onClick={closeMobile}>
                         <motion.div
                             whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(34,211,238,0.4)' }}
                             style={{
                                 width: 34, height: 34, borderRadius: 10,
                                 background: 'radial-gradient(circle, rgba(34,211,238,0.3), rgba(15,23,62,0.8))',
-                                border: '1px solid rgba(34,211,238,0.4)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                border: '1px solid rgba(34,211,238,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 boxShadow: '0 0 12px rgba(34,211,238,0.2)',
                             }}
                         >
@@ -194,56 +208,51 @@ export default function DashboardLayout() {
                     </Link>
                 </div>
 
-                {/* Banking Nav */}
-                <div className="nx-sidebar-section">Banking</div>
-                <nav>
-                    {bankingNav.map(item => (
-                        <NavLink key={item.to} to={item.to} className={({ isActive }) => `nx-sidebar-link ${isActive ? 'active' : ''}`}>
-                            <item.icon size={16} /> {item.label}
-                        </NavLink>
-                    ))}
-                </nav>
-
-                {/* Intelligence Nav — NEXUS Upgrade */}
-                <div className="nx-sidebar-section" style={{ marginTop: 8 }}>Intelligence</div>
-                <nav>
-                    {intelligenceNav.map(item => (
-                        <NavLink key={item.to} to={item.to} className={({ isActive }) => `nx-sidebar-link ${isActive ? 'active' : ''}`}>
-                            <item.icon size={16} /> {item.label}
-                        </NavLink>
-                    ))}
-                </nav>
-
-                {/* Services Nav */}
-                <div className="nx-sidebar-section" style={{ marginTop: 8 }}>Services</div>
-                <nav>
-                    {servicesNav.map(item => (
-                        <NavLink key={item.to} to={item.to} className={({ isActive }) => `nx-sidebar-link ${isActive ? 'active' : ''}`}>
-                            <item.icon size={16} /> {item.label}
-                        </NavLink>
-                    ))}
-                </nav>
-
-                {/* Admin Link */}
-                {isAdmin && (
-                    <div style={{ padding: '0.5rem 0' }}>
-                        <div className="nx-sidebar-section">Administration</div>
-                        <NavLink to="/admin" className="nx-sidebar-link" style={{ color: 'var(--nx-violet)' }}>
-                            <Shield size={16} /> Admin Console
-                        </NavLink>
-                    </div>
-                )}
+                {/* Nav Sections */}
+                <div style={{ flex: 1, overflowY: 'auto' }}>
+                    <div className="nx-sidebar-section">Banking</div>
+                    <nav>
+                        {bankingNav.map(item => (
+                            <NavLink key={item.to} to={item.to} onClick={closeMobile} className={({ isActive }) => `nx-sidebar-link ${isActive ? 'active' : ''}`}>
+                                <item.icon size={16} /> {item.label}
+                            </NavLink>
+                        ))}
+                    </nav>
+                    <div className="nx-sidebar-section" style={{ marginTop: 8 }}>Intelligence</div>
+                    <nav>
+                        {intelligenceNav.map(item => (
+                            <NavLink key={item.to} to={item.to} onClick={closeMobile} className={({ isActive }) => `nx-sidebar-link ${isActive ? 'active' : ''}`}>
+                                <item.icon size={16} /> {item.label}
+                            </NavLink>
+                        ))}
+                    </nav>
+                    <div className="nx-sidebar-section" style={{ marginTop: 8 }}>Services</div>
+                    <nav>
+                        {servicesNav.map(item => (
+                            <NavLink key={item.to} to={item.to} onClick={closeMobile} className={({ isActive }) => `nx-sidebar-link ${isActive ? 'active' : ''}`}>
+                                <item.icon size={16} /> {item.label}
+                            </NavLink>
+                        ))}
+                    </nav>
+                    {isAdmin && (
+                        <div style={{ padding: '0.5rem 0' }}>
+                            <div className="nx-sidebar-section">Administration</div>
+                            <NavLink to="/admin" onClick={closeMobile} className="nx-sidebar-link" style={{ color: 'var(--nx-violet)' }}>
+                                <Shield size={16} /> Admin Console
+                            </NavLink>
+                        </div>
+                    )}
+                </div>
 
                 {/* User Info */}
-                <div style={{ borderTop: '1px solid var(--nx-border)', padding: '1rem 1.5rem', marginTop: 'auto' }}>
+                <div style={{ borderTop: '1px solid var(--nx-border)', padding: '1rem 1.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                         <div style={{
                             width: 34, height: 34, borderRadius: '50%',
                             background: 'radial-gradient(circle, rgba(34,211,238,0.2), rgba(15,23,62,0.8))',
                             border: '1px solid rgba(34,211,238,0.3)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: 13, fontWeight: 700, color: 'var(--nx-cyan)',
-                            fontFamily: 'var(--font-display)',
+                            fontSize: 13, fontWeight: 700, color: 'var(--nx-cyan)', fontFamily: 'var(--font-display)',
                         }}>
                             {user?.username?.[0]?.toUpperCase()}
                         </div>
@@ -260,12 +269,15 @@ export default function DashboardLayout() {
 
             {/* Main Content */}
             <main style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column' }}>
-                {/* Top Bar with Notifications + Theme */}
+                {/* Stock Ticker */}
+                <GlobalTicker />
+
+                {/* Top Bar */}
                 <div style={{
                     display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8,
                     padding: '0.75rem 2rem',
                     borderBottom: '1px solid var(--nx-border)',
-                    background: 'rgba(10, 15, 46, 0.3)',
+                    background: 'var(--glass-bg)',
                     backdropFilter: 'blur(8px)',
                 }}>
                     <div className="nx-live-indicator" style={{ marginRight: 'auto' }}>
@@ -279,7 +291,6 @@ export default function DashboardLayout() {
                 </div>
             </main>
 
-            {/* NEXUS Copilot — Floating AI Assistant */}
             <NexusCopilot />
         </div>
     )
