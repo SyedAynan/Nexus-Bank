@@ -49,13 +49,10 @@ def _run_simulation_tick() -> dict | None:
         if tx_type == TransactionType.withdrawal and float(account.balance) < amount:
             tx_type = TransactionType.deposit
 
-        from decimal import Decimal
-        decimal_amount = Decimal(str(amount))
-
         if tx_type == TransactionType.deposit:
-            account.balance = account.balance + decimal_amount
+            account.balance = float(account.balance) + amount
         else:
-            account.balance = account.balance - decimal_amount
+            account.balance = float(account.balance) - amount
 
         tx = Transaction(
             account_id=account.id,
@@ -76,8 +73,7 @@ def _run_simulation_tick() -> dict | None:
         for loan in active_loans:
             acct = db.query(Account).get(loan.account_id)
             if acct and float(acct.balance) >= float(loan.emi_amount):
-                emi_decimal = Decimal(str(loan.emi_amount))
-                acct.balance = acct.balance - emi_decimal
+                acct.balance = float(acct.balance) - float(loan.emi_amount)
                 emi_tx = Transaction(
                     account_id=acct.id,
                     amount=float(loan.emi_amount),

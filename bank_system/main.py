@@ -135,6 +135,15 @@ ALLOWED_ORIGINS = [
     "http://localhost:8000",   # FastAPI self
     "http://127.0.0.1:8000",
 ]
+
+# Add production frontend URL from env var (e.g. Vercel deployment)
+_frontend_url = os.environ.get("FRONTEND_URL", "").strip()
+if _frontend_url:
+    ALLOWED_ORIGINS.append(_frontend_url)
+    # Also allow www subdomain variant
+    if _frontend_url.startswith("https://") and not _frontend_url.startswith("https://www."):
+        ALLOWED_ORIGINS.append(_frontend_url.replace("https://", "https://www."))
+
 if settings.environment == "development":
     ALLOWED_ORIGINS.extend([
         "http://localhost:4173",   # Vite preview

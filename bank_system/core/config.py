@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     # Simulation
     simulation_tick_seconds: int = 5
 
+    # Deployment
+    frontend_url: str = Field(default="")
+    demo_mode: bool = Field(default=False)
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

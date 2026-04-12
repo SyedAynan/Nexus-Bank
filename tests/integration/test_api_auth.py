@@ -3,6 +3,10 @@ NEXA API Integration Tests
 ============================
 Tests for auth endpoints, protected routes, and role enforcement
 using FastAPI TestClient.
+
+NOTE: The login flow is MFA-based:
+  1. POST /api/auth/login (form-encoded) → 202 MFA challenge
+  2. POST /api/auth/verify-otp (JSON)    → 200 with tokens
 """
 import os
 import pytest
@@ -12,6 +16,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite:///./test_api.db")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/1")
 os.environ.setdefault("SECRET_KEY", "test-secret-key-for-testing-only")
 os.environ.setdefault("ENVIRONMENT", "testing")
+os.environ.setdefault("DEMO_MODE", "true")
 
 from fastapi.testclient import TestClient
 from bank_system.main import app
@@ -40,6 +45,29 @@ def registered_user(client):
         "password": "TestPass123!",
     })
     return {"username": "testuser", "password": "TestPass123!", "response": resp}
+
+
+def _do_full_login(client, username, password, otp="000000"):
+    """Helper: Complete the full MFA login flow and return tokens."""
+    # Step 1: Login with form-encoded data (OAuth2PasswordRequestForm)
+    login_resp = client.post("/api/auth/login", data={
+        "username": username,
+        "password": password,
+    }, headers={"Content-Type": "application/x-www-form-urlencoded"})
+
+    if login_resp.status_code != 202:
+        return None, login_resp
+
+    # Step 2: Verify OTP
+    otp_resp = client.post("/api/auth/verify-otp", json={
+        "username": username,
+        "password": password,
+        "otp": otp,
+    })
+
+    if otp_resp.status_code == 200:
+        return otp_resp.json(), otp_resp
+    return None, otp_resp
 
 
 # ─── Health Check ───
@@ -73,40 +101,62 @@ class TestAuth:
         # Should reject duplicate
         assert resp.status_code in (400, 409, 422), f"Duplicate registration should fail: {resp.text}"
 
-    def test_login_success(self, client, registered_user):
-        resp = client.post("/api/auth/login", json={
+    def test_login_returns_mfa_challenge(self, client, registered_user):
+        """Login should return 202 MFA challenge (not 200 with tokens)."""
+        resp = client.post("/api/auth/login", data={
             "username": "testuser",
             "password": "TestPass123!",
-        })
-        assert resp.status_code == 200, f"Login failed: {resp.text}"
+        }, headers={"Content-Type": "application/x-www-form-urlencoded"})
+        assert resp.status_code == 202, f"Login should return 202 MFA: {resp.text}"
         data = resp.json()
-        assert "access_token" in data
+        assert data.get("mfa") is True
+
+    def test_full_login_with_otp(self, client, registered_user):
+        """Full MFA login flow: login → OTP → tokens."""
+        tokens, resp = _do_full_login(client, "testuser", "TestPass123!")
+        assert tokens is not None, f"Full login failed: {resp.text}"
+        assert "access_token" in tokens
+        assert "refresh_token" in tokens
 
     def test_login_wrong_password(self, client, registered_user):
-        resp = client.post("/api/auth/login", json={
+        resp = client.post("/api/auth/login", data={
             "username": "testuser",
             "password": "WrongPassword!",
-        })
+        }, headers={"Content-Type": "application/x-www-form-urlencoded"})
         assert resp.status_code in (400, 401, 403)
 
     def test_login_nonexistent_user(self, client):
-        resp = client.post("/api/auth/login", json={
+        resp = client.post("/api/auth/login", data={
             "username": "ghost",
             "password": "nope",
-        })
+        }, headers={"Content-Type": "application/x-www-form-urlencoded"})
         assert resp.status_code in (400, 401, 404)
+
+    def test_invalid_otp(self, client, registered_user):
+        """Wrong OTP should be rejected."""
+        # First trigger MFA
+        client.post("/api/auth/login", data={
+            "username": "testuser",
+            "password": "TestPass123!",
+        }, headers={"Content-Type": "application/x-www-form-urlencoded"})
+        # Then send wrong OTP
+        resp = client.post("/api/auth/verify-otp", json={
+            "username": "testuser",
+            "password": "TestPass123!",
+            "otp": "999999",
+        })
+        assert resp.status_code == 400
 
 
 # ─── Protected Routes ───
 
 class TestProtectedRoutes:
     def _get_token(self, client, registered_user):
-        resp = client.post("/api/auth/login", json={
-            "username": registered_user["username"],
-            "password": registered_user["password"],
-        })
-        if resp.status_code == 200:
-            return resp.json().get("access_token")
+        tokens, _ = _do_full_login(
+            client, registered_user["username"], registered_user["password"]
+        )
+        if tokens:
+            return tokens.get("access_token")
         return None
 
     def test_accounts_without_token(self, client):

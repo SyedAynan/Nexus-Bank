@@ -34,7 +34,7 @@ def validate_environment() -> None:
                 "SECRET_KEY is set to a known insecure default. "
                 "Set a unique, random 64+ character key for production."
             )
-        else:
+        elif settings.environment not in ("development", "testing"):
             warnings.append(
                 "SECRET_KEY is a development default — change before deploying to production."
             )

@@ -43,9 +43,9 @@ OTP_MAX_ATTEMPTS = 3       # Max failed OTP attempts before invalidation
 def _generate_otp() -> str:
     """Generate a cryptographically secure 6-digit OTP.
     Uses SystemRandom for cryptographic security.
-    In development mode, uses fixed OTP '000000' for demo convenience.
+    In development or demo mode, uses fixed OTP '000000' for convenience.
     """
-    if settings.environment == "development":
+    if settings.environment == "development" or settings.demo_mode:
         logger.info("[DEV OTP] Using fixed OTP: 000000")
         return "000000"
     otp = f"{random.SystemRandom().randint(0, 999999):06d}"

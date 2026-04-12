@@ -1,7 +1,11 @@
 import axios from 'axios'
 
+// In production (Vercel), VITE_API_URL points to the deployed backend (e.g. https://nexa-api.onrender.com/api)
+// In local dev, falls back to '/api' which Vite proxies to localhost:8000
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+
 const api = axios.create({
-    baseURL: '/api',
+    baseURL: API_BASE_URL,
     headers: { 'Content-Type': 'application/json' },
     timeout: 30000, // 30 second timeout
 })
@@ -57,7 +61,7 @@ api.interceptors.response.use(
 
             if (refreshToken) {
                 try {
-                    const res = await axios.post('/api/auth/refresh', {
+                    const res = await axios.post(`${API_BASE_URL}/auth/refresh`, {
                         refresh_token: refreshToken,
                     })
 
