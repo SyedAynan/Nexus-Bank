@@ -43,11 +43,12 @@ OTP_MAX_ATTEMPTS = 3       # Max failed OTP attempts before invalidation
 def _generate_otp() -> str:
     """Generate a cryptographically secure 6-digit OTP.
     Uses SystemRandom for cryptographic security.
-    In development mode, logs the OTP for testing convenience.
+    In development mode, uses fixed OTP '000000' for demo convenience.
     """
-    otp = f"{random.SystemRandom().randint(0, 999999):06d}"
     if settings.environment == "development":
-        logger.info(f"[DEV OTP] Generated OTP: {otp}")
+        logger.info("[DEV OTP] Using fixed OTP: 000000")
+        return "000000"
+    otp = f"{random.SystemRandom().randint(0, 999999):06d}"
     return otp
 
 
@@ -74,7 +75,7 @@ def register_user(payload: UserCreate, db: Annotated[Session, Depends(get_db)]):
     return user
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login")
 def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     request: Request,
@@ -257,7 +258,7 @@ def verify_otp(
 # ── Token Refresh Endpoint (BUG-015 Fix) ──
 
 @router.post("/refresh", response_model=Token)
-def refresh_token(
+async def refresh_token(
     request: Request,
     db: Annotated[Session, Depends(get_db)],
 ):
@@ -267,21 +268,11 @@ def refresh_token(
     pair (access + refresh) is issued. This prevents refresh token reuse attacks.
     """
     import orjson
-    body = {}
-    # Parse refresh_token from JSON body
-    try:
-        raw = request._body if hasattr(request, '_body') else None
-    except Exception:
-        raw = None
-
-    # Try to get from Authorization header first
-    auth = request.headers.get("authorization", "")
     refresh_str = None
 
     # Get from JSON body
     try:
-        import asyncio
-        body_bytes = asyncio.get_event_loop().run_until_complete(request.body())
+        body_bytes = await request.body()
         body = orjson.loads(body_bytes)
         refresh_str = body.get("refresh_token")
     except Exception:

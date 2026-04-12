@@ -20,18 +20,22 @@ export function AuthProvider({ children }) {
 
         const res = await api.post('/auth/login', formData, {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            validateStatus: (status) => status >= 200 && status < 300,
         })
 
         // 202 = MFA required, 200 = direct login (no MFA)
-        if (res.status === 202) {
+        if (res.status === 202 || res.data?.mfa === true) {
             setPendingPassword(password)
             return { mfa_required: true }
         }
 
         // Direct login (if MFA not enabled)
-        const { access_token } = res.data
+        const { access_token, refresh_token } = res.data
         if (access_token) {
             localStorage.setItem('access_token', access_token)
+            if (refresh_token) {
+                localStorage.setItem('refresh_token', refresh_token)
+            }
             const payload = JSON.parse(atob(access_token.split('.')[1]))
             const userData = { username: payload.sub, role: payload.role }
             localStorage.setItem('user', JSON.stringify(userData))
@@ -42,8 +46,11 @@ export function AuthProvider({ children }) {
 
     const verifyOtp = async (username, otp) => {
         const res = await api.post('/auth/verify-otp', { username, password: pendingPassword, otp })
-        const { access_token } = res.data
+        const { access_token, refresh_token } = res.data
         localStorage.setItem('access_token', access_token)
+        if (refresh_token) {
+            localStorage.setItem('refresh_token', refresh_token)
+        }
 
         const payload = JSON.parse(atob(access_token.split('.')[1]))
         const userData = { username: payload.sub, role: payload.role }
@@ -53,8 +60,14 @@ export function AuthProvider({ children }) {
         return userData
     }
 
-    const logout = () => {
+    const logout = async () => {
+        try {
+            await api.post('/auth/logout')
+        } catch (e) {
+            // Ignore logout API errors — still clear local state
+        }
         localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
         localStorage.removeItem('user')
         setUser(null)
     }
@@ -71,3 +84,4 @@ export function AuthProvider({ children }) {
 }
 
 export const useAuth = () => useContext(AuthContext)
+

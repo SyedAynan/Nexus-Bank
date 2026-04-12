@@ -46,13 +46,16 @@ def _run_simulation_tick() -> dict | None:
             [TransactionType.deposit, TransactionType.withdrawal]
         )
 
-        if tx_type == TransactionType.withdrawal and account.balance < amount:
+        if tx_type == TransactionType.withdrawal and float(account.balance) < amount:
             tx_type = TransactionType.deposit
 
+        from decimal import Decimal
+        decimal_amount = Decimal(str(amount))
+
         if tx_type == TransactionType.deposit:
-            account.balance += amount
+            account.balance = account.balance + decimal_amount
         else:
-            account.balance -= amount
+            account.balance = account.balance - decimal_amount
 
         tx = Transaction(
             account_id=account.id,
@@ -73,10 +76,11 @@ def _run_simulation_tick() -> dict | None:
         for loan in active_loans:
             acct = db.query(Account).get(loan.account_id)
             if acct and float(acct.balance) >= float(loan.emi_amount):
-                acct.balance -= loan.emi_amount
+                emi_decimal = Decimal(str(loan.emi_amount))
+                acct.balance = acct.balance - emi_decimal
                 emi_tx = Transaction(
                     account_id=acct.id,
-                    amount=loan.emi_amount,
+                    amount=float(loan.emi_amount),
                     type=TransactionType.emi,
                     description="Simulated EMI deduction",
                     is_simulated=True,

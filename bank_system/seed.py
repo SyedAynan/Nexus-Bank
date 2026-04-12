@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from bank_system.core.db import SessionLocal
 from bank_system.core.security import hash_password
 from bank_system.models.db_models import (
-    Account, FraudAlert, Loan, SecurityEvent, Transaction, User, UserRole,
+    Account, FraudAlert, Loan, SecurityEvent, SecurityEventType, Transaction, User, UserRole,
 )
 
 
@@ -201,18 +201,18 @@ def seed_if_empty() -> None:
 
         # ── Security Events ──
         event_types = [
-            ("login_success", "admin", "Successful admin login"),
-            ("login_success", "john_doe", "Successful login from Chrome/Windows"),
-            ("login_failure", "emily_chen", "Incorrect password - attempt 1"),
-            ("login_failure", "emily_chen", "Incorrect password - attempt 2"),
-            ("login_success", "emily_chen", "Successful login after retry"),
-            ("registration", "marcus_williams", "New user registration"),
-            ("mfa_setup", "admin", "MFA enabled for admin account"),
-            ("password_change", "john_doe", "Password changed successfully"),
-            ("login_success", "sarah_analyst", "Analyst login from office IP"),
-            ("login_failure", "unknown_user", "Brute force attempt detected"),
-            ("login_failure", "unknown_user", "Rate limited - IP blocked"),
-            ("account_locked", "unknown_user", "Account locked after 5 failures"),
+            (SecurityEventType.login_success, "admin", "Successful admin login"),
+            (SecurityEventType.login_success, "john_doe", "Successful login from Chrome/Windows"),
+            (SecurityEventType.login_failure, "emily_chen", "Incorrect password - attempt 1"),
+            (SecurityEventType.login_failure, "emily_chen", "Incorrect password - attempt 2"),
+            (SecurityEventType.login_success, "emily_chen", "Successful login after retry"),
+            (SecurityEventType.login_success, "marcus_williams", "New user registration"),
+            (SecurityEventType.mfa_challenge, "admin", "MFA enabled for admin account"),
+            (SecurityEventType.login_success, "john_doe", "Password changed successfully"),
+            (SecurityEventType.login_success, "sarah_analyst", "Analyst login from office IP"),
+            (SecurityEventType.login_failure, "unknown_user", "Brute force attempt detected"),
+            (SecurityEventType.login_failure, "unknown_user", "Rate limited - IP blocked"),
+            (SecurityEventType.account_lockout, "unknown_user", "Account locked after 5 failures"),
         ]
 
         for event_type, username, details in event_types:

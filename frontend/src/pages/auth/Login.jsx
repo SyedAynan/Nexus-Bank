@@ -32,7 +32,7 @@ const MicrosoftIcon = () => (
 /* ─── OTP Input Group ─── */
 function OtpInputGroup({ value, onChange }) {
     const refs = useRef([])
-    const digits = value.padEnd(6, '').split('').slice(0, 6)
+    const digits = Array.from({ length: 6 }, (_, i) => value[i] || '')
 
     const handleChange = (i, val) => {
         if (!/^\d*$/.test(val)) return

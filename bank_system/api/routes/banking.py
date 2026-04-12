@@ -187,6 +187,35 @@ def create_transaction(
     return tx
 
 
+@router.get("/transactions", response_model=List[TransactionRead])
+def list_all_transactions(
+    db: Annotated[Session, Depends(get_db)],
+    current_user=Depends(get_current_active_user),
+    limit: int = 100,
+    offset: int = 0,
+):
+    """List all transactions visible to the current user.
+
+    - Regular users see transactions from their own accounts only.
+    - Admin/Analyst users see all transactions.
+    """
+    q = db.query(Transaction)
+
+    if current_user.role == UserRole.user:
+        user_account_ids = [
+            a.id for a in db.query(Account.id).filter(Account.owner_id == current_user.id).all()
+        ]
+        q = q.filter(Transaction.account_id.in_(user_account_ids))
+
+    txs = (
+        q.order_by(Transaction.created_at.desc())
+        .offset(offset)
+        .limit(min(limit, 500))
+        .all()
+    )
+    return txs
+
+
 @router.get(
     "/transactions/{account_id}",
     response_model=List[TransactionRead],
