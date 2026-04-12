@@ -15,7 +15,6 @@ Produces: approval probability, interest rate recommendation,
 Note: Uses deterministic scoring model (no external ML libs needed).
 """
 
-import math
 import statistics
 from datetime import datetime
 

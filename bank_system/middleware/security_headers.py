@@ -5,7 +5,6 @@ Adds OWASP-recommended security headers to every response.
 Implements enterprise-grade CSP with nonce support for React/Vite compatibility.
 """
 
-import secrets
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 

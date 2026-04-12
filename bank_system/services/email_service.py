@@ -6,7 +6,7 @@ Falls back to console logging for development/demo.
 import os
 import logging
 import time
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, List
 
 logger = logging.getLogger(__name__)
 

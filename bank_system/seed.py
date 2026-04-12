@@ -228,7 +228,7 @@ def seed_if_empty() -> None:
 
         db.commit()
 
-    except Exception as e:
+    except Exception:
         db.rollback()
         raise
     finally:

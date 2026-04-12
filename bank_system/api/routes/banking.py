@@ -9,13 +9,12 @@ Core banking operations with:
 - Transaction lifecycle visualization
 """
 
-from datetime import datetime, timezone, timedelta
-from typing import Annotated, List, Optional
+from datetime import timezone, timedelta
+from typing import Annotated, List
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import select
 
 from bank_system.core.db import get_db
 from bank_system.api.deps import get_current_active_user, role_required

@@ -14,7 +14,6 @@ Generates chart-ready data for:
 
 from datetime import datetime, timedelta
 from collections import defaultdict
-import random
 
 
 class AnalyticsEngine:

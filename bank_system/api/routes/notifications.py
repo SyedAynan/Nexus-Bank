@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from bank_system.core.db import get_db
 from bank_system.api.deps import get_current_active_user, role_required
-from bank_system.models.db_models import Notification, NotificationType, User, UserRole
-from bank_system.schemas.notifications import NotificationCreate, NotificationRead, NotificationUpdate
+from bank_system.models.db_models import Notification, User, UserRole
+from bank_system.schemas.notifications import NotificationCreate, NotificationRead
 
 router = APIRouter(prefix="/api/notifications", tags=["notifications"])
 

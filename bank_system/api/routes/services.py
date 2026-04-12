@@ -2,14 +2,12 @@
 NEXA Services API — Unified routes for OAuth, WebAuthn, Email, BillPay, MultiCurrency, Feature Flags
 All endpoints now require authentication (BUG-015 fix).
 """
-from typing import Annotated, Optional, Dict, Any, List
+from typing import Annotated, Optional, Dict, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
 from bank_system.api.deps import get_current_active_user, role_required
-from bank_system.core.db import get_db
 from bank_system.models.db_models import User, UserRole
 from bank_system.services.oauth_service import oauth_service
 from bank_system.services.webauthn_service import webauthn_service
@@ -418,7 +416,6 @@ def export_audit_trail(
     current_admin: User = Depends(role_required(UserRole.admin)),
 ):
     """Export audit trail as CSV."""
-    import time
     demo_audit = [
         {"timestamp": "2026-02-28 10:15:00", "user": "admin", "action": "user_login", "details": "Successful login", "ip_address": "192.168.1.100", "risk_level": "low"},
         {"timestamp": "2026-02-28 10:20:00", "user": "admin", "action": "account_create", "details": "Created account NX-0001", "ip_address": "192.168.1.100", "risk_level": "low"},

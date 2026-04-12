@@ -7,9 +7,9 @@ EXCLUSIVELY to admin users. Customers MUST NOT access these.
 
 import time
 import sys
-from typing import Annotated, List
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from bank_system.api.deps import role_required
@@ -23,13 +23,6 @@ from bank_system.data_structures.sorting import (
     counting_sort_by_risk,
     get_algorithm_info,
 )
-from bank_system.data_structures.linked_list import TransactionLinkedList
-from bank_system.data_structures.stack import UndoStack
-from bank_system.data_structures.queue import TransactionQueue
-from bank_system.data_structures.bst import AccountBST
-from bank_system.data_structures.hash_table import AccountHashTable
-from bank_system.data_structures.graph import ComplianceGraph
-from bank_system.data_structures.priority_queue import LoanPriorityQueue
 
 
 router = APIRouter(prefix="/api/admin/dsa", tags=["dsa-admin"])

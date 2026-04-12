@@ -17,7 +17,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from typing import Dict, Any, List
-import math
 
 
 class ForecastingEngine:

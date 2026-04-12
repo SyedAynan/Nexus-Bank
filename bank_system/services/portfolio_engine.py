@@ -16,8 +16,7 @@ It produces:
 
 from __future__ import annotations
 
-from typing import Dict, Any, List
-import math
+from typing import Dict, Any
 
 
 class PortfolioEngine:

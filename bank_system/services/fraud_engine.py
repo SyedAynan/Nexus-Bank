@@ -12,7 +12,6 @@ Implements multiple anomaly detection algorithms:
 All scores are combined into a composite Fraud Risk Score (0-100).
 """
 
-import math
 import statistics
 from datetime import datetime, timedelta
 from collections import defaultdict, deque

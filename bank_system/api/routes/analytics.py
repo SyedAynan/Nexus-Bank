@@ -5,10 +5,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from bank_system.api.deps import get_current_active_user, role_required
+from bank_system.api.deps import get_current_active_user
 from bank_system.core.db import get_db
 from bank_system.engines.forecasting import ForecastingEngine
-from bank_system.models.db_models import Account, FraudAlert, Loan, Transaction, TransactionType, UserRole
+from bank_system.models.db_models import Account, FraudAlert, Loan, Transaction
 from bank_system.schemas.analytics import DashboardKPI, ForecastSeries
 
 

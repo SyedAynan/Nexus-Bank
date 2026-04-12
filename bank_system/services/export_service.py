@@ -5,9 +5,8 @@ PDF uses basic HTML-to-text formatting (no external dependencies required).
 """
 import csv
 import io
-import time
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Optional
 from datetime import datetime
 
 logger = logging.getLogger(__name__)

@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from bank_system.models.db_models import (
     AMLEdge,
     AMLNode,
-    Account,
     Transaction,
     TransactionType,
 )

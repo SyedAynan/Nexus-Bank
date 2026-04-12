@@ -24,7 +24,6 @@ from bank_system.core.security import (
 from bank_system.models.db_models import SecurityEventType, SessionToken, User, UserRole
 from bank_system.schemas.auth import (
     LoginRequest,
-    MFAChallenge,
     SessionRead,
     Token,
     UserCreate,
@@ -489,7 +488,6 @@ def unlock_account(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     """Admin-only: Unlock a locked user account."""
-    from bank_system.api.deps import role_required
     if current_user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Admin access required")
 
