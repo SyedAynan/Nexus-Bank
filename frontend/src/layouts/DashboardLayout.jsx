@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BarChart3, Wallet, CreditCard, ScrollText, TrendingUp, User, Shield, LogOut, Bell, Sun, Moon, ShieldCheck, AlertTriangle, DollarSign, CheckCircle, X, Activity, Globe, Briefcase, Sparkles, Zap, Receipt, Coins, PieChart, Target, Menu } from 'lucide-react'
 import NexusCopilot from '../components/NexusCopilot'
+import { GlobalEffectsLayer } from '../components/enhancements'
 import { getLiveIndices } from '../data/simulationEngine'
 
 /* ─── Demo Notifications ─── */
@@ -173,6 +174,7 @@ export default function DashboardLayout() {
     return (
         <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
             <div className="nx-nebula-bg" />
+            <GlobalEffectsLayer />
             <LiveToast notifications={wsNotifs} />
 
             {/* Mobile Menu Button */}

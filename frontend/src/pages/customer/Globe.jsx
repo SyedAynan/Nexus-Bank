@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Globe as GlobeIcon, ArrowRightLeft, DollarSign, TrendingUp, Zap, MapPin, Satellite, RotateCcw, Activity, CreditCard, Clock, Users, ZoomIn, ZoomOut } from 'lucide-react'
+import { EnhancedGlobeWrapper } from '../../components/enhancements'
 
 /* ═══════════════════════════════════════════════════════════
    NEXUS GLOBAL FINANCE — 3D SATELLITE GLOBE
@@ -348,7 +349,8 @@ export default function GlobePage() {
 
             {/* ── Globe + Sidebar ── */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
-                {/* Globe */}
+                {/* Globe — wrapped with Three.js 3D enhancement layer */}
+                <EnhancedGlobeWrapper cities={CITIES} payments={livePayments}>
                 <motion.div className="nx-chart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
                     style={{ padding: '0.75rem', position: 'relative', overflow: 'hidden' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 0.5rem 0.5rem' }}>
@@ -507,6 +509,7 @@ export default function GlobePage() {
                         ))}
                     </div>
                 </motion.div>
+                </EnhancedGlobeWrapper>
 
                 {/* ── Sidebar ── */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

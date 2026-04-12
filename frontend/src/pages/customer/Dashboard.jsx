@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { Shield, CreditCard, BarChart3, Users, Database, Zap, TrendingUp, Activity, Lock, Eye, Star, Sparkles, AlertTriangle, ArrowRight, Globe, Target } from 'lucide-react'
 import { AreaChart, Area, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts'
 import { getDemoAccounts, getDemoTransactions, getCashFlowData, NEXUS_NETWORK_NODES, NEXUS_NETWORK_LINKS } from '../../data/simulationEngine'
+import { EnhancedChartWrapper, EnhancedNetworkWrapper } from '../../components/enhancements'
 
 /* ─── Particles Background ─── */
 function ParticlesField() {
@@ -240,11 +241,14 @@ export default function Dashboard() {
                     ))}
                 </div>
 
-                {/* ─── 3D Network Map ─── */}
-                <NexusCoreNetwork />
+                {/* ─── 3D Network Map — wrapped with particle enhancement ─── */}
+                <EnhancedNetworkWrapper nodes={NEXUS_NETWORK_NODES} links={NEXUS_NETWORK_LINKS}>
+                    <NexusCoreNetwork />
+                </EnhancedNetworkWrapper>
 
                 {/* ─── Charts Row ─── */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16, marginBottom: 24 }}>
+                    <EnhancedChartWrapper glowColor="#34d399" intensity="medium">
                     <motion.div className="nx-chart" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.7 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
                             <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--nx-text)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>CASH FLOW — 7 DAYS</h3>
@@ -274,7 +278,9 @@ export default function Dashboard() {
                             </AreaChart>
                         </ResponsiveContainer>
                     </motion.div>
+                    </EnhancedChartWrapper>
 
+                    <EnhancedChartWrapper glowColor="#a78bfa" intensity="low">
                     <motion.div className="nx-chart" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.9 }}>
                         <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16, color: 'var(--nx-text)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>PORTFOLIO MIX</h3>
                         {pieData.length > 0 ? (
@@ -298,6 +304,7 @@ export default function Dashboard() {
                             ))}
                         </div>
                     </motion.div>
+                    </EnhancedChartWrapper>
                 </div>
 
                 {/* ─── Bottom Row ─── */}

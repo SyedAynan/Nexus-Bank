@@ -36,7 +36,7 @@ class FraudEngine:
         if not txs:
             return np.zeros((0, 2))
 
-        amounts = np.array([abs(t.amount) for t in txs])
+        amounts = np.array([float(abs(t.amount)) for t in txs])
         ages = np.array(
             [
                 (txs[-1].created_at - t.created_at).total_seconds() / 3600.0
@@ -64,7 +64,7 @@ class FraudEngine:
         if not self._trained:
             self.train(db)
 
-        X = np.array([[abs(tx.amount), 0.0]])
+        X = np.array([[float(abs(tx.amount)), 0.0]])
 
         if self._trained:
             score_raw = -float(self.model.decision_function(X)[0])
