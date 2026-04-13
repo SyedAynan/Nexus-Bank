@@ -38,7 +38,7 @@ def _refresh_whitelist() -> set[str]:
         db: DBSession = SessionLocal()
         try:
             rows = db.query(IPWhitelist.ip_address).filter(
-                IPWhitelist.is_active == True
+                IPWhitelist.is_active.is_(True)
             ).all()
             _cached_ips = {r[0] for r in rows}
         finally:

@@ -6,6 +6,8 @@ These are plain Python classes (not DB-backed) for simplicity.
 import uuid
 from datetime import datetime
 
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 def gen_id(prefix=""):
     return prefix + str(uuid.uuid4())[:8].upper()
@@ -63,7 +65,6 @@ class LoanApplication:
         }
 
 
-from werkzeug.security import generate_password_hash, check_password_hash
 
 class User:
     ROLES = ["admin", "staff", "auditor"]

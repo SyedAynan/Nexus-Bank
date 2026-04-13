@@ -69,7 +69,7 @@ class LoanPriorityQueue:
 
     def to_list(self):
         """Return all pending loans in priority order. O(n log n)"""
-        temp = [(p, c, l) for p, c, l in self._heap if l is not None]
+        temp = [(p, c, loan) for p, c, loan in self._heap if loan is not None]
         temp.sort()
         return [loan for _, _, loan in temp]
 

@@ -123,9 +123,9 @@ class AnalyticsEngine:
         """Loan pipeline funnel data."""
         pending = self.bank.loan_queue.size()
         processed = self.bank.processed_loans
-        approved = sum(1 for l in processed if l['status'] == 'approved')
-        rejected = sum(1 for l in processed if l['status'] == 'rejected')
-        approved_vol = sum(l['amount'] for l in processed if l['status'] == 'approved')
+        approved = sum(1 for loan in processed if loan['status'] == 'approved')
+        rejected = sum(1 for loan in processed if loan['status'] == 'rejected')
+        approved_vol = sum(loan['amount'] for loan in processed if loan['status'] == 'approved')
         return {
             'labels': ['Pending', 'Approved', 'Rejected'],
             'counts': [pending, approved, rejected],
@@ -214,7 +214,7 @@ class AnalyticsEngine:
         loans = self.bank.get_pending_loans() + getattr(self.bank, "processed_loans", [])
 
         total_assets = sum(a.get('balance', 0.0) for a in accounts)
-        total_loans = sum(l.get('amount', 0.0) for l in loans)
+        total_loans = sum(loan.get('amount', 0.0) for loan in loans)
         # Assume simple risk-weighted assets as loans * factor
         rwa = total_loans * 0.85
 
@@ -224,9 +224,9 @@ class AnalyticsEngine:
 
         # NPL approximation: loans with status overdue/defaulted
         npl_amount = sum(
-            l.get('amount', 0.0)
-            for l in loans
-            if str(l.get('status', '')).lower() in ('overdue', 'defaulted')
+            loan.get('amount', 0.0)
+            for loan in loans
+            if str(loan.get('status', '')).lower() in ('overdue', 'defaulted')
         )
         npl_ratio = (npl_amount / total_loans * 100.0) if total_loans else 0.0
 
@@ -280,11 +280,15 @@ class AnalyticsEngine:
                 ts = datetime.fromisoformat(t['timestamp'])
                 age = (now - ts).days
                 if age <= days:
-                    if t['type'] == 'deposit':    current_deps += t['amount']
-                    elif t['type'] == 'withdrawal': current_with += t['amount']
+                    if t['type'] == 'deposit':
+                        current_deps += t['amount']
+                    elif t['type'] == 'withdrawal':
+                        current_with += t['amount']
                 elif age <= days * 2:
-                    if t['type'] == 'deposit':    prev_deps += t['amount']
-                    elif t['type'] == 'withdrawal': prev_with += t['amount']
+                    if t['type'] == 'deposit':
+                        prev_deps += t['amount']
+                    elif t['type'] == 'withdrawal':
+                        prev_with += t['amount']
             except Exception:
                 continue
 
@@ -296,7 +300,8 @@ class AnalyticsEngine:
             prev_with = 48900
 
         def pct(curr, prev):
-            if prev == 0: return 0
+            if prev == 0:
+                return 0
             return round((curr - prev) / prev * 100, 1)
 
         return {
@@ -372,11 +377,16 @@ class AnalyticsEngine:
                     loan.get('credit_score', 650)
                 )
                 s = r['composite_score']
-                if s <= 40:     buckets['0-40'] += 1
-                elif s <= 55:   buckets['41-55'] += 1
-                elif s <= 70:   buckets['56-70'] += 1
-                elif s <= 85:   buckets['71-85'] += 1
-                else:           buckets['86-100'] += 1
+                if s <= 40:
+                    buckets['0-40'] += 1
+                elif s <= 55:
+                    buckets['41-55'] += 1
+                elif s <= 70:
+                    buckets['56-70'] += 1
+                elif s <= 85:
+                    buckets['71-85'] += 1
+                else:
+                    buckets['86-100'] += 1
             except Exception:
                 pass
         return {'labels': list(buckets.keys()), 'counts': list(buckets.values())}

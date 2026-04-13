@@ -5,6 +5,7 @@ All endpoints now require authentication (BUG-015 fix).
 from typing import Annotated, Optional, Dict, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
 from bank_system.api.deps import get_current_active_user, role_required
@@ -355,7 +356,6 @@ def delete_flag(
 
 
 # ─── Export Routes ───
-from fastapi.responses import StreamingResponse
 
 
 @router.get("/export/csv/{account_id}")
@@ -406,7 +406,6 @@ def export_pdf_html(
     ]
     acct_info = {"account_number": f"NX-{account_id:04d}", "account_type": "savings", "balance": 15000.00}
     html = export_service.generate_pdf_content(demo_txns, acct_info)
-    from fastapi.responses import HTMLResponse
     return HTMLResponse(content=html)
 
 

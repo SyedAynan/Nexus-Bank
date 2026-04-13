@@ -141,7 +141,7 @@ def counting_sort_by_risk(
     risk_key: str = "risk_level",
 ) -> Tuple[List[dict], SortStats]:
     """Counting sort for risk-level bucketing (low/medium/high)."""
-    bucket_order = {"low": 0, "medium": 1, "high": 2}
+    _bucket_order = {"low": 0, "medium": 1, "high": 2}  # noqa: F841 — kept for reference
     stats: SortStats = {"bucket_ops": 0, "items_processed": len(data)}
 
     buckets: Dict[str, List[dict]] = {"low": [], "medium": [], "high": []}
