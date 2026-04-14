@@ -1,5 +1,4 @@
 from typing import List
-from datetime import datetime
 
 from sqlalchemy.orm import Session
 
@@ -11,7 +10,6 @@ class FinancialHealthEngine:
     def compute_for_user(self, db: Session, user_id: int) -> FinancialHealthSummary:
         accounts = db.query(Account).filter(Account.owner_id == user_id).all()
         if not accounts:
-            now = datetime.utcnow()
             snap = FinancialHealthSnapshot(
                 user_id=user_id,
                 health_score=0,

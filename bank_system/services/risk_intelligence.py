@@ -165,7 +165,7 @@ class RiskIntelligenceEngine:
 
         loans = getattr(self.bank, "processed_loans", []) + self.bank.get_pending_loans()
         accounts = self.bank.get_all_accounts()
-        total_loan_amount = sum(l.get("amount", 0.0) for l in loans) or 1.0
+        total_loan_amount = sum(loan.get("amount", 0.0) for loan in loans) or 1.0
         total_balance = sum(a.get("balance", 0.0) for a in accounts) or 1.0
 
         capital_losses = []
@@ -321,7 +321,7 @@ class RiskIntelligenceEngine:
         Use loan scoring engine and recent loan decisions as a proxy for
         credit volatility / uncertainty.
         """
-        loans = [l for l in self.bank.processed_loans if l.get("account_id") == account_id]
+        loans = [loan for loan in self.bank.processed_loans if loan.get("account_id") == account_id]
         if not loans:
             return 20.0
 

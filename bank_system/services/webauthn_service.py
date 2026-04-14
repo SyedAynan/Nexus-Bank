@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 # Check if py_webauthn is available
 try:
-    import webauthn
+    import webauthn  # noqa: F401
     WEBAUTHN_AVAILABLE = True
 except ImportError:
     WEBAUTHN_AVAILABLE = False

@@ -69,11 +69,11 @@ class ForecastingEngine:
 
         # Simple probability heuristics
         loan_book = self.bank.get_pending_loans() + getattr(self.bank, "processed_loans", [])
-        total_loans = sum(l.get("amount", 0.0) for l in loan_book) or 1.0
+        total_loans = sum(loan.get("amount", 0.0) for loan in loan_book) or 1.0
         overdue_like = sum(
-            l.get("amount", 0.0)
-            for l in loan_book
-            if str(l.get("status", "")).lower() in ("overdue", "defaulted")
+            loan.get("amount", 0.0)
+            for loan in loan_book
+            if str(loan.get("status", "")).lower() in ("overdue", "defaulted")
         )
         default_prob = max(0.01, min(0.5, overdue_like / total_loans))
 
