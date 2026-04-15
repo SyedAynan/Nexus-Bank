@@ -22,8 +22,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
         "Referrer-Policy": "strict-origin-when-cross-origin",
         "Permissions-Policy": (
-            "camera=(), microphone=(), geolocation=(), "
-            "payment=(), usb=(), magnetometer=(), gyroscope=()"
+            "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()"
         ),
         "X-Permitted-Cross-Domain-Policies": "none",
         "Cross-Origin-Embedder-Policy": "credentialless",
@@ -69,9 +68,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "upgrade-insecure-requests"
             )
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         response = await call_next(request)
 
         # Apply all static headers

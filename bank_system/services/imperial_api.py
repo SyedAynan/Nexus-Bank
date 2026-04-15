@@ -73,9 +73,7 @@ def build_imperial_state(bank):
                 "category": a.get("category", "Standard"),
                 "balanceHistory": balance_history or [0],
                 "failedTxCount": a.get("failedTxCount", 0),
-                "lastTxDate": a.get(
-                    "lastTxDate", _format_date(a.get("created_at", ""))
-                ),
+                "lastTxDate": a.get("lastTxDate", _format_date(a.get("created_at", ""))),
             }
         )
 
@@ -200,9 +198,7 @@ def build_imperial_state(bank):
         auditLog.append(
             {
                 "timestamp": ts,
-                "category": log.get("action", "SYSTEM").split("_")[0]
-                if log.get("action")
-                else "SYSTEM",
+                "category": log.get("action", "SYSTEM").split("_")[0] if log.get("action") else "SYSTEM",
                 "action": (log.get("action") or "ACTION").replace("_", " "),
                 "account": log.get("details", "")[:20] or "—",
                 "performedBy": log.get("user", "System"),
@@ -278,23 +274,15 @@ def _account_name(bank, account_id):
 
 def create_account_from_imperial(bank, form_data, user="Administrator"):
     """Create account from Imperial frontend form. All logic in Python."""
-    name = (
-        form_data.get("name")
-        or form_data.get("owner_name")
-        or form_data.get("clientName", "")
-    )
+    name = form_data.get("name") or form_data.get("owner_name") or form_data.get("clientName", "")
     email = form_data.get("email", "")
     account_type = form_data.get("type") or form_data.get("account_type", "savings")
-    initial_deposit = float(
-        form_data.get("initialDeposit") or form_data.get("initial_deposit", 0)
-    )
+    initial_deposit = float(form_data.get("initialDeposit") or form_data.get("initial_deposit", 0))
     result = bank.create_account(name, email, account_type, initial_deposit, user=user)
     return result
 
 
-def process_transaction_from_imperial(
-    bank, from_acc, to_acc, amount, txn_type, description, user="Administrator"
-):
+def process_transaction_from_imperial(bank, from_acc, to_acc, amount, txn_type, description, user="Administrator"):
     """Process transaction from Imperial frontend. All logic in Python."""
     amount = float(amount)
     if txn_type in ("credit", "deposit"):
@@ -319,10 +307,7 @@ def search_clients_imperial(bank, query):
     """Client search for Imperial UI. Uses Python search / name matching."""
     if not query or not str(query).strip():
         accounts = bank.get_all_accounts()
-        return [
-            {"id": a.get("account_id"), "name": a.get("owner_name", "")}
-            for a in accounts
-        ]
+        return [{"id": a.get("account_id"), "name": a.get("owner_name", "")} for a in accounts]
     q = str(query).strip().lower()
     accounts = bank.get_all_accounts()
     out = []
@@ -330,13 +315,7 @@ def search_clients_imperial(bank, query):
         name = (a.get("owner_name") or "").lower()
         acc_id = (a.get("account_id") or "").lower()
         email = (a.get("email") or "").lower()
-        if (
-            q in name
-            or q in acc_id
-            or q in email
-            or name.startswith(q)
-            or acc_id.startswith(q)
-        ):
+        if q in name or q in acc_id or q in email or name.startswith(q) or acc_id.startswith(q):
             out.append({"id": a.get("account_id"), "name": a.get("owner_name", "")})
     return out[:20]
 

@@ -38,9 +38,7 @@ class Account:
 
 
 class LoanApplication:
-    def __init__(
-        self, account_id, owner_name, amount, purpose, credit_score, urgency=0
-    ):
+    def __init__(self, account_id, owner_name, amount, purpose, credit_score, urgency=0):
         self.loan_id = gen_id("LOAN")
         self.account_id = account_id
         self.owner_name = owner_name

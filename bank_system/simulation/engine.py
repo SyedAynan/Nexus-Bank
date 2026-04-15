@@ -126,8 +126,5 @@ async def simulation_loop():
         except Exception as e:
             consecutive_errors += 1
             backoff = min(15 * (2**consecutive_errors), max_backoff)
-            logger.error(
-                f"Simulation error (attempt {consecutive_errors}): {e}. "
-                f"Retrying in {backoff}s."
-            )
+            logger.error(f"Simulation error (attempt {consecutive_errors}): {e}. Retrying in {backoff}s.")
             await asyncio.sleep(backoff)

@@ -50,9 +50,7 @@ class AMLEngine:
                 except Exception:
                     return now
 
-            hist_sorted = sorted(
-                hist, key=lambda x: _parse_ts(x.get("timestamp", "")), reverse=True
-            )
+            hist_sorted = sorted(hist, key=lambda x: _parse_ts(x.get("timestamp", "")), reverse=True)
             # Pattern: multiple similar amounts within a short window
             for i in range(len(hist_sorted) - 2):
                 t0, t1, t2 = hist_sorted[i], hist_sorted[i + 1], hist_sorted[i + 2]

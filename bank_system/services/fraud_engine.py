@@ -150,9 +150,7 @@ class FraudEngine:
         # Late night / early morning: 00:00 - 05:59
         if 0 <= hour <= 5:
             # Check if account has history at these hours
-            late_night_count = sum(
-                1 for t in history if int(t["timestamp"][11:13]) <= 5
-            )
+            late_night_count = sum(1 for t in history if int(t["timestamp"][11:13]) <= 5)
             if late_night_count == 0:
                 return 65  # Never transacted at night
             return 20

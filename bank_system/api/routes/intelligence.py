@@ -51,10 +51,7 @@ def aml_network(
 ):
     res = aml_engine.run_network_scan(db)
     return AMLNetworkView(
-        nodes=[
-            {"account_id": n["account_id"], "risk_score": n["risk_score"]}
-            for n in res["nodes"]
-        ],
+        nodes=[{"account_id": n["account_id"], "risk_score": n["risk_score"]} for n in res["nodes"]],
         edges=[
             {
                 "from_account_id": e["from_account_id"],

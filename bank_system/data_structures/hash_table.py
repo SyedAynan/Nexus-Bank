@@ -63,9 +63,7 @@ class AccountHashTable:
                     del self._email_index[email]
                 owner = account.get("owner_name", "")
                 if owner in self._owner_index:
-                    self._owner_index[owner] = [
-                        i for i in self._owner_index[owner] if i != account_id
-                    ]
+                    self._owner_index[owner] = [i for i in self._owner_index[owner] if i != account_id]
             return account
 
     def exists(self, account_id):

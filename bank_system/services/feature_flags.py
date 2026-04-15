@@ -90,9 +90,7 @@ class FeatureFlagService:
         if flag["rollout_pct"] >= 100:
             return True
         if user_id:
-            user_hash = int(
-                hashlib.md5(f"{flag_key}-{user_id}".encode()).hexdigest(), 16
-            )
+            user_hash = int(hashlib.md5(f"{flag_key}-{user_id}".encode()).hexdigest(), 16)
             return (user_hash % 100) < flag["rollout_pct"]
         return True
 
@@ -109,11 +107,7 @@ class FeatureFlagService:
         if key not in self._flags:
             return None
         self._flags[key].update(
-            {
-                k: v
-                for k, v in updates.items()
-                if k in ("enabled", "rollout_pct", "description", "name")
-            }
+            {k: v for k, v in updates.items() if k in ("enabled", "rollout_pct", "description", "name")}
         )
         self._flags[key]["updated_at"] = time.time()
         return {"key": key, **self._flags[key]}
@@ -138,12 +132,8 @@ class FeatureFlagService:
             "total": len(flags),
             "enabled": sum(1 for f in flags if f["enabled"]),
             "disabled": sum(1 for f in flags if not f["enabled"]),
-            "full_rollout": sum(
-                1 for f in flags if f["enabled"] and f["rollout_pct"] >= 100
-            ),
-            "partial_rollout": sum(
-                1 for f in flags if f["enabled"] and 0 < f["rollout_pct"] < 100
-            ),
+            "full_rollout": sum(1 for f in flags if f["enabled"] and f["rollout_pct"] >= 100),
+            "partial_rollout": sum(1 for f in flags if f["enabled"] and 0 < f["rollout_pct"] < 100),
             "categories": list(set(f.get("category", "other") for f in flags)),
         }
 

@@ -181,9 +181,7 @@ class BankingService:
     # ─────────────────────────────────────────────
     # ACCOUNT MANAGEMENT
     # ─────────────────────────────────────────────
-    def create_account(
-        self, owner_name, email, account_type, initial_deposit, user="unknown"
-    ):
+    def create_account(self, owner_name, email, account_type, initial_deposit, user="unknown"):
         acc = Account(owner_name, email, account_type, initial_deposit)
         acc_dict = acc.to_dict()
 
@@ -211,9 +209,7 @@ class BankingService:
                 "Initial deposit",
             )
 
-        self._audit(
-            user, "ACCOUNT_CREATE", f"Created account {acc.account_id} for {owner_name}"
-        )
+        self._audit(user, "ACCOUNT_CREATE", f"Created account {acc.account_id} for {owner_name}")
         return acc_dict
 
     def get_account(self, account_id):
@@ -228,9 +224,7 @@ class BankingService:
         acc = self.account_table.get(account_id)
         if acc:
             acc["status"] = "frozen"
-            self._audit(
-                user, "ACCOUNT_FREEZE", f"Froze account {account_id}", "warning"
-            )
+            self._audit(user, "ACCOUNT_FREEZE", f"Froze account {account_id}", "warning")
             return True
         return False
 
@@ -256,9 +250,7 @@ class BankingService:
             acc["balance"] = round(acc["balance"], 2)
 
             # DSA: Linked List — O(1) prepend
-            txn = self._record_transaction(
-                account_id, "deposit", amount, acc["balance"], description or "Deposit"
-            )
+            txn = self._record_transaction(account_id, "deposit", amount, acc["balance"], description or "Deposit")
 
             # DSA: Stack — push undo snapshot O(1)
             self.undo_stacks[account_id].push(
@@ -415,9 +407,7 @@ class BankingService:
         urgency=0,
         user="unknown",
     ):
-        loan = LoanApplication(
-            account_id, owner_name, amount, purpose, credit_score, urgency
-        )
+        loan = LoanApplication(account_id, owner_name, amount, purpose, credit_score, urgency)
         loan_dict = loan.to_dict()
 
         # DSA: Priority Queue — insert O(log n)
@@ -530,9 +520,7 @@ class BankingService:
     # ─────────────────────────────────────────────
     # HELPERS
     # ─────────────────────────────────────────────
-    def _record_transaction(
-        self, account_id, type_, amount, balance_after, description
-    ):
+    def _record_transaction(self, account_id, type_, amount, balance_after, description):
         node = TransactionNode(
             transaction_id=gen_id("TXN"),
             type_=type_,
@@ -566,7 +554,9 @@ class BankingService:
         """
         prev = "GENESIS"
         for idx, entry in enumerate(self.audit_logs):
-            payload = f"{prev}|{entry['timestamp']}|{entry['user']}|{entry['action']}|{entry['details']}|{entry['severity']}"
+            payload = (
+                f"{prev}|{entry['timestamp']}|{entry['user']}|{entry['action']}|{entry['details']}|{entry['severity']}"
+            )
             expected = hashlib.sha256(payload.encode("utf-8")).hexdigest()
             if entry.get("hash") != expected or entry.get("prev_hash") != prev:
                 return False, idx

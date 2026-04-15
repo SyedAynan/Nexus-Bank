@@ -133,10 +133,7 @@ class SearchEngine:
             # Apply filters
             if filters.get("status") and acc.get("status") != filters["status"]:
                 continue
-            if (
-                filters.get("account_type")
-                and acc.get("account_type") != filters["account_type"]
-            ):
+            if filters.get("account_type") and acc.get("account_type") != filters["account_type"]:
                 continue
             bal = acc.get("balance", 0)
             if filters.get("amount_min") and bal < float(filters["amount_min"]):
@@ -309,18 +306,14 @@ class SearchEngine:
                     f"{d.get('account_id', '')},{d.get('owner_name', '')},{d.get('email', '')},{d.get('account_type', '')},{d.get('balance', '')},{d.get('status', '')},{d.get('created_at', '')[:10]}"
                 )
         elif entity == "transaction":
-            lines.append(
-                "transaction_id,type,amount,balance_after,description,timestamp"
-            )
+            lines.append("transaction_id,type,amount,balance_after,description,timestamp")
             for r in results:
                 d = r["data"]
                 lines.append(
                     f"{d.get('transaction_id', '')},{d.get('type', '')},{d.get('amount', '')},{d.get('balance_after', '')},{d.get('description', '').replace(',', ';')},{d.get('timestamp', '')[:16]}"
                 )
         elif entity == "loan":
-            lines.append(
-                "loan_id,owner_name,amount,purpose,credit_score,status,applied_at"
-            )
+            lines.append("loan_id,owner_name,amount,purpose,credit_score,status,applied_at")
             for r in results:
                 d = r["data"]
                 lines.append(

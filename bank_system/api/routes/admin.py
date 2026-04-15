@@ -104,12 +104,7 @@ def security_events(
     current_admin=Depends(role_required(UserRole.admin)),
     limit: int = 100,
 ):
-    events = (
-        db.query(SecurityEvent)
-        .order_by(SecurityEvent.created_at.desc())
-        .limit(limit)
-        .all()
-    )
+    events = db.query(SecurityEvent).order_by(SecurityEvent.created_at.desc()).limit(limit).all()
     return [
         {
             "id": e.id,

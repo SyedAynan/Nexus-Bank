@@ -191,18 +191,10 @@ def seed_if_empty() -> None:
         db.commit()
 
         # ── Fraud Alerts ──
-        high_risk_txs = (
-            db.query(Transaction).filter(Transaction.fraud_score > 0.5).limit(5).all()
-        )
+        high_risk_txs = db.query(Transaction).filter(Transaction.fraud_score > 0.5).limit(5).all()
 
         for tx in high_risk_txs:
-            severity = (
-                "critical"
-                if tx.fraud_score > 0.8
-                else "high"
-                if tx.fraud_score > 0.6
-                else "medium"
-            )
+            severity = "critical" if tx.fraud_score > 0.8 else "high" if tx.fraud_score > 0.6 else "medium"
             reasons = [
                 "Unusual transaction amount detected",
                 "Transaction outside normal operating hours",
@@ -284,8 +276,7 @@ def seed_if_empty() -> None:
                 event_type=event_type,
                 ip_address=f"192.168.{random.randint(1, 255)}.{random.randint(1, 255)}",
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0",
-                created_at=now
-                - timedelta(days=random.randint(0, 30), hours=random.randint(0, 23)),
+                created_at=now - timedelta(days=random.randint(0, 30), hours=random.randint(0, 23)),
                 details=details,
             )
             db.add(event)

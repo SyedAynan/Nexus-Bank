@@ -162,9 +162,7 @@ _frontend_url = os.environ.get("FRONTEND_URL", "").strip()
 if _frontend_url:
     ALLOWED_ORIGINS.append(_frontend_url)
     # Also allow www subdomain variant
-    if _frontend_url.startswith("https://") and not _frontend_url.startswith(
-        "https://www."
-    ):
+    if _frontend_url.startswith("https://") and not _frontend_url.startswith("https://www."):
         ALLOWED_ORIGINS.append(_frontend_url.replace("https://", "https://www."))
 
 if settings.environment == "development":
@@ -318,6 +316,4 @@ app.include_router(analytics_routes.router)
 app.include_router(admin_routes.router)
 app.include_router(intelligence_routes.router)
 app.include_router(dsa_admin_routes.router)  # Admin-only DSA visualization
-app.include_router(
-    services_routes.router
-)  # OAuth, WebAuthn, Email, BillPay, FX, Flags, Export
+app.include_router(services_routes.router)  # OAuth, WebAuthn, Email, BillPay, FX, Flags, Export

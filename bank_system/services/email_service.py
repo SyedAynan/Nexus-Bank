@@ -42,9 +42,7 @@ class EmailService:
             "total_sent": len(self._sent_log),
         }
 
-    def send_otp(
-        self, to_email: str, otp_code: str, purpose: str = "login"
-    ) -> dict[str, Any]:
+    def send_otp(self, to_email: str, otp_code: str, purpose: str = "login") -> dict[str, Any]:
         """Send OTP code via email."""
         subject = f"NEXA — Your verification code: {otp_code}"
         html = f"""
@@ -63,9 +61,7 @@ class EmailService:
         """
         return self._send(to_email, subject, html, "otp")
 
-    def send_transaction_alert(
-        self, to_email: str, tx_type: str, amount: float, account: str
-    ) -> dict[str, Any]:
+    def send_transaction_alert(self, to_email: str, tx_type: str, amount: float, account: str) -> dict[str, Any]:
         """Send transaction notification."""
         subject = f"NEXA — {tx_type.title()} of ${amount:,.2f}"
         html = f"""
@@ -83,9 +79,7 @@ class EmailService:
         """
         return self._send(to_email, subject, html, "transaction_alert")
 
-    def send_security_alert(
-        self, to_email: str, event: str, details: str
-    ) -> dict[str, Any]:
+    def send_security_alert(self, to_email: str, event: str, details: str) -> dict[str, Any]:
         """Send security notification (login, password change, etc.)."""
         subject = f"NEXA — Security Alert: {event}"
         html = f"""
@@ -101,9 +95,7 @@ class EmailService:
         """
         return self._send(to_email, subject, html, "security_alert")
 
-    def _send(
-        self, to_email: str, subject: str, html: str, email_type: str
-    ) -> dict[str, Any]:
+    def _send(self, to_email: str, subject: str, html: str, email_type: str) -> dict[str, Any]:
         """Send email through configured provider or log to console."""
         record = {
             "to": to_email,

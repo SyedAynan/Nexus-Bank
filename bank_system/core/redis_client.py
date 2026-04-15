@@ -21,9 +21,7 @@ class FakeRedis:
         self._expiry = {}  # key -> expiry_timestamp (epoch)
         self._sets = {}
         self._sorted_sets = {}
-        logger.warning(
-            "Using in-memory FakeRedis — data will not persist across restarts"
-        )
+        logger.warning("Using in-memory FakeRedis — data will not persist across restarts")
 
     def _is_expired(self, key):
         """Check if a key has expired and remove it if so."""

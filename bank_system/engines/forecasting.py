@@ -9,22 +9,12 @@ from bank_system.schemas.analytics import ForecastSeries, TimeSeriesPoint
 
 
 class ForecastingEngine:
-    def build_cashflow_forecast(
-        self, db: Session, horizon_days: int = 30
-    ) -> list[ForecastSeries]:
+    def build_cashflow_forecast(self, db: Session, horizon_days: int = 30) -> list[ForecastSeries]:
         now = datetime.utcnow()
         since = now - timedelta(days=90)
-        txs = (
-            db.query(Transaction)
-            .filter(Transaction.created_at >= since)
-            .order_by(Transaction.created_at)
-            .all()
-        )
+        txs = db.query(Transaction).filter(Transaction.created_at >= since).order_by(Transaction.created_at).all()
         if not txs:
-            base = [
-                TimeSeriesPoint(timestamp=now + timedelta(days=i), value=0.0)
-                for i in range(horizon_days)
-            ]
+            base = [TimeSeriesPoint(timestamp=now + timedelta(days=i), value=0.0) for i in range(horizon_days)]
             return [ForecastSeries(label="net_flow", points=base)]
 
         daily = {}
@@ -46,8 +36,7 @@ class ForecastingEngine:
             forecast_vals = np.repeat(y.mean(), horizon_days)
 
         series = [
-            TimeSeriesPoint(timestamp=now + timedelta(days=i), value=float(v))
-            for i, v in enumerate(forecast_vals)
+            TimeSeriesPoint(timestamp=now + timedelta(days=i), value=float(v)) for i, v in enumerate(forecast_vals)
         ]
         snap = ForecastSnapshot(
             account_id=None,

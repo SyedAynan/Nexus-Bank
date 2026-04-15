@@ -27,9 +27,7 @@ def _create_token(data: dict, expires_delta: timedelta) -> str:
     if "jti" not in to_encode:
         to_encode["jti"] = uuid.uuid4().hex
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(
-        to_encode, settings.secret_key, algorithm=settings.jwt_algorithm
-    )
+    encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.jwt_algorithm)
     return encoded_jwt
 
 
@@ -55,9 +53,7 @@ def create_refresh_token(subject: str, extra: dict | None = None) -> str:
 
 def decode_token(token: str) -> dict[str, Any]:
     try:
-        payload = jwt.decode(
-            token, settings.secret_key, algorithms=[settings.jwt_algorithm]
-        )
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.jwt_algorithm])
         return payload
     except JWTError as exc:
         raise ValueError("Invalid token") from exc

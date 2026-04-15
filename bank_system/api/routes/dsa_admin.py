@@ -183,9 +183,7 @@ def sorting_benchmark(
     current_admin=Depends(role_required(UserRole.admin)),
 ):
     """Run all sorting algorithms on transaction data and return performance stats."""
-    transactions = (
-        db.query(Transaction).order_by(Transaction.created_at.desc()).limit(500).all()
-    )
+    transactions = db.query(Transaction).order_by(Transaction.created_at.desc()).limit(500).all()
 
     if not transactions:
         return {"message": "No transactions to sort", "results": []}

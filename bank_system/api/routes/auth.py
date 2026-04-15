@@ -58,11 +58,7 @@ def _generate_otp() -> str:
 
 @router.post("/register", response_model=UserRead, status_code=201)
 def register_user(payload: UserCreate, db: Annotated[Session, Depends(get_db)]):
-    existing = (
-        db.query(User)
-        .filter((User.username == payload.username) | (User.email == payload.email))
-        .first()
-    )
+    existing = db.query(User).filter((User.username == payload.username) | (User.email == payload.email)).first()
     if existing:
         raise HTTPException(status_code=400, detail="User already exists")
 
@@ -194,9 +190,7 @@ def verify_otp(
             ua=ua,
             details="OTP max attempts exceeded — OTP invalidated",
         )
-        raise HTTPException(
-            status_code=429, detail="Too many OTP attempts. Please login again."
-        )
+        raise HTTPException(status_code=429, detail="Too many OTP attempts. Please login again.")
 
     cached = redis.get(f"otp:{user.username}")
 

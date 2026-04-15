@@ -1,4 +1,3 @@
-
 from sqlalchemy.orm import Session
 
 from bank_system.models.db_models import Account, PortfolioHolding
@@ -6,14 +5,8 @@ from bank_system.schemas.intelligence import PortfolioInsight
 
 
 class PortfolioEngine:
-    def get_insights_for_account(
-        self, db: Session, account_id: int
-    ) -> list[PortfolioInsight]:
-        holdings = (
-            db.query(PortfolioHolding)
-            .filter(PortfolioHolding.account_id == account_id)
-            .all()
-        )
+    def get_insights_for_account(self, db: Session, account_id: int) -> list[PortfolioInsight]:
+        holdings = db.query(PortfolioHolding).filter(PortfolioHolding.account_id == account_id).all()
         if not holdings:
             # synthesize a conservative allocation
             holdings = [

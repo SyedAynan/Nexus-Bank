@@ -84,9 +84,7 @@ class MultiCurrencyService:
             "currencies": len(converted),
         }
 
-    def convert(
-        self, amount: float, from_currency: str, to_currency: str
-    ) -> dict[str, Any]:
+    def convert(self, amount: float, from_currency: str, to_currency: str) -> dict[str, Any]:
         from_rate = self._rates.get(from_currency.upper(), 1.0)
         to_rate = self._rates.get(to_currency.upper(), 1.0)
         rate = to_rate / from_rate
@@ -108,10 +106,7 @@ class MultiCurrencyService:
 
     def get_wallet(self, user_id: str = "default") -> dict[str, Any]:
         wallet = self._wallets.get(user_id, self._wallets["default"])
-        total_usd = sum(
-            amt / self._rates.get(curr, 1.0) * self._rates["USD"]
-            for curr, amt in wallet.items()
-        )
+        total_usd = sum(amt / self._rates.get(curr, 1.0) * self._rates["USD"] for curr, amt in wallet.items())
         holdings = []
         for curr, amt in wallet.items():
             usd_value = amt / self._rates.get(curr, 1.0)
@@ -121,9 +116,7 @@ class MultiCurrencyService:
                     "currency": curr,
                     "balance": amt,
                     "usd_value": round(usd_value, 2),
-                    "percentage": round(usd_value / total_usd * 100, 1)
-                    if total_usd
-                    else 0,
+                    "percentage": round(usd_value / total_usd * 100, 1) if total_usd else 0,
                     **info,
                 }
             )

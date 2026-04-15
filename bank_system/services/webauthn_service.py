@@ -46,21 +46,13 @@ class WebAuthnService:
             "total_credentials": sum(len(c) for c in self._credentials.values()),
         }
 
-    def generate_registration_options(
-        self, user_id: str, username: str
-    ) -> dict[str, Any]:
+    def generate_registration_options(self, user_id: str, username: str) -> dict[str, Any]:
         """Generate registration options (challenge) for passkey creation."""
         challenge = (
-            base64.urlsafe_b64encode(
-                hashlib.sha256(f"{user_id}-{time.time()}".encode()).digest()
-            )
-            .decode()
-            .rstrip("=")
+            base64.urlsafe_b64encode(hashlib.sha256(f"{user_id}-{time.time()}".encode()).digest()).decode().rstrip("=")
         )
 
-        session_id = hashlib.sha256(
-            f"reg-{user_id}-{time.time()}".encode()
-        ).hexdigest()[:32]
+        session_id = hashlib.sha256(f"reg-{user_id}-{time.time()}".encode()).hexdigest()[:32]
         self._challenges[session_id] = challenge
 
         return {
@@ -86,9 +78,7 @@ class WebAuthnService:
             "mode": self.mode,
         }
 
-    def verify_registration(
-        self, session_id: str, user_id: str, credential: dict
-    ) -> dict[str, Any]:
+    def verify_registration(self, session_id: str, user_id: str, credential: dict) -> dict[str, Any]:
         """Verify registration response and store credential."""
         if session_id not in self._challenges:
             return {"success": False, "error": "Invalid or expired session"}
@@ -119,16 +109,10 @@ class WebAuthnService:
         # Production flow would use py_webauthn here
         return {"success": True, "mode": "production"}
 
-    def generate_authentication_options(
-        self, user_id: str | None = None
-    ) -> dict[str, Any]:
+    def generate_authentication_options(self, user_id: str | None = None) -> dict[str, Any]:
         """Generate authentication options for passkey login."""
         challenge = (
-            base64.urlsafe_b64encode(
-                hashlib.sha256(f"auth-{time.time()}".encode()).digest()
-            )
-            .decode()
-            .rstrip("=")
+            base64.urlsafe_b64encode(hashlib.sha256(f"auth-{time.time()}".encode()).digest()).decode().rstrip("=")
         )
 
         session_id = hashlib.sha256(f"auth-{time.time()}".encode()).hexdigest()[:32]
@@ -136,10 +120,7 @@ class WebAuthnService:
 
         allow_credentials = []
         if user_id and user_id in self._credentials:
-            allow_credentials = [
-                {"type": "public-key", "id": c["credential_id"]}
-                for c in self._credentials[user_id]
-            ]
+            allow_credentials = [{"type": "public-key", "id": c["credential_id"]} for c in self._credentials[user_id]]
 
         return {
             "session_id": session_id,
@@ -151,9 +132,7 @@ class WebAuthnService:
             "mode": self.mode,
         }
 
-    def verify_authentication(
-        self, session_id: str, credential: dict
-    ) -> dict[str, Any]:
+    def verify_authentication(self, session_id: str, credential: dict) -> dict[str, Any]:
         """Verify authentication assertion."""
         if session_id not in self._challenges:
             return {"success": False, "error": "Invalid or expired session"}
@@ -177,11 +156,7 @@ class WebAuthnService:
     def revoke_credential(self, user_id: str, credential_id: str) -> bool:
         """Revoke a specific credential."""
         if user_id in self._credentials:
-            self._credentials[user_id] = [
-                c
-                for c in self._credentials[user_id]
-                if c["credential_id"] != credential_id
-            ]
+            self._credentials[user_id] = [c for c in self._credentials[user_id] if c["credential_id"] != credential_id]
             return True
         return False
 

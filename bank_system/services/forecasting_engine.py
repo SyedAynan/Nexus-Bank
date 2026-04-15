@@ -23,9 +23,7 @@ class ForecastingEngine:
     def __init__(self, banking_service):
         self.bank = banking_service
 
-    def get_cashflow_forecast(
-        self, horizons: list[int] | None = None
-    ) -> dict[str, Any]:
+    def get_cashflow_forecast(self, horizons: list[int] | None = None) -> dict[str, Any]:
         """
         Compute rolling net cash-flow projections for a set of horizons in days.
         """
@@ -70,9 +68,7 @@ class ForecastingEngine:
             forecast[str(h)] = round(ma * h, 2)
 
         # Simple probability heuristics
-        loan_book = self.bank.get_pending_loans() + getattr(
-            self.bank, "processed_loans", []
-        )
+        loan_book = self.bank.get_pending_loans() + getattr(self.bank, "processed_loans", [])
         total_loans = sum(loan.get("amount", 0.0) for loan in loan_book) or 1.0
         overdue_like = sum(
             loan.get("amount", 0.0)
@@ -83,9 +79,7 @@ class ForecastingEngine:
 
         accounts = self.bank.get_all_accounts()
         low_balance_accounts = [a for a in accounts if a.get("balance", 0.0) < 1000]
-        churn_prob = max(
-            0.01, min(0.4, len(low_balance_accounts) / max(1, len(accounts)))
-        )
+        churn_prob = max(0.01, min(0.4, len(low_balance_accounts) / max(1, len(accounts))))
 
         return {
             "cashflow_forecast": forecast,

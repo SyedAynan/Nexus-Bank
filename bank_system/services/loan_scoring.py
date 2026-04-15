@@ -105,15 +105,7 @@ class LoanScoringEngine:
         max_amount = self._recommend_max_amount(composite, account, history, amount)
 
         # Risk tier
-        tier = (
-            "A"
-            if composite >= 80
-            else "B"
-            if composite >= 65
-            else "C"
-            if composite >= 50
-            else "D"
-        )
+        tier = "A" if composite >= 80 else "B" if composite >= 65 else "C" if composite >= 50 else "D"
 
         return {
             "account_id": account_id,
@@ -130,9 +122,7 @@ class LoanScoringEngine:
             "credit_score": credit_score,
             "urgency": urgency,
             "scored_at": datetime.now().isoformat(),
-            "recommendations": self._generate_recommendations(
-                factors, composite, decision
-            ),
+            "recommendations": self._generate_recommendations(factors, composite, decision),
         }
 
     def _score_credit(self, credit_score):
@@ -148,11 +138,7 @@ class LoanScoringEngine:
         if not deposits:
             return 30
         # Reward consistent deposit behavior
-        dep_cv = (
-            (statistics.stdev(deposits) / statistics.mean(deposits))
-            if len(deposits) > 1
-            else 1
-        )
+        dep_cv = (statistics.stdev(deposits) / statistics.mean(deposits)) if len(deposits) > 1 else 1
         # Low coefficient of variation = consistent = good
         behavior_score = max(0, 100 - dep_cv * 40)
         # Penalize if withdrawals consistently exceed deposits
@@ -187,9 +173,7 @@ class LoanScoringEngine:
         # Estimate monthly income from average deposits
         estimated_monthly = statistics.mean(deposits) * max(1, len(deposits) / 12)
         # Loan should be < 36x monthly income (3 years)
-        months_to_repay = (
-            loan_amount / estimated_monthly if estimated_monthly > 0 else 999
-        )
+        months_to_repay = loan_amount / estimated_monthly if estimated_monthly > 0 else 999
         if months_to_repay <= 12:
             return 95
         elif months_to_repay <= 24:
@@ -257,13 +241,9 @@ class LoanScoringEngine:
         if factors["credit_score"] < 60:
             recs.append("Improve credit score by paying down existing debts on time.")
         if factors["account_behavior"] < 50:
-            recs.append(
-                "Maintain more consistent deposit patterns over the next 3-6 months."
-            )
+            recs.append("Maintain more consistent deposit patterns over the next 3-6 months.")
         if factors["balance_health"] < 50:
-            recs.append(
-                "Build up account balance to at least 20% of requested loan amount."
-            )
+            recs.append("Build up account balance to at least 20% of requested loan amount.")
         if factors["lti_ratio"] < 50:
             recs.append("Consider requesting a smaller loan amount relative to income.")
         if factors["network_risk"] < 60:

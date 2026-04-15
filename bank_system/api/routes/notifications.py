@@ -51,17 +51,13 @@ def get_notification(
     db: Annotated[Session, Depends(get_db)],
 ):
     """Get a single notification. Only the owner can view."""
-    notification = (
-        db.query(Notification).filter(Notification.id == notification_id).first()
-    )
+    notification = db.query(Notification).filter(Notification.id == notification_id).first()
 
     if not notification:
         raise HTTPException(status_code=404, detail="Notification not found")
 
     if notification.user_id != current_user.id:
-        raise HTTPException(
-            status_code=403, detail="Not authorized to view this notification"
-        )
+        raise HTTPException(status_code=403, detail="Not authorized to view this notification")
 
     return notification
 
@@ -120,17 +116,13 @@ def mark_as_read(
     db: Annotated[Session, Depends(get_db)],
 ):
     """Mark a notification as read. Only the owner can mark."""
-    notification = (
-        db.query(Notification).filter(Notification.id == notification_id).first()
-    )
+    notification = db.query(Notification).filter(Notification.id == notification_id).first()
 
     if not notification:
         raise HTTPException(status_code=404, detail="Notification not found")
 
     if notification.user_id != current_user.id:
-        raise HTTPException(
-            status_code=403, detail="Not authorized to update this notification"
-        )
+        raise HTTPException(status_code=403, detail="Not authorized to update this notification")
 
     notification.is_read = True
     db.commit()
@@ -162,9 +154,7 @@ def delete_notification(
     db: Annotated[Session, Depends(get_db)],
 ):
     """Delete a notification (admin only)."""
-    notification = (
-        db.query(Notification).filter(Notification.id == notification_id).first()
-    )
+    notification = db.query(Notification).filter(Notification.id == notification_id).first()
 
     if not notification:
         raise HTTPException(status_code=404, detail="Notification not found")

@@ -12,11 +12,7 @@ from bank_system.models.db_models import (
 
 class AMLEngine:
     def _rebuild_graph(self, db: Session) -> tuple[list[AMLNode], list[AMLEdge]]:
-        txs = (
-            db.query(Transaction)
-            .filter(Transaction.type == TransactionType.transfer)
-            .all()
-        )
+        txs = db.query(Transaction).filter(Transaction.type == TransactionType.transfer).all()
 
         edge_weights: dict[tuple[int, int], float] = defaultdict(float)
 
@@ -30,11 +26,7 @@ class AMLEngine:
         for (src, dst), weight in edge_weights.items():
             for acc_id in (src, dst):
                 if acc_id not in nodes:
-                    node = (
-                        db.query(AMLNode)
-                        .filter(AMLNode.account_id == acc_id)
-                        .one_or_none()
-                    )
+                    node = db.query(AMLNode).filter(AMLNode.account_id == acc_id).one_or_none()
                     if not node:
                         node = AMLNode(account_id=acc_id, risk_score=0.0)
                         db.add(node)
@@ -113,9 +105,7 @@ class AMLEngine:
 
         db.commit()
 
-        node_view = [
-            {"account_id": n.account_id, "risk_score": n.risk_score} for n in nodes
-        ]
+        node_view = [{"account_id": n.account_id, "risk_score": n.risk_score} for n in nodes]
 
         edge_view = [
             {
@@ -126,9 +116,7 @@ class AMLEngine:
             for e in edges
         ]
 
-        suspicious_clusters = [
-            {"accounts": cyc, "size": len(cyc)} for cyc in cycles if len(cyc) >= 3
-        ]
+        suspicious_clusters = [{"accounts": cyc, "size": len(cyc)} for cyc in cycles if len(cyc) >= 3]
 
         return {
             "nodes": node_view,

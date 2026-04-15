@@ -29,9 +29,7 @@ RATE_LIMITS = {
 class RateLimiterMiddleware(BaseHTTPMiddleware):
     """Sliding-window rate limiter backed by Redis sorted sets."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         try:
             redis = get_redis()
         except Exception:

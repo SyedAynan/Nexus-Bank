@@ -14,7 +14,6 @@ Space Complexity: O(N * M) where N = words, M = avg length
 """
 
 
-
 class TrieNode:
     __slots__ = ("children", "is_end", "data")
 
@@ -52,9 +51,7 @@ class Trie:
         node = self._find_node(word.lower())
         return node is not None and node.is_end
 
-    def starts_with(
-        self, prefix: str, limit: int = 20
-    ) -> list[tuple[str, dict | None]]:
+    def starts_with(self, prefix: str, limit: int = 20) -> list[tuple[str, dict | None]]:
         """Return up to *limit* words starting with *prefix*."""
         node = self._find_node(prefix.lower())
         if node is None:

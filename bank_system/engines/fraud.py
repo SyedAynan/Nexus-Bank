@@ -37,19 +37,12 @@ class FraudEngine:
             return np.zeros((0, 2))
 
         amounts = np.array([float(abs(t.amount)) for t in txs])
-        ages = np.array(
-            [(txs[-1].created_at - t.created_at).total_seconds() / 3600.0 for t in txs]
-        )
+        ages = np.array([(txs[-1].created_at - t.created_at).total_seconds() / 3600.0 for t in txs])
 
         return np.vstack([amounts, ages]).T
 
     def train(self, db: Session) -> None:
-        txs = (
-            db.query(Transaction)
-            .order_by(Transaction.created_at.desc())
-            .limit(500)
-            .all()
-        )
+        txs = db.query(Transaction).order_by(Transaction.created_at.desc()).limit(500).all()
 
         X = self._build_features(txs)
 
@@ -78,11 +71,7 @@ class FraudEngine:
             severity = "low"
 
         flagged = composite > 0.6
-        reason = (
-            "Amount anomaly vs historical pattern"
-            if self._trained
-            else "Heuristic scoring"
-        )
+        reason = "Amount anomaly vs historical pattern" if self._trained else "Heuristic scoring"
 
         if flagged:
             alert = FraudAlert(

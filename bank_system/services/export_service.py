@@ -15,9 +15,7 @@ logger = logging.getLogger(__name__)
 class ExportService:
     """Transaction export service for CSV and PDF generation."""
 
-    def generate_csv(
-        self, transactions: list[dict], account_info: dict | None = None
-    ) -> str:
+    def generate_csv(self, transactions: list[dict], account_info: dict | None = None) -> str:
         """Generate CSV content from transactions."""
         output = io.StringIO()
         writer = csv.writer(output)
@@ -27,9 +25,7 @@ class ExportService:
             writer.writerow(["NEXA Banking — Account Statement"])
             writer.writerow([f"Account: {account_info.get('account_number', 'N/A')}"])
             writer.writerow([f"Type: {account_info.get('account_type', 'N/A')}"])
-            writer.writerow(
-                [f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"]
-            )
+            writer.writerow([f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"])
             writer.writerow([])
 
         # Column headers
@@ -54,32 +50,24 @@ class ExportService:
             else:
                 amount_str = f"+${abs(amount):,.2f}"
 
-            writer.writerow(
-                [date, tx_type, desc, amount_str, f"${running_balance:,.2f}"]
-            )
+            writer.writerow([date, tx_type, desc, amount_str, f"${running_balance:,.2f}"])
 
         # Summary
         writer.writerow([])
         writer.writerow(["Summary"])
         writer.writerow([f"Total Transactions: {len(transactions)}"])
         total_in = sum(
-            t.get("amount", 0)
-            for t in transactions
-            if t.get("type") in ("deposit", "interest", "transfer_in")
+            t.get("amount", 0) for t in transactions if t.get("type") in ("deposit", "interest", "transfer_in")
         )
         total_out = sum(
-            t.get("amount", 0)
-            for t in transactions
-            if t.get("type") in ("withdrawal", "transfer_out", "emi")
+            t.get("amount", 0) for t in transactions if t.get("type") in ("withdrawal", "transfer_out", "emi")
         )
         writer.writerow([f"Total Credits: ${total_in:,.2f}"])
         writer.writerow([f"Total Debits: ${total_out:,.2f}"])
 
         return output.getvalue()
 
-    def generate_pdf_content(
-        self, transactions: list[dict], account_info: dict | None = None
-    ) -> str:
+    def generate_pdf_content(self, transactions: list[dict], account_info: dict | None = None) -> str:
         """Generate PDF-ready HTML content for statements.
         This returns HTML that can be rendered as a PDF by the frontend or wkhtmltopdf.
         """
@@ -114,14 +102,10 @@ class ExportService:
             </tr>"""
 
         total_in = sum(
-            t.get("amount", 0)
-            for t in transactions
-            if t.get("type") in ("deposit", "interest", "transfer_in")
+            t.get("amount", 0) for t in transactions if t.get("type") in ("deposit", "interest", "transfer_in")
         )
         total_out = sum(
-            t.get("amount", 0)
-            for t in transactions
-            if t.get("type") in ("withdrawal", "transfer_out", "emi")
+            t.get("amount", 0) for t in transactions if t.get("type") in ("withdrawal", "transfer_out", "emi")
         )
 
         html = f"""<!DOCTYPE html>
@@ -193,9 +177,7 @@ class ExportService:
 </html>"""
         return html
 
-    def generate_audit_report(
-        self, audit_entries: list[dict], report_type: str = "general"
-    ) -> str:
+    def generate_audit_report(self, audit_entries: list[dict], report_type: str = "general") -> str:
         """Generate audit trail CSV for compliance."""
         output = io.StringIO()
         writer = csv.writer(output)
@@ -203,9 +185,7 @@ class ExportService:
         writer.writerow([f"NEXA Banking — Audit Report ({report_type.upper()})"])
         writer.writerow([f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"])
         writer.writerow([])
-        writer.writerow(
-            ["Timestamp", "User", "Action", "Details", "IP Address", "Risk Level"]
-        )
+        writer.writerow(["Timestamp", "User", "Action", "Details", "IP Address", "Risk Level"])
 
         for entry in audit_entries:
             writer.writerow(

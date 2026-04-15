@@ -65,9 +65,7 @@ class PolicyEngine:
             "risk": {"risk:view", "risk:act"},
         }
 
-    def is_allowed(
-        self, role: str, permission: str, attributes: dict[str, Any] | None = None
-    ) -> bool:
+    def is_allowed(self, role: str, permission: str, attributes: dict[str, Any] | None = None) -> bool:
         """
         ABAC-friendly entry: attributes can later hold branch, entity flags, etc.
         For now we only match role → permission sets.

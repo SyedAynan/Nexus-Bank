@@ -57,9 +57,7 @@ def _get_account_with_lock(db: Session, account_id: int) -> Account:
     try:
         # Use with_for_update() for PostgreSQL row-level locking
         # Falls back gracefully on SQLite (which uses file-level locks)
-        account = (
-            db.query(Account).filter(Account.id == account_id).with_for_update().first()
-        )
+        account = db.query(Account).filter(Account.id == account_id).with_for_update().first()
     except Exception:
         # SQLite doesn't support FOR UPDATE — fallback to normal query
         account = db.query(Account).filter(Account.id == account_id).first()
@@ -158,14 +156,10 @@ def create_transaction(
         # Atomic transfer with both accounts locked (BUG-007 fix)
         counter = _get_account_with_lock(db, payload.counterparty_account_id)
         if not counter:
-            raise HTTPException(
-                status_code=404, detail="Counterparty account not found"
-            )
+            raise HTTPException(status_code=404, detail="Counterparty account not found")
 
         if counter.status != "active":
-            raise HTTPException(
-                status_code=400, detail="Counterparty account is not active"
-            )
+            raise HTTPException(status_code=400, detail="Counterparty account is not active")
 
         if account.balance < payload.amount:
             raise HTTPException(status_code=400, detail="Insufficient funds")
@@ -203,20 +197,10 @@ def list_all_transactions(
     q = db.query(Transaction)
 
     if current_user.role == UserRole.user:
-        user_account_ids = [
-            a.id
-            for a in db.query(Account.id)
-            .filter(Account.owner_id == current_user.id)
-            .all()
-        ]
+        user_account_ids = [a.id for a in db.query(Account.id).filter(Account.owner_id == current_user.id).all()]
         q = q.filter(Transaction.account_id.in_(user_account_ids))
 
-    txs = (
-        q.order_by(Transaction.created_at.desc())
-        .offset(offset)
-        .limit(min(limit, 500))
-        .all()
-    )
+    txs = q.order_by(Transaction.created_at.desc()).offset(offset).limit(min(limit, 500)).all()
     return txs
 
 
@@ -267,9 +251,7 @@ def create_loan(
 
     # Regular users can only apply for loans on their own accounts
     if current_user.role == UserRole.user and account.owner_id != current_user.id:
-        raise HTTPException(
-            status_code=403, detail="Can only apply for loans on your own accounts"
-        )
+        raise HTTPException(status_code=403, detail="Can only apply for loans on your own accounts")
 
     dti = payload.debt_to_income
     credit = payload.credit_score
@@ -284,9 +266,7 @@ def create_loan(
 
     risk_tier = "low" if prob > 0.7 else "medium" if prob > 0.4 else "high"
 
-    emi = (payload.principal * (1 + payload.interest_rate / 100)) / max(
-        1, payload.term_months
-    )
+    emi = (payload.principal * (1 + payload.interest_rate / 100)) / max(1, payload.term_months)
 
     loan = Loan(
         account_id=payload.account_id,
@@ -348,9 +328,7 @@ def create_user_transaction(
 
     # Regular users can only transact on their own accounts
     if current_user.role == UserRole.user and account.owner_id != current_user.id:
-        raise HTTPException(
-            status_code=403, detail="You can only transact on your own accounts"
-        )
+        raise HTTPException(status_code=403, detail="You can only transact on your own accounts")
 
     if payload.type == TransactionType.withdrawal and account.balance < payload.amount:
         raise HTTPException(status_code=400, detail="Insufficient funds")
@@ -386,9 +364,7 @@ def user_transfer(
     race conditions and ensure atomic balance updates.
     """
     if not payload.counterparty_account_id:
-        raise HTTPException(
-            status_code=400, detail="Counterparty account ID required for transfers"
-        )
+        raise HTTPException(status_code=400, detail="Counterparty account ID required for transfers")
 
     # Lock both accounts in consistent order to prevent deadlocks
     # Always lock lower ID first
@@ -416,9 +392,7 @@ def user_transfer(
 
     # Regular users can only transfer from their own accounts
     if current_user.role == UserRole.user and source.owner_id != current_user.id:
-        raise HTTPException(
-            status_code=403, detail="You can only transfer from your own accounts"
-        )
+        raise HTTPException(status_code=403, detail="You can only transfer from your own accounts")
 
     if source.balance < payload.amount:
         raise HTTPException(status_code=400, detail="Insufficient funds")
@@ -461,11 +435,7 @@ def get_transaction_lifecycle(
     if current_user.role == UserRole.user and account.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    base_time = (
-        tx.created_at.replace(tzinfo=UTC)
-        if tx.created_at.tzinfo is None
-        else tx.created_at
-    )
+    base_time = tx.created_at.replace(tzinfo=UTC) if tx.created_at.tzinfo is None else tx.created_at
 
     lifecycle_stages = [
         {

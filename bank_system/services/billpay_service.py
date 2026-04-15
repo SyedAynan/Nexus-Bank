@@ -195,9 +195,7 @@ class BillPayService:
         return {
             "total_scheduled": len(self._scheduled),
             "active": len(active),
-            "monthly_total": sum(
-                p["amount"] for p in active if p["frequency"] == "monthly"
-            ),
+            "monthly_total": sum(p["amount"] for p in active if p["frequency"] == "monthly"),
             "total_paid_all_time": sum(p.get("total_paid", 0) for p in self._scheduled),
             "auto_pay_count": sum(1 for p in active if p.get("auto_pay")),
             "categories": list(set(p.get("category", "other") for p in active)),

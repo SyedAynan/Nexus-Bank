@@ -119,9 +119,7 @@ class AnalyticsEngine:
         processed = self.bank.processed_loans
         approved = sum(1 for loan in processed if loan["status"] == "approved")
         rejected = sum(1 for loan in processed if loan["status"] == "rejected")
-        approved_vol = sum(
-            loan["amount"] for loan in processed if loan["status"] == "approved"
-        )
+        approved_vol = sum(loan["amount"] for loan in processed if loan["status"] == "approved")
         return {
             "labels": ["Pending", "Approved", "Rejected"],
             "counts": [pending, approved, rejected],
@@ -180,9 +178,7 @@ class AnalyticsEngine:
             "labels": labels,
             "inflow": [round(months[k]["inflow"], 2) for k in labels],
             "outflow": [round(months[k]["outflow"], 2) for k in labels],
-            "net": [
-                round(months[k]["inflow"] - months[k]["outflow"], 2) for k in labels
-            ],
+            "net": [round(months[k]["inflow"] - months[k]["outflow"], 2) for k in labels],
         }
 
     def get_kpi_delta(self):
@@ -212,9 +208,7 @@ class AnalyticsEngine:
                 return self._kpi_cache
 
         accounts = self.bank.get_all_accounts()
-        loans = self.bank.get_pending_loans() + getattr(
-            self.bank, "processed_loans", []
-        )
+        loans = self.bank.get_pending_loans() + getattr(self.bank, "processed_loans", [])
 
         total_assets = sum(a.get("balance", 0.0) for a in accounts)
         total_loans = sum(loan.get("amount", 0.0) for loan in loans)
@@ -227,19 +221,13 @@ class AnalyticsEngine:
 
         # NPL approximation: loans with status overdue/defaulted
         npl_amount = sum(
-            loan.get("amount", 0.0)
-            for loan in loans
-            if str(loan.get("status", "")).lower() in ("overdue", "defaulted")
+            loan.get("amount", 0.0) for loan in loans if str(loan.get("status", "")).lower() in ("overdue", "defaulted")
         )
         npl_ratio = (npl_amount / total_loans * 100.0) if total_loans else 0.0
 
         # Liquidity coverage: high-level proxy of deposits vs stressed outflow
         stressed_outflow = total_loans * 0.05
-        lcr = (
-            ((total_assets - total_loans) / stressed_outflow * 100.0)
-            if stressed_outflow
-            else 0.0
-        )
+        lcr = ((total_assets - total_loans) / stressed_outflow * 100.0) if stressed_outflow else 0.0
 
         result = {
             "cet1_ratio": round(cet1_ratio, 2),

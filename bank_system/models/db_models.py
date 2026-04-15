@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 
 from sqlalchemy import (
     Boolean,
@@ -20,7 +20,7 @@ from sqlalchemy.orm import relationship
 from bank_system.core.db import Base
 
 
-class UserRole(str, Enum):
+class UserRole(StrEnum):
     admin = "admin"
     analyst = "analyst"
     user = "user"
@@ -38,9 +38,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_locked = Column(Boolean, default=False)
     failed_login_attempts = Column(Integer, default=0)
-    created_at = Column(
-        DateTime, default=lambda: datetime.now(UTC), nullable=False
-    )
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     accounts = relationship("Account", back_populates="owner")
 
@@ -52,9 +50,7 @@ class SessionToken(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     jti = Column(String(64), unique=True, nullable=False)
     token_type = Column(String(20), nullable=False)  # access | refresh
-    created_at = Column(
-        DateTime, default=lambda: datetime.now(UTC), nullable=False
-    )
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
     expires_at = Column(DateTime, nullable=False)
     revoked = Column(Boolean, default=False, nullable=False)
 
@@ -76,9 +72,7 @@ class Account(Base):
     balance = Column(Numeric(19, 4), default=0.0)
     currency = Column(String(10), default="USD")
     status = Column(String(20), default="active")  # active | frozen | closed
-    created_at = Column(
-        DateTime, default=lambda: datetime.now(UTC), nullable=False
-    )
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     owner = relationship("User", back_populates="accounts")
     transactions = relationship(
@@ -89,7 +83,7 @@ class Account(Base):
     )
 
 
-class TransactionType(str, Enum):
+class TransactionType(StrEnum):
     deposit = "deposit"
     withdrawal = "withdrawal"
     transfer = "transfer"
@@ -106,9 +100,7 @@ class Transaction(Base):
     amount = Column(Numeric(19, 4), nullable=False)
     type = Column(SAEnum(TransactionType), nullable=False)
     description = Column(String(255), default="")
-    created_at = Column(
-        DateTime, default=lambda: datetime.now(UTC), index=True
-    )
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), index=True)
     is_simulated = Column(Boolean, default=False)
     fraud_score = Column(Numeric(10, 4), default=0.0)
     risk_level = Column(String(10), default="low")
@@ -120,7 +112,7 @@ class Transaction(Base):
     )
 
 
-class LoanStatus(str, Enum):
+class LoanStatus(StrEnum):
     pending = "pending"
     approved = "approved"
     rejected = "rejected"
@@ -145,7 +137,7 @@ class Loan(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
 
-class FraudAlertSeverity(str, Enum):
+class FraudAlertSeverity(StrEnum):
     low = "low"
     medium = "medium"
     high = "high"
@@ -182,12 +174,10 @@ class AMLEdge(Base):
     weight = Column(Numeric(10, 4), default=0.0)
     last_tx_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
-    __table_args__ = (
-        UniqueConstraint("from_account_id", "to_account_id", name="uq_aml_edge_pair"),
-    )
+    __table_args__ = (UniqueConstraint("from_account_id", "to_account_id", name="uq_aml_edge_pair"),)
 
 
-class SecurityEventType(str, Enum):
+class SecurityEventType(StrEnum):
     login_success = "login_success"
     login_failure = "login_failure"
     mfa_challenge = "mfa_challenge"

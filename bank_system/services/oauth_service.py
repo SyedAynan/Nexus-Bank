@@ -98,9 +98,7 @@ class OAuthService:
             for name, p in self.providers.items()
         }
 
-    def get_authorization_url(
-        self, provider: str, redirect_uri: str, state: str | None = None
-    ) -> dict[str, str]:
+    def get_authorization_url(self, provider: str, redirect_uri: str, state: str | None = None) -> dict[str, str]:
         """Generate authorization URL for the given provider."""
         if provider not in self.providers:
             raise ValueError(f"Unknown provider: {provider}")
@@ -114,8 +112,7 @@ class OAuthService:
                 "redirect_uri": redirect_uri,
                 "response_type": "code",
                 "scope": " ".join(config.get("scopes", [])),
-                "state": state
-                or hashlib.sha256(str(time.time()).encode()).hexdigest()[:16],
+                "state": state or hashlib.sha256(str(time.time()).encode()).hexdigest()[:16],
             }
             base_url = config["auth_url"]
             if "{tenant}" in base_url:
@@ -135,9 +132,7 @@ class OAuthService:
                 "mode": "simulation",
             }
 
-    def exchange_code(
-        self, provider: str, code: str, redirect_uri: str
-    ) -> dict[str, Any]:
+    def exchange_code(self, provider: str, code: str, redirect_uri: str) -> dict[str, Any]:
         """Exchange authorization code for user profile."""
         if provider not in self.providers:
             raise ValueError(f"Unknown provider: {provider}")

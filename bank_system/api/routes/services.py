@@ -58,9 +58,7 @@ def oauth_authorize(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     try:
-        return oauth_service.get_authorization_url(
-            req.provider, req.redirect_uri, req.state
-        )
+        return oauth_service.get_authorization_url(req.provider, req.redirect_uri, req.state)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -107,9 +105,7 @@ def webauthn_register_verify(
     req: WebAuthnRegisterVerify,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    return webauthn_service.verify_registration(
-        req.session_id, req.user_id, req.credential
-    )
+    return webauthn_service.verify_registration(req.session_id, req.user_id, req.credential)
 
 
 @router.post("/webauthn/authenticate/options")
@@ -168,9 +164,7 @@ def send_transaction_alert(
     req: EmailAlertRequest,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    return email_service.send_transaction_alert(
-        req.to_email, req.tx_type, req.amount, req.account
-    )
+    return email_service.send_transaction_alert(req.to_email, req.tx_type, req.amount, req.account)
 
 
 @router.get("/email/log")
@@ -443,9 +437,7 @@ def export_csv(
     return StreamingResponse(
         iter([content]),
         media_type="text/csv",
-        headers={
-            "Content-Disposition": f"attachment; filename=nexa_statement_{account_id}.csv"
-        },
+        headers={"Content-Disposition": f"attachment; filename=nexa_statement_{account_id}.csv"},
     )
 
 
@@ -578,7 +570,5 @@ def export_audit_trail(
     return StreamingResponse(
         iter([content]),
         media_type="text/csv",
-        headers={
-            "Content-Disposition": f"attachment; filename=nexa_audit_{report_type}.csv"
-        },
+        headers={"Content-Disposition": f"attachment; filename=nexa_audit_{report_type}.csv"},
     )

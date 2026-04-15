@@ -32,13 +32,10 @@ def validate_environment() -> None:
     if settings.secret_key in INSECURE_SECRETS:
         if settings.environment == "production":
             errors.append(
-                "SECRET_KEY is set to a known insecure default. "
-                "Set a unique, random 64+ character key for production."
+                "SECRET_KEY is set to a known insecure default. Set a unique, random 64+ character key for production."
             )
         elif settings.environment not in ("development", "testing"):
-            warnings.append(
-                "SECRET_KEY is a development default — change before deploying to production."
-            )
+            warnings.append("SECRET_KEY is a development default — change before deploying to production.")
 
     # ── Check DATABASE_URL ──
     if "localhost" in settings.database_url and settings.environment == "production":

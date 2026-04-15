@@ -23,27 +23,10 @@ def dashboard_kpi(
 ):
     now = datetime.utcnow()
     since_24h = now - timedelta(hours=24)
-    total_balance = (
-        db.query(func.coalesce(func.sum(Account.balance), 0.0)).scalar() or 0.0
-    )
-    tx_24h = (
-        db.query(func.count(Transaction.id))
-        .filter(Transaction.created_at >= since_24h)
-        .scalar()
-        or 0
-    )
-    open_fraud = (
-        db.query(func.count(FraudAlert.id))
-        .filter(FraudAlert.acknowledged.is_(False))
-        .scalar()
-        or 0
-    )
-    active_loans = (
-        db.query(func.count(Loan.id))
-        .filter(Loan.status.in_(["approved", "active"]))
-        .scalar()
-        or 0
-    )
+    total_balance = db.query(func.coalesce(func.sum(Account.balance), 0.0)).scalar() or 0.0
+    tx_24h = db.query(func.count(Transaction.id)).filter(Transaction.created_at >= since_24h).scalar() or 0
+    open_fraud = db.query(func.count(FraudAlert.id)).filter(FraudAlert.acknowledged.is_(False)).scalar() or 0
+    active_loans = db.query(func.count(Loan.id)).filter(Loan.status.in_(["approved", "active"])).scalar() or 0
 
     # health score: average of last snapshots if any
     avg_health = 75.0

@@ -20,9 +20,7 @@ logger = logging.getLogger("nexa.access")
 class RequestLoggerMiddleware(BaseHTTPMiddleware):
     """Log requests in structured format with timing and request IDs."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         request_id = str(uuid.uuid4())[:8]
         request.state.request_id = request_id
 

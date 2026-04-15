@@ -9,9 +9,7 @@ Space Complexity: O(n) where n = number of transactions
 class TransactionNode:
     """Node in the transaction linked list."""
 
-    def __init__(
-        self, transaction_id, type_, amount, balance_after, timestamp, description=""
-    ):
+    def __init__(self, transaction_id, type_, amount, balance_after, timestamp, description=""):
         self.transaction_id = transaction_id
         self.type = type_  # 'deposit', 'withdrawal', 'transfer'
         self.amount = amount
