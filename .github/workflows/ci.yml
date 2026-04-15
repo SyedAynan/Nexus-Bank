@@ -2,7 +2,7 @@
 # NEXA — CI/CD Pipeline (GitHub Actions)
 # ============================================================
 # Runs on: push to main/develop, all PRs
-# Steps: lint → type-check → test → frontend build → Docker
+# Steps: lint → format → type-check → test → frontend build → Docker
 
 name: NEXA CI/CD
 
@@ -16,6 +16,7 @@ env:
   PYTHON_VERSION: "3.11"
   NODE_VERSION: "20"
   REGISTRY: ghcr.io
+  # Force lowercase for GHCR compatibility
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
@@ -40,6 +41,9 @@ jobs:
 
       - name: Lint with Ruff
         run: ruff check bank_system/ --output-format=github
+
+      - name: Check formatting with Ruff
+        run: ruff format --check bank_system/
 
       - name: Type check with MyPy
         run: mypy bank_system/ --ignore-missing-imports --no-strict-optional
@@ -146,13 +150,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Lowercase image name
+        id: image
+        run: echo "name=$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:latest
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
