@@ -11,7 +11,6 @@ from bank_system.engines.forecasting import ForecastingEngine
 from bank_system.models.db_models import Account, FraudAlert, Loan, Transaction
 from bank_system.schemas.analytics import DashboardKPI, ForecastSeries
 
-
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
 forecast_engine = ForecastingEngine()

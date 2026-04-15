@@ -3,10 +3,10 @@ NEXA Feature Flags — A/B Testing + Feature Toggle System
 Simple feature flag service for UX experiments and gradual rollouts.
 """
 
-import time
-import logging
 import hashlib
-from typing import Dict, Any, List, Optional
+import logging
+import time
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class FeatureFlagService:
     """Feature flag management for A/B testing and gradual rollouts."""
 
     def __init__(self):
-        self._flags: Dict[str, Dict] = {
+        self._flags: dict[str, dict] = {
             "dark_mode_v2": {
                 "name": "Dark Mode V2",
                 "description": "Enhanced dark theme with improved contrast ratios",
@@ -83,7 +83,7 @@ class FeatureFlagService:
         }
         logger.info(f"Feature Flags: {len(self._flags)} flags initialized")
 
-    def is_enabled(self, flag_key: str, user_id: Optional[str] = None) -> bool:
+    def is_enabled(self, flag_key: str, user_id: str | None = None) -> bool:
         flag = self._flags.get(flag_key)
         if not flag or not flag["enabled"]:
             return False
@@ -96,16 +96,16 @@ class FeatureFlagService:
             return (user_hash % 100) < flag["rollout_pct"]
         return True
 
-    def get_all_flags(self) -> List[Dict]:
+    def get_all_flags(self) -> list[dict]:
         return [{"key": k, **v} for k, v in self._flags.items()]
 
-    def get_flag(self, key: str) -> Optional[Dict]:
+    def get_flag(self, key: str) -> dict | None:
         flag = self._flags.get(key)
         if flag:
             return {"key": key, **flag}
         return None
 
-    def update_flag(self, key: str, updates: Dict) -> Optional[Dict]:
+    def update_flag(self, key: str, updates: dict) -> dict | None:
         if key not in self._flags:
             return None
         self._flags[key].update(
@@ -118,7 +118,7 @@ class FeatureFlagService:
         self._flags[key]["updated_at"] = time.time()
         return {"key": key, **self._flags[key]}
 
-    def create_flag(self, key: str, data: Dict) -> Dict:
+    def create_flag(self, key: str, data: dict) -> dict:
         self._flags[key] = {
             "name": data.get("name", key),
             "description": data.get("description", ""),
@@ -132,7 +132,7 @@ class FeatureFlagService:
     def delete_flag(self, key: str) -> bool:
         return bool(self._flags.pop(key, None))
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         flags = list(self._flags.values())
         return {
             "total": len(flags),

@@ -9,7 +9,7 @@ Simulated Anti-Money Laundering layer:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Any
 
 try:
     from bank_system.services.search_engine import fuzzy_score
@@ -28,16 +28,16 @@ class AMLEngine:
             "Omega Investments",
         ]
 
-    def run_aml_scan(self) -> Dict[str, Any]:
+    def run_aml_scan(self) -> dict[str, Any]:
         """
         Scan recent transactions for basic AML patterns and watchlist hits.
         """
         txns = self.bank.get_all_recent_transactions(limit=500)
         now = datetime.now()
-        flagged: List[Dict[str, Any]] = []
+        flagged: list[dict[str, Any]] = []
 
         # Rapid movement / structuring / layering detection
-        by_account: Dict[str, List[Dict[str, Any]]] = {}
+        by_account: dict[str, list[dict[str, Any]]] = {}
         for t in txns:
             acc_id = t.get("account_id") or t.get("fromAcc") or ""
             by_account.setdefault(acc_id, []).append(t)
@@ -83,7 +83,7 @@ class AMLEngine:
 
         # Watchlist / PEP simulation based on account owner names
         accounts = self.bank.get_all_accounts()
-        watch_hits: List[Dict[str, Any]] = []
+        watch_hits: list[dict[str, Any]] = []
         for acc in accounts:
             name = acc.get("owner_name", "")
             for wl in self.watchlist:

@@ -16,7 +16,7 @@ It produces:
 
 from __future__ import annotations
 
-from typing import Dict, Any
+from typing import Any
 
 
 class PortfolioEngine:
@@ -31,7 +31,7 @@ class PortfolioEngine:
     def __init__(self, banking_service):
         self.bank = banking_service
 
-    def get_portfolio_metrics(self) -> Dict[str, Any]:
+    def get_portfolio_metrics(self) -> dict[str, Any]:
         """
         Derive a synthetic portfolio allocation across asset classes.
         For now this is a deterministic mapping from balances:

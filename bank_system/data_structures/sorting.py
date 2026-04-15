@@ -14,17 +14,17 @@ All functions return (sorted_list, stats) where stats contains
 comparison/swap counts for admin dashboard display.
 """
 
-from typing import Any, Callable, Dict, List, Tuple
+from collections.abc import Callable
+from typing import Any
 
-
-SortStats = Dict[str, int]
+SortStats = dict[str, int]
 
 
 def merge_sort(
-    data: List[Any],
+    data: list[Any],
     key: Callable[[Any], Any] = lambda x: x,
     reverse: bool = False,
-) -> Tuple[List[Any], SortStats]:
+) -> tuple[list[Any], SortStats]:
     """Stable merge sort — ideal for transaction history ordering."""
     stats: SortStats = {"comparisons": 0, "copies": 0, "recursive_calls": 0}
 
@@ -58,10 +58,10 @@ def merge_sort(
 
 
 def quick_sort(
-    data: List[Any],
+    data: list[Any],
     key: Callable[[Any], Any] = lambda x: x,
     reverse: bool = False,
-) -> Tuple[List[Any], SortStats]:
+) -> tuple[list[Any], SortStats]:
     """Quick sort — used for risk-based ranking."""
     arr = list(data)
     stats: SortStats = {"comparisons": 0, "swaps": 0, "recursive_calls": 0}
@@ -93,10 +93,10 @@ def quick_sort(
 
 
 def heap_sort(
-    data: List[Any],
+    data: list[Any],
     key: Callable[[Any], Any] = lambda x: x,
     reverse: bool = False,
-) -> Tuple[List[Any], SortStats]:
+) -> tuple[list[Any], SortStats]:
     """Heap sort — used for top-K customer queries."""
     arr = list(data)
     n = len(arr)
@@ -137,14 +137,14 @@ def heap_sort(
 
 
 def counting_sort_by_risk(
-    data: List[dict],
+    data: list[dict],
     risk_key: str = "risk_level",
-) -> Tuple[List[dict], SortStats]:
+) -> tuple[list[dict], SortStats]:
     """Counting sort for risk-level bucketing (low/medium/high)."""
     _bucket_order = {"low": 0, "medium": 1, "high": 2}  # noqa: F841 — kept for reference
     stats: SortStats = {"bucket_ops": 0, "items_processed": len(data)}
 
-    buckets: Dict[str, List[dict]] = {"low": [], "medium": [], "high": []}
+    buckets: dict[str, list[dict]] = {"low": [], "medium": [], "high": []}
     for item in data:
         level = item.get(risk_key, "low")
         if level not in buckets:
@@ -152,14 +152,14 @@ def counting_sort_by_risk(
         buckets[level].append(item)
         stats["bucket_ops"] += 1
 
-    result: List[dict] = []
+    result: list[dict] = []
     for level in ["high", "medium", "low"]:  # high risk first
         result.extend(buckets[level])
 
     return result, stats
 
 
-def get_algorithm_info() -> List[dict]:
+def get_algorithm_info() -> list[dict]:
     """Return algorithm metadata for the admin DSA panel."""
     return [
         {

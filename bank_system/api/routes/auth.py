@@ -1,8 +1,8 @@
-from datetime import datetime, timedelta, timezone
 import logging
 import random
 import uuid
-from typing import Annotated, List
+from datetime import UTC, datetime, timedelta
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import ORJSONResponse
@@ -228,7 +228,7 @@ def verify_otp(
         details="MFA verified — login successful",
     )
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Generate shared JTI for the access/refresh token pair
     session_jti = uuid.uuid4().hex
@@ -326,7 +326,7 @@ async def refresh_token(
         if old_session:
             old_session.revoked = True
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     new_jti = uuid.uuid4().hex
 
     # Issue new token pair
@@ -394,14 +394,14 @@ def logout(
 # ── Session Management Endpoints ──
 
 
-@router.get("/sessions", response_model=List[SessionRead])
+@router.get("/sessions", response_model=list[SessionRead])
 def list_sessions(
     current_user: Annotated[User, Depends(get_current_active_user)],
     token: Annotated[str, Depends(oauth2_scheme)],
     db: Annotated[Session, Depends(get_db)],
 ):
     """List all active (non-revoked, non-expired) sessions for the current user."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Get current session JTI
     current_jti = None
@@ -475,7 +475,7 @@ def revoke_all_sessions(
     db: Annotated[Session, Depends(get_db)],
 ):
     """Revoke all sessions except the current one."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     current_jti = None
     try:

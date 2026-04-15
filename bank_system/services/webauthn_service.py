@@ -4,12 +4,12 @@ Implements credential registration and assertion flows.
 Without py_webauthn and HTTPS, runs in simulation mode for demos.
 """
 
-import os
-import logging
-import hashlib
-import time
 import base64
-from typing import Dict, Any, Optional, List
+import hashlib
+import logging
+import os
+import time
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +33,11 @@ class WebAuthnService:
     def __init__(self):
         self.mode = "production" if WEBAUTHN_AVAILABLE else "simulation"
         # In-memory credential store (production would use DB)
-        self._credentials: Dict[str, List[Dict]] = {}  # user_id -> [credentials]
-        self._challenges: Dict[str, str] = {}  # session_id -> challenge
+        self._credentials: dict[str, list[dict]] = {}  # user_id -> [credentials]
+        self._challenges: dict[str, str] = {}  # session_id -> challenge
         logger.info(f"WebAuthn service initialized: mode={self.mode}")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         return {
             "enabled": True,
             "mode": self.mode,
@@ -48,7 +48,7 @@ class WebAuthnService:
 
     def generate_registration_options(
         self, user_id: str, username: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate registration options (challenge) for passkey creation."""
         challenge = (
             base64.urlsafe_b64encode(
@@ -87,8 +87,8 @@ class WebAuthnService:
         }
 
     def verify_registration(
-        self, session_id: str, user_id: str, credential: Dict
-    ) -> Dict[str, Any]:
+        self, session_id: str, user_id: str, credential: dict
+    ) -> dict[str, Any]:
         """Verify registration response and store credential."""
         if session_id not in self._challenges:
             return {"success": False, "error": "Invalid or expired session"}
@@ -120,8 +120,8 @@ class WebAuthnService:
         return {"success": True, "mode": "production"}
 
     def generate_authentication_options(
-        self, user_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, user_id: str | None = None
+    ) -> dict[str, Any]:
         """Generate authentication options for passkey login."""
         challenge = (
             base64.urlsafe_b64encode(
@@ -152,8 +152,8 @@ class WebAuthnService:
         }
 
     def verify_authentication(
-        self, session_id: str, credential: Dict
-    ) -> Dict[str, Any]:
+        self, session_id: str, credential: dict
+    ) -> dict[str, Any]:
         """Verify authentication assertion."""
         if session_id not in self._challenges:
             return {"success": False, "error": "Invalid or expired session"}
@@ -170,7 +170,7 @@ class WebAuthnService:
 
         return {"success": True, "mode": "production"}
 
-    def get_user_credentials(self, user_id: str) -> List[Dict]:
+    def get_user_credentials(self, user_id: str) -> list[dict]:
         """Get all registered credentials for a user."""
         return self._credentials.get(user_id, [])
 

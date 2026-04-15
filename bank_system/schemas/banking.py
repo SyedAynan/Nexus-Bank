@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -27,7 +26,7 @@ class AccountRead(BaseModel):
 
 class TransactionCreate(BaseModel):
     account_id: int
-    counterparty_account_id: Optional[int] = None
+    counterparty_account_id: int | None = None
     amount: float = Field(gt=0)
     type: TransactionType
     description: str = ""
@@ -36,7 +35,7 @@ class TransactionCreate(BaseModel):
 class TransactionRead(BaseModel):
     id: int
     account_id: int
-    counterparty_account_id: Optional[int]
+    counterparty_account_id: int | None
     amount: float
     type: TransactionType
     description: str

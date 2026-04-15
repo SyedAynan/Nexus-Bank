@@ -9,20 +9,20 @@ Core banking operations with:
 - Transaction lifecycle visualization
 """
 
-from datetime import timezone, timedelta
-from typing import Annotated, List
 import uuid
+from datetime import UTC, timedelta
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from bank_system.core.db import get_db
 from bank_system.api.deps import get_current_active_user, role_required
+from bank_system.core.db import get_db
 from bank_system.models.db_models import (
     Account,
+    Loan,
     Transaction,
     TransactionType,
-    Loan,
     UserRole,
 )
 from bank_system.schemas.banking import (
@@ -33,7 +33,6 @@ from bank_system.schemas.banking import (
     TransactionCreate,
     TransactionRead,
 )
-
 
 router = APIRouter(prefix="/api/banking", tags=["banking"])
 
@@ -101,7 +100,7 @@ def create_account(
     return account
 
 
-@router.get("/accounts", response_model=List[AccountRead])
+@router.get("/accounts", response_model=list[AccountRead])
 def list_accounts(
     db: Annotated[Session, Depends(get_db)],
     current_user=Depends(get_current_active_user),
@@ -189,7 +188,7 @@ def create_transaction(
     return tx
 
 
-@router.get("/transactions", response_model=List[TransactionRead])
+@router.get("/transactions", response_model=list[TransactionRead])
 def list_all_transactions(
     db: Annotated[Session, Depends(get_db)],
     current_user=Depends(get_current_active_user),
@@ -223,7 +222,7 @@ def list_all_transactions(
 
 @router.get(
     "/transactions/{account_id}",
-    response_model=List[TransactionRead],
+    response_model=list[TransactionRead],
 )
 def list_transactions(
     account_id: int,
@@ -308,7 +307,7 @@ def create_loan(
     return loan
 
 
-@router.get("/loans", response_model=List[LoanRead])
+@router.get("/loans", response_model=list[LoanRead])
 def list_loans(
     db: Annotated[Session, Depends(get_db)],
     current_user=Depends(get_current_active_user),
@@ -463,7 +462,7 @@ def get_transaction_lifecycle(
         raise HTTPException(status_code=403, detail="Forbidden")
 
     base_time = (
-        tx.created_at.replace(tzinfo=timezone.utc)
+        tx.created_at.replace(tzinfo=UTC)
         if tx.created_at.tzinfo is None
         else tx.created_at
     )

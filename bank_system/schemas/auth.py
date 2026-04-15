@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
@@ -42,7 +41,7 @@ class UserRead(UserBase):
 class LoginRequest(BaseModel):
     username: str
     password: str
-    otp: Optional[str] = None
+    otp: str | None = None
 
 
 class MFAChallenge(BaseModel):
@@ -52,11 +51,11 @@ class MFAChallenge(BaseModel):
 
 class SessionRead(BaseModel):
     id: int
-    device_name: Optional[str] = None
-    ip_address: Optional[str] = None
-    location: Optional[str] = None
+    device_name: str | None = None
+    ip_address: str | None = None
+    location: str | None = None
     created_at: datetime
-    last_active: Optional[datetime] = None
+    last_active: datetime | None = None
     is_current: bool = False
 
     class Config:

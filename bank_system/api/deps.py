@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
@@ -95,7 +95,7 @@ def log_security_event(
         event_type=event_type,
         ip_address=ip,
         user_agent=ua,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         details=details,
     )
     db.add(evt)

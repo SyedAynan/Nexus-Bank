@@ -17,7 +17,6 @@ from starlette.responses import JSONResponse
 
 from bank_system.core.redis_client import get_redis
 
-
 # Rate limit configuration: (requests, window_seconds)
 RATE_LIMITS = {
     "default": (100, 60),

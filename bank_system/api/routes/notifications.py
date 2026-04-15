@@ -1,10 +1,10 @@
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from bank_system.core.db import get_db
 from bank_system.api.deps import get_current_active_user, role_required
+from bank_system.core.db import get_db
 from bank_system.models.db_models import Notification, User, UserRole
 from bank_system.schemas.notifications import NotificationCreate, NotificationRead
 
@@ -28,7 +28,7 @@ def get_unread_count(
     return {"unread_count": unread_count}
 
 
-@router.get("/", response_model=List[NotificationRead])
+@router.get("/", response_model=list[NotificationRead])
 def list_notifications(
     current_user: Annotated[User, Depends(get_current_active_user)],
     db: Annotated[Session, Depends(get_db)],

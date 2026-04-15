@@ -16,7 +16,7 @@ DSA usage:
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Dict, Any, List
+from typing import Any
 
 
 class ForecastingEngine:
@@ -24,8 +24,8 @@ class ForecastingEngine:
         self.bank = banking_service
 
     def get_cashflow_forecast(
-        self, horizons: List[int] | None = None
-    ) -> Dict[str, Any]:
+        self, horizons: list[int] | None = None
+    ) -> dict[str, Any]:
         """
         Compute rolling net cash-flow projections for a set of horizons in days.
         """

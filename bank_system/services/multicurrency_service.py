@@ -3,10 +3,10 @@ NEXA Multi-Currency Service — FX Rates + Multi-Currency Wallet
 Static FX rates with fallback. Can be upgraded to live API (Fixer.io, ExchangeRate-API).
 """
 
+import logging
 import os
 import time
-import logging
-from typing import Dict, Any, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +59,9 @@ class MultiCurrencyService:
         self.mode = "production" if FX_API_KEY else "static"
         self._rates = dict(STATIC_RATES)
         self._last_updated = time.time()
-        self._conversion_log: List[Dict] = []
+        self._conversion_log: list[dict] = []
         # Simulated wallets
-        self._wallets: Dict[str, Dict[str, float]] = {
+        self._wallets: dict[str, dict[str, float]] = {
             "default": {
                 "USD": 25000.00,
                 "EUR": 5000.00,
@@ -71,7 +71,7 @@ class MultiCurrencyService:
         }
         logger.info(f"FX Service: mode={self.mode}, {len(self._rates)} currencies")
 
-    def get_rates(self, base: str = "USD") -> Dict[str, Any]:
+    def get_rates(self, base: str = "USD") -> dict[str, Any]:
         if base not in self._rates:
             base = "USD"
         base_rate = self._rates[base]
@@ -86,7 +86,7 @@ class MultiCurrencyService:
 
     def convert(
         self, amount: float, from_currency: str, to_currency: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         from_rate = self._rates.get(from_currency.upper(), 1.0)
         to_rate = self._rates.get(to_currency.upper(), 1.0)
         rate = to_rate / from_rate
@@ -106,7 +106,7 @@ class MultiCurrencyService:
         self._conversion_log.append(result)
         return result
 
-    def get_wallet(self, user_id: str = "default") -> Dict[str, Any]:
+    def get_wallet(self, user_id: str = "default") -> dict[str, Any]:
         wallet = self._wallets.get(user_id, self._wallets["default"])
         total_usd = sum(
             amt / self._rates.get(curr, 1.0) * self._rates["USD"]
@@ -134,7 +134,7 @@ class MultiCurrencyService:
             "currencies_count": len(wallet),
         }
 
-    def get_currencies(self) -> List[Dict]:
+    def get_currencies(self) -> list[dict]:
         return [
             {
                 "code": k,
@@ -144,7 +144,7 @@ class MultiCurrencyService:
             for k, v in self._rates.items()
         ]
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         return {
             "enabled": True,
             "mode": self.mode,

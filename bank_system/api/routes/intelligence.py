@@ -15,7 +15,6 @@ from bank_system.schemas.intelligence import (
     PortfolioInsight,
 )
 
-
 router = APIRouter(prefix="/api/intelligence", tags=["intelligence"])
 
 health_engine = FinancialHealthEngine()

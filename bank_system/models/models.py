@@ -6,7 +6,7 @@ These are plain Python classes (not DB-backed) for simplicity.
 import uuid
 from datetime import datetime
 
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 
 def gen_id(prefix=""):

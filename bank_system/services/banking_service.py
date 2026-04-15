@@ -8,37 +8,37 @@ from datetime import datetime
 # Robust imports — work as both a package and standalone module
 try:
     from data_structures import (
-        TransactionLinkedList,
-        TransactionNode,
-        UndoStack,
-        TransactionQueue,
         AccountBST,
         AccountHashTable,
         ComplianceGraph,
         LoanPriorityQueue,
+        TransactionLinkedList,
+        TransactionNode,
+        TransactionQueue,
+        UndoStack,
     )
 except ImportError:
     from bank_system.data_structures import (
-        TransactionLinkedList,
-        TransactionNode,
-        UndoStack,
-        TransactionQueue,
         AccountBST,
         AccountHashTable,
         ComplianceGraph,
         LoanPriorityQueue,
+        TransactionLinkedList,
+        TransactionNode,
+        TransactionQueue,
+        UndoStack,
     )
 
 try:
     from bank_system.models.models import (
         Account,
+        AuditLog,
         LoanApplication,
         User,
-        AuditLog,
         gen_id,
     )
 except ImportError:
-    from models.models import Account, LoanApplication, User, AuditLog, gen_id
+    from models.models import Account, AuditLog, LoanApplication, User, gen_id
 import hashlib
 import threading
 

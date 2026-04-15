@@ -7,7 +7,6 @@ PDF uses basic HTML-to-text formatting (no external dependencies required).
 import csv
 import io
 import logging
-from typing import List, Dict, Optional
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -17,7 +16,7 @@ class ExportService:
     """Transaction export service for CSV and PDF generation."""
 
     def generate_csv(
-        self, transactions: List[Dict], account_info: Optional[Dict] = None
+        self, transactions: list[dict], account_info: dict | None = None
     ) -> str:
         """Generate CSV content from transactions."""
         output = io.StringIO()
@@ -79,7 +78,7 @@ class ExportService:
         return output.getvalue()
 
     def generate_pdf_content(
-        self, transactions: List[Dict], account_info: Optional[Dict] = None
+        self, transactions: list[dict], account_info: dict | None = None
     ) -> str:
         """Generate PDF-ready HTML content for statements.
         This returns HTML that can be rendered as a PDF by the frontend or wkhtmltopdf.
@@ -195,7 +194,7 @@ class ExportService:
         return html
 
     def generate_audit_report(
-        self, audit_entries: List[Dict], report_type: str = "general"
+        self, audit_entries: list[dict], report_type: str = "general"
     ) -> str:
         """Generate audit trail CSV for compliance."""
         output = io.StringIO()

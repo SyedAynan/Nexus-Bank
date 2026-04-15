@@ -1,39 +1,40 @@
-from contextlib import asynccontextmanager
-from typing import Any, Dict
 import logging
 import os
-import orjson
+from contextlib import asynccontextmanager
+from typing import Any
 
-from fastapi import FastAPI, WebSocket, Request, WebSocketDisconnect
+import orjson
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import ORJSONResponse, HTMLResponse
+from fastapi.responses import HTMLResponse, ORJSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+
+from bank_system.api.routes import admin as admin_routes
+from bank_system.api.routes import analytics as analytics_routes
+
+# Route imports
+from bank_system.api.routes import auth as auth_routes
+from bank_system.api.routes import banking as banking_routes
+from bank_system.api.routes import dsa_admin as dsa_admin_routes
+from bank_system.api.routes import intelligence as intelligence_routes
+from bank_system.api.routes import services as services_routes
 
 # Core imports
 from bank_system.core.config import get_settings
 from bank_system.core.db import Base, engine
 from bank_system.core.exceptions import register_exception_handlers
-from bank_system.core.redis_client import get_redis
 from bank_system.core.realtime import ws_manager
+from bank_system.core.redis_client import get_redis
 from bank_system.core.security import decode_token
 from bank_system.core.startup_checks import validate_environment
-from bank_system.simulation.engine import simulation_loop
 
 # Middleware imports
 from bank_system.middleware.rate_limiter import RateLimiterMiddleware
-from bank_system.middleware.security_headers import SecurityHeadersMiddleware
 from bank_system.middleware.request_logger import RequestLoggerMiddleware
-
-# Route imports
-from bank_system.api.routes import auth as auth_routes
-from bank_system.api.routes import banking as banking_routes
-from bank_system.api.routes import analytics as analytics_routes
-from bank_system.api.routes import admin as admin_routes
-from bank_system.api.routes import intelligence as intelligence_routes
-from bank_system.api.routes import dsa_admin as dsa_admin_routes
-from bank_system.api.routes import services as services_routes
+from bank_system.middleware.security_headers import SecurityHeadersMiddleware
+from bank_system.simulation.engine import simulation_loop
 
 # Configure structured logging
 logging.basicConfig(
@@ -206,7 +207,7 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     description="Returns service health and environment info.",
 )
 @app.get("/health", tags=["system"], include_in_schema=False)
-def healthcheck() -> Dict[str, str]:
+def healthcheck() -> dict[str, str]:
     return {
         "status": "healthy",
         "environment": settings.environment,

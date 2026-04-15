@@ -1,17 +1,19 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 
 from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
-    Enum as SAEnum,
     ForeignKey,
     Integer,
     Numeric,
     String,
     Text,
     UniqueConstraint,
+)
+from sqlalchemy import (
+    Enum as SAEnum,
 )
 from sqlalchemy.orm import relationship
 
@@ -37,7 +39,7 @@ class User(Base):
     is_locked = Column(Boolean, default=False)
     failed_login_attempts = Column(Integer, default=0)
     created_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime, default=lambda: datetime.now(UTC), nullable=False
     )
 
     accounts = relationship("Account", back_populates="owner")
@@ -51,7 +53,7 @@ class SessionToken(Base):
     jti = Column(String(64), unique=True, nullable=False)
     token_type = Column(String(20), nullable=False)  # access | refresh
     created_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime, default=lambda: datetime.now(UTC), nullable=False
     )
     expires_at = Column(DateTime, nullable=False)
     revoked = Column(Boolean, default=False, nullable=False)
@@ -61,7 +63,7 @@ class SessionToken(Base):
     ip_address = Column(String(64), nullable=True)
     user_agent = Column(String(512), nullable=True)
     location = Column(String(255), nullable=True)
-    last_active = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    last_active = Column(DateTime, default=lambda: datetime.now(UTC))
 
 
 class Account(Base):
@@ -75,7 +77,7 @@ class Account(Base):
     currency = Column(String(10), default="USD")
     status = Column(String(20), default="active")  # active | frozen | closed
     created_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime, default=lambda: datetime.now(UTC), nullable=False
     )
 
     owner = relationship("User", back_populates="accounts")
@@ -105,7 +107,7 @@ class Transaction(Base):
     type = Column(SAEnum(TransactionType), nullable=False)
     description = Column(String(255), default="")
     created_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), index=True
+        DateTime, default=lambda: datetime.now(UTC), index=True
     )
     is_simulated = Column(Boolean, default=False)
     fraud_score = Column(Numeric(10, 4), default=0.0)
@@ -140,7 +142,7 @@ class Loan(Base):
     approval_probability = Column(Numeric(8, 4), default=0.0)
     risk_tier = Column(String(20), default="medium")
     emi_amount = Column(Numeric(19, 4), default=0.0)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
 
 class FraudAlertSeverity(str, Enum):
@@ -158,7 +160,7 @@ class FraudAlert(Base):
     score = Column(Numeric(10, 4), nullable=False)
     severity = Column(SAEnum(FraudAlertSeverity), nullable=False)
     reason = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     acknowledged = Column(Boolean, default=False)
 
 
@@ -168,7 +170,7 @@ class AMLNode(Base):
     id = Column(Integer, primary_key=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), unique=True)
     risk_score = Column(Numeric(10, 4), default=0.0)
-    last_updated = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    last_updated = Column(DateTime, default=lambda: datetime.now(UTC))
 
 
 class AMLEdge(Base):
@@ -178,7 +180,7 @@ class AMLEdge(Base):
     from_account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False)
     to_account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False)
     weight = Column(Numeric(10, 4), default=0.0)
-    last_tx_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    last_tx_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
     __table_args__ = (
         UniqueConstraint("from_account_id", "to_account_id", name="uq_aml_edge_pair"),
@@ -203,7 +205,7 @@ class SecurityEvent(Base):
     ip_address = Column(String(64), nullable=True)
     user_agent = Column(String(255), nullable=True)
     location = Column(String(255), nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     details = Column(Text, nullable=True)
 
 
@@ -217,7 +219,7 @@ class FinancialHealthSnapshot(Base):
     savings_consistency = Column(Numeric(10, 4), nullable=False)
     spending_discipline = Column(Numeric(10, 4), nullable=False)
     recommendations = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
 
 class PortfolioHolding(Base):
@@ -238,7 +240,7 @@ class ForecastSnapshot(Base):
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True)
     horizon_days = Column(Integer, nullable=False)
     payload_json = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
 
 class IPWhitelist(Base):
@@ -248,5 +250,5 @@ class IPWhitelist(Base):
     ip_address = Column(String(64), unique=True, nullable=False)
     label = Column(String(128), nullable=True)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     is_active = Column(Boolean, default=True, nullable=False)

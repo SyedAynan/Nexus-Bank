@@ -18,11 +18,11 @@ DSA under the hood (via existing services):
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
 import math
 import random
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any
 
 
 @dataclass
@@ -45,7 +45,7 @@ class ClientRiskBreakdown:
             1,
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "client_id": self.client_id,
             "name": self.name,
@@ -76,7 +76,7 @@ class RiskIntelligenceEngine:
     # ─────────────────────────────────────────────
     # REAL-TIME CLIENT RISK
     # ─────────────────────────────────────────────
-    def get_live_client_risk(self, client_id: str) -> Dict[str, Any]:
+    def get_live_client_risk(self, client_id: str) -> dict[str, Any]:
         """
         Compute a live risk snapshot for a single client (account owner).
         """
@@ -113,14 +113,14 @@ class RiskIntelligenceEngine:
             "bucket": bucket,
         }
 
-    def get_risk_heatmap(self) -> Dict[str, Any]:
+    def get_risk_heatmap(self) -> dict[str, Any]:
         """
         Aggregate risk distribution across all accounts for dashboards.
         Returns buckets: low / medium / high / critical.
         """
         accounts = self.bank.get_all_accounts()
         buckets = {"low": 0, "medium": 0, "high": 0, "critical": 0}
-        samples: List[float] = []
+        samples: list[float] = []
 
         for acc in accounts:
             acc_id = acc["account_id"]
@@ -146,8 +146,8 @@ class RiskIntelligenceEngine:
     # STRESS TESTING
     # ─────────────────────────────────────────────
     def run_stress_test(
-        self, scenarios: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, scenarios: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """
         Simple Monte Carlo style stress testing over the current loan book and balances.
 
@@ -189,7 +189,7 @@ class RiskIntelligenceEngine:
             capital_losses.append(loss)
             liquidity_gaps.append(gap)
 
-        def _summary(values: List[float]) -> Dict[str, float]:
+        def _summary(values: list[float]) -> dict[str, float]:
             if not values:
                 return {"avg": 0.0, "p95": 0.0, "max": 0.0}
             sorted_vals = sorted(values)
@@ -217,14 +217,14 @@ class RiskIntelligenceEngine:
     # ─────────────────────────────────────────────
     # NARRATIVE INSIGHTS
     # ─────────────────────────────────────────────
-    def get_insights(self) -> Dict[str, Any]:
+    def get_insights(self) -> dict[str, Any]:
         """
         Generate lightweight, heuristic-based insights suitable for
         the Imperial "intelligence" layer without heavy ML.
         """
         accounts = self.bank.get_all_accounts()
         heatmap = self.get_risk_heatmap()
-        insights: List[str] = []
+        insights: list[str] = []
 
         if heatmap["buckets"]["high"] + heatmap["buckets"]["critical"] > 0:
             insights.append(
@@ -262,7 +262,7 @@ class RiskIntelligenceEngine:
     # ─────────────────────────────────────────────
     # INTERNAL HELPERS
     # ─────────────────────────────────────────────
-    def _lookup_account_fuzzy(self, client_id: str) -> Optional[Dict[str, Any]]:
+    def _lookup_account_fuzzy(self, client_id: str) -> dict[str, Any] | None:
         """
         Helper in case the caller passes an alias instead of exact account_id.
         """

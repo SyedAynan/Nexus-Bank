@@ -5,11 +5,11 @@ When API keys are configured via env vars, real OAuth flows activate.
 Without keys, a simulated flow returns demo tokens for development/demo.
 """
 
-import os
-import logging
 import hashlib
+import logging
+import os
 import time
-from typing import Optional, Dict, Any
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +87,7 @@ class OAuthService:
         simulated = [n for n, p in self.providers.items() if not p["configured"]]
         logger.info(f"OAuth: production={configured}, simulation={simulated}")
 
-    def get_provider_status(self) -> Dict[str, Any]:
+    def get_provider_status(self) -> dict[str, Any]:
         """Return status of all OAuth providers."""
         return {
             name: {
@@ -99,8 +99,8 @@ class OAuthService:
         }
 
     def get_authorization_url(
-        self, provider: str, redirect_uri: str, state: Optional[str] = None
-    ) -> Dict[str, str]:
+        self, provider: str, redirect_uri: str, state: str | None = None
+    ) -> dict[str, str]:
         """Generate authorization URL for the given provider."""
         if provider not in self.providers:
             raise ValueError(f"Unknown provider: {provider}")
@@ -137,7 +137,7 @@ class OAuthService:
 
     def exchange_code(
         self, provider: str, code: str, redirect_uri: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Exchange authorization code for user profile."""
         if provider not in self.providers:
             raise ValueError(f"Unknown provider: {provider}")

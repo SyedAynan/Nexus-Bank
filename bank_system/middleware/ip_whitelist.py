@@ -10,9 +10,9 @@ import logging
 import time
 
 from fastapi import Request, Response
+from sqlalchemy.orm import Session as DBSession
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import JSONResponse
-from sqlalchemy.orm import Session as DBSession
 
 from bank_system.core.config import get_settings
 from bank_system.core.db import SessionLocal

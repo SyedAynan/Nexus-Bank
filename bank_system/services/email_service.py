@@ -4,10 +4,10 @@ Integrates with SendGrid/SES when API key is configured.
 Falls back to console logging for development/demo.
 """
 
-import os
 import logging
+import os
 import time
-from typing import Dict, Any, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -30,10 +30,10 @@ class EmailService:
         else:
             self.provider = "console"
             self.mode = "simulation"
-        self._sent_log: List[Dict] = []
+        self._sent_log: list[dict] = []
         logger.info(f"Email service: provider={self.provider}, mode={self.mode}")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         return {
             "enabled": True,
             "provider": self.provider,
@@ -44,7 +44,7 @@ class EmailService:
 
     def send_otp(
         self, to_email: str, otp_code: str, purpose: str = "login"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Send OTP code via email."""
         subject = f"NEXA — Your verification code: {otp_code}"
         html = f"""
@@ -65,7 +65,7 @@ class EmailService:
 
     def send_transaction_alert(
         self, to_email: str, tx_type: str, amount: float, account: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Send transaction notification."""
         subject = f"NEXA — {tx_type.title()} of ${amount:,.2f}"
         html = f"""
@@ -85,7 +85,7 @@ class EmailService:
 
     def send_security_alert(
         self, to_email: str, event: str, details: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Send security notification (login, password change, etc.)."""
         subject = f"NEXA — Security Alert: {event}"
         html = f"""
@@ -103,7 +103,7 @@ class EmailService:
 
     def _send(
         self, to_email: str, subject: str, html: str, email_type: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Send email through configured provider or log to console."""
         record = {
             "to": to_email,
@@ -132,7 +132,7 @@ class EmailService:
         self._sent_log.append(record)
         return record
 
-    def get_sent_log(self, limit: int = 50) -> List[Dict]:
+    def get_sent_log(self, limit: int = 50) -> list[dict]:
         """Return recent sent emails."""
         return list(reversed(self._sent_log[-limit:]))
 

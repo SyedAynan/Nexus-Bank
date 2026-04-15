@@ -14,7 +14,6 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 
 from bank_system.core.security import decode_token
 
-
 logger = logging.getLogger("nexa.access")
 
 

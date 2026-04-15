@@ -1,4 +1,3 @@
-from typing import List
 
 from sqlalchemy.orm import Session
 
@@ -39,7 +38,7 @@ class FinancialHealthEngine:
         total_balance = sum(balances)
         risk_exposure = 0.0 if total_balance <= 0 else min(1.0, len(accounts) / 5.0)
 
-        txs: List[Transaction] = (
+        txs: list[Transaction] = (
             db.query(Transaction)
             .join(Account)
             .filter(Account.owner_id == user_id)

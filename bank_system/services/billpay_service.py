@@ -3,9 +3,9 @@ NEXA Bill Pay Service — Scheduled Payments + Recurring Transfers
 Manages scheduled and recurring payment configurations.
 """
 
-import time
 import logging
-from typing import List, Dict, Any, Optional
+import time
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +14,8 @@ class BillPayService:
     """Scheduled payments and recurring transfer management."""
 
     def __init__(self):
-        self._scheduled: List[Dict] = []
-        self._payees: List[Dict] = [
+        self._scheduled: list[dict] = []
+        self._payees: list[dict] = [
             {
                 "id": "payee-001",
                 "name": "Electricity Company",
@@ -142,15 +142,15 @@ class BillPayService:
             },
         ]
 
-    def get_payees(self) -> List[Dict]:
+    def get_payees(self) -> list[dict]:
         return self._payees
 
-    def get_scheduled_payments(self, status: Optional[str] = None) -> List[Dict]:
+    def get_scheduled_payments(self, status: str | None = None) -> list[dict]:
         if status:
             return [p for p in self._scheduled if p["status"] == status]
         return self._scheduled
 
-    def create_scheduled_payment(self, data: Dict) -> Dict:
+    def create_scheduled_payment(self, data: dict) -> dict:
         payment = {
             "id": f"bill-{int(time.time())}",
             "payee_id": data.get("payee_id", ""),
@@ -190,7 +190,7 @@ class BillPayService:
                 return True
         return False
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         active = [p for p in self._scheduled if p["status"] == "active"]
         return {
             "total_scheduled": len(self._scheduled),

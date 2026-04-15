@@ -5,8 +5,8 @@ These endpoints expose DSA internal state and performance metrics
 EXCLUSIVELY to admin users. Customers MUST NOT access these.
 """
 
-import time
 import sys
+import time
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -14,16 +14,15 @@ from sqlalchemy.orm import Session
 
 from bank_system.api.deps import role_required
 from bank_system.core.db import get_db
-from bank_system.models.db_models import Account, Transaction, UserRole
-from bank_system.data_structures.trie import Trie
 from bank_system.data_structures.sorting import (
-    merge_sort,
-    quick_sort,
-    heap_sort,
     counting_sort_by_risk,
     get_algorithm_info,
+    heap_sort,
+    merge_sort,
+    quick_sort,
 )
-
+from bank_system.data_structures.trie import Trie
+from bank_system.models.db_models import Account, Transaction, UserRole
 
 router = APIRouter(prefix="/api/admin/dsa", tags=["dsa-admin"])
 

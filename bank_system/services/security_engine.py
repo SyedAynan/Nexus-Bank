@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, time
-from typing import Dict, Any, List, Optional
+from typing import Any
 
 
 @dataclass
@@ -26,7 +26,7 @@ class SecurityEvent:
     timestamp: str
     severity: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "username": self.username,
@@ -66,7 +66,7 @@ class PolicyEngine:
         }
 
     def is_allowed(
-        self, role: str, permission: str, attributes: Optional[Dict[str, Any]] = None
+        self, role: str, permission: str, attributes: dict[str, Any] | None = None
     ) -> bool:
         """
         ABAC-friendly entry: attributes can later hold branch, entity flags, etc.
@@ -88,13 +88,13 @@ class SecurityEngine:
     def __init__(self, banking_service):
         self.bank = banking_service
         self.policy = PolicyEngine()
-        self.login_events: List[SecurityEvent] = []
+        self.login_events: list[SecurityEvent] = []
         self._counter = 0
 
     # ─────────────────────────────────────────────
     # Access checks
     # ─────────────────────────────────────────────
-    def can_view_client(self, user: Dict[str, Any], account_id: str) -> bool:
+    def can_view_client(self, user: dict[str, Any], account_id: str) -> bool:
         """
         Example ABAC policy:
             - admin: always yes
@@ -145,5 +145,5 @@ class SecurityEngine:
         self.login_events.insert(0, ev)
         self.login_events = self.login_events[:200]
 
-    def get_events(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_events(self, limit: int = 50) -> list[dict[str, Any]]:
         return [e.to_dict() for e in self.login_events[:limit]]

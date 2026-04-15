@@ -3,7 +3,7 @@ NEXA Services API — Unified routes for OAuth, WebAuthn, Email, BillPay, MultiC
 All endpoints now require authentication (BUG-015 fix).
 """
 
-from typing import Annotated, Optional, Dict, Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, StreamingResponse
@@ -11,13 +11,13 @@ from pydantic import BaseModel
 
 from bank_system.api.deps import get_current_active_user, role_required
 from bank_system.models.db_models import User, UserRole
+from bank_system.services.billpay_service import billpay_service
+from bank_system.services.email_service import email_service
+from bank_system.services.export_service import export_service
+from bank_system.services.feature_flags import feature_flag_service
+from bank_system.services.multicurrency_service import multicurrency_service
 from bank_system.services.oauth_service import oauth_service
 from bank_system.services.webauthn_service import webauthn_service
-from bank_system.services.email_service import email_service
-from bank_system.services.billpay_service import billpay_service
-from bank_system.services.multicurrency_service import multicurrency_service
-from bank_system.services.feature_flags import feature_flag_service
-from bank_system.services.export_service import export_service
 
 router = APIRouter(prefix="/api/services", tags=["services"])
 
@@ -49,7 +49,7 @@ def get_oauth_providers(
 class OAuthAuthRequest(BaseModel):
     provider: str
     redirect_uri: str = "http://localhost:5173/auth/callback"
-    state: Optional[str] = None
+    state: str | None = None
 
 
 @router.post("/oauth/authorize")
@@ -99,7 +99,7 @@ def webauthn_register_options(
 class WebAuthnRegisterVerify(BaseModel):
     session_id: str
     user_id: str
-    credential: Dict[str, Any]
+    credential: dict[str, Any]
 
 
 @router.post("/webauthn/register/verify")
@@ -114,7 +114,7 @@ def webauthn_register_verify(
 
 @router.post("/webauthn/authenticate/options")
 def webauthn_auth_options(
-    user_id: Optional[str] = None,
+    user_id: str | None = None,
     current_user: Annotated[User, Depends(get_current_active_user)] = None,
 ):
     return webauthn_service.generate_authentication_options(user_id)
@@ -122,7 +122,7 @@ def webauthn_auth_options(
 
 class WebAuthnAuthVerify(BaseModel):
     session_id: str
-    credential: Dict[str, Any]
+    credential: dict[str, Any]
 
 
 @router.post("/webauthn/authenticate/verify")
@@ -191,7 +191,7 @@ def get_payees(
 
 @router.get("/billpay/scheduled")
 def get_scheduled_payments(
-    status: Optional[str] = None,
+    status: str | None = None,
     current_user: Annotated[User, Depends(get_current_active_user)] = None,
 ):
     return billpay_service.get_scheduled_payments(status)
@@ -311,15 +311,15 @@ def get_flag(key: str):
 
 
 @router.get("/flags/{key}/check")
-def check_flag(key: str, user_id: Optional[str] = None):
+def check_flag(key: str, user_id: str | None = None):
     return {"key": key, "enabled": feature_flag_service.is_enabled(key, user_id)}
 
 
 class FlagUpdate(BaseModel):
-    enabled: Optional[bool] = None
-    rollout_pct: Optional[int] = None
-    description: Optional[str] = None
-    name: Optional[str] = None
+    enabled: bool | None = None
+    rollout_pct: int | None = None
+    description: str | None = None
+    name: str | None = None
 
 
 @router.put("/flags/{key}")

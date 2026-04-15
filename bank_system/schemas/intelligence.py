@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 
 from pydantic import BaseModel
 
@@ -32,5 +31,5 @@ class AMLEdgeView(BaseModel):
 
 
 class AMLNetworkView(BaseModel):
-    nodes: List[AMLNodeView]
-    edges: List[AMLEdgeView]
+    nodes: list[AMLNodeView]
+    edges: list[AMLEdgeView]

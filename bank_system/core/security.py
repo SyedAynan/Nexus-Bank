@@ -1,12 +1,11 @@
 import uuid
-from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 from .config import get_settings
-
 
 settings = get_settings()
 
@@ -23,7 +22,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def _create_token(data: dict, expires_delta: timedelta) -> str:
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + expires_delta
+    expire = datetime.now(UTC) + expires_delta
     # Add unique JWT ID for session tracking
     if "jti" not in to_encode:
         to_encode["jti"] = uuid.uuid4().hex
@@ -34,7 +33,7 @@ def _create_token(data: dict, expires_delta: timedelta) -> str:
     return encoded_jwt
 
 
-def create_access_token(subject: str, extra: Optional[dict] = None) -> str:
+def create_access_token(subject: str, extra: dict | None = None) -> str:
     payload: dict[str, Any] = {"sub": subject, "type": "access"}
     if extra:
         payload.update(extra)
@@ -44,7 +43,7 @@ def create_access_token(subject: str, extra: Optional[dict] = None) -> str:
     )
 
 
-def create_refresh_token(subject: str, extra: Optional[dict] = None) -> str:
+def create_refresh_token(subject: str, extra: dict | None = None) -> str:
     payload: dict[str, Any] = {"sub": subject, "type": "refresh"}
     if extra:
         payload.update(extra)

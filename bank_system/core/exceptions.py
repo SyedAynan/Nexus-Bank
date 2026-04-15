@@ -4,7 +4,6 @@ NEXA Centralized Exception Handling
 Custom exception classes and global handlers for consistent API error responses.
 """
 
-from typing import Optional
 
 from fastapi import FastAPI, Request
 from fastapi.responses import ORJSONResponse
@@ -17,8 +16,8 @@ class AppException(Exception):
         self,
         status_code: int,
         detail: str,
-        error_code: Optional[str] = None,
-        headers: Optional[dict] = None,
+        error_code: str | None = None,
+        headers: dict | None = None,
     ):
         self.status_code = status_code
         self.detail = detail

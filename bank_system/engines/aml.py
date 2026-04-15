@@ -1,5 +1,4 @@
 from collections import defaultdict
-from typing import Dict, List, Tuple
 
 from sqlalchemy.orm import Session
 
@@ -12,21 +11,21 @@ from bank_system.models.db_models import (
 
 
 class AMLEngine:
-    def _rebuild_graph(self, db: Session) -> Tuple[List[AMLNode], List[AMLEdge]]:
+    def _rebuild_graph(self, db: Session) -> tuple[list[AMLNode], list[AMLEdge]]:
         txs = (
             db.query(Transaction)
             .filter(Transaction.type == TransactionType.transfer)
             .all()
         )
 
-        edge_weights: Dict[Tuple[int, int], float] = defaultdict(float)
+        edge_weights: dict[tuple[int, int], float] = defaultdict(float)
 
         for tx in txs:
             if not tx.counterparty_account_id:
                 continue
             edge_weights[(tx.account_id, tx.counterparty_account_id)] += abs(tx.amount)
 
-        nodes: Dict[int, AMLNode] = {}
+        nodes: dict[int, AMLNode] = {}
 
         for (src, dst), weight in edge_weights.items():
             for acc_id in (src, dst):
@@ -43,7 +42,7 @@ class AMLEngine:
 
         db.flush()
 
-        edges: List[AMLEdge] = []
+        edges: list[AMLEdge] = []
 
         for (src, dst), weight in edge_weights.items():
             edge = (
@@ -70,18 +69,18 @@ class AMLEngine:
         db.commit()
         return list(nodes.values()), edges
 
-    def run_network_scan(self, db: Session) -> Dict[str, List[Dict]]:
+    def run_network_scan(self, db: Session) -> dict[str, list[dict]]:
         nodes, edges = self._rebuild_graph(db)
 
-        adjacency: Dict[int, List[int]] = defaultdict(list)
+        adjacency: dict[int, list[int]] = defaultdict(list)
 
         for e in edges:
             adjacency[e.from_account_id].append(e.to_account_id)
 
-        visited: Dict[int, bool] = {}
-        stack: List[int] = []
-        in_stack: Dict[int, bool] = {}
-        cycles: List[List[int]] = []
+        visited: dict[int, bool] = {}
+        stack: list[int] = []
+        in_stack: dict[int, bool] = {}
+        cycles: list[list[int]] = []
 
         def dfs(v: int):
             visited[v] = True
@@ -102,7 +101,7 @@ class AMLEngine:
             if node.account_id not in visited:
                 dfs(node.account_id)
 
-        degree: Dict[int, int] = defaultdict(int)
+        degree: dict[int, int] = defaultdict(int)
 
         for e in edges:
             degree[e.from_account_id] += 1

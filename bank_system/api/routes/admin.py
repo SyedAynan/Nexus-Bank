@@ -1,4 +1,4 @@
-from typing import Annotated, List, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -10,7 +10,6 @@ from bank_system.core.redis_client import get_redis
 from bank_system.engines.fraud import FraudEngine
 from bank_system.models.db_models import SecurityEvent, User, UserRole
 
-
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 fraud_engine = FraudEngine()
@@ -20,9 +19,9 @@ fraud_engine = FraudEngine()
 
 
 class UserUpdate(BaseModel):
-    role: Optional[str] = None
-    is_locked: Optional[bool] = None
-    is_active: Optional[bool] = None
+    role: str | None = None
+    is_locked: bool | None = None
+    is_active: bool | None = None
 
 
 # ── User Management Endpoints ──
@@ -83,7 +82,7 @@ def update_user(
 # ── Existing Endpoints ──
 
 
-@router.get("/live-users", response_model=List[str])
+@router.get("/live-users", response_model=list[str])
 def live_users(
     current_admin=Depends(role_required(UserRole.admin)),
 ):

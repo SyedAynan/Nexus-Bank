@@ -1,4 +1,3 @@
-from typing import Dict, List
 
 from sqlalchemy.orm import Session
 
@@ -9,7 +8,7 @@ from bank_system.schemas.intelligence import PortfolioInsight
 class PortfolioEngine:
     def get_insights_for_account(
         self, db: Session, account_id: int
-    ) -> List[PortfolioInsight]:
+    ) -> list[PortfolioInsight]:
         holdings = (
             db.query(PortfolioHolding)
             .filter(PortfolioHolding.account_id == account_id)
@@ -53,7 +52,7 @@ class PortfolioEngine:
             for h in holdings
         ]
 
-    def summarize_portfolio(self, db: Session, user_id: int) -> Dict[str, float]:
+    def summarize_portfolio(self, db: Session, user_id: int) -> dict[str, float]:
         accounts = db.query(Account).filter(Account.owner_id == user_id).all()
         if not accounts:
             return {

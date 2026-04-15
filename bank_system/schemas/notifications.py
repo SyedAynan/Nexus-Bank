@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -10,7 +9,7 @@ class NotificationCreate(BaseModel):
     title: str
     message: str
     type: NotificationType = NotificationType.info
-    user_id: Optional[int] = None  # None means broadcast to all users
+    user_id: int | None = None  # None means broadcast to all users
 
 
 class NotificationRead(BaseModel):

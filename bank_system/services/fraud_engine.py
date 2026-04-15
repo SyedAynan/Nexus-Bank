@@ -13,8 +13,8 @@ All scores are combined into a composite Fraud Risk Score (0-100).
 """
 
 import statistics
-from datetime import datetime, timedelta
 from collections import defaultdict, deque
+from datetime import datetime, timedelta
 
 
 class FraudEngine:

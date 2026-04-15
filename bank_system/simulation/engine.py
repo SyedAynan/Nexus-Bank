@@ -7,15 +7,15 @@ blocking the event loop and freezing WebSocket/API responses.
 import asyncio
 import logging
 import random
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
 from bank_system.core.config import get_settings
 from bank_system.core.db import SessionLocal
 from bank_system.core.realtime import get_ws_manager
-from bank_system.engines.fraud import FraudEngine
 from bank_system.engines.aml import AMLEngine
+from bank_system.engines.fraud import FraudEngine
 from bank_system.models.db_models import (
     Account,
     Loan,
@@ -88,7 +88,7 @@ def _run_simulation_tick() -> dict | None:
 
         return {
             "type": "tick",
-            "sim_time": datetime.now(timezone.utc).isoformat(),
+            "sim_time": datetime.now(UTC).isoformat(),
             "account_id": account.id,
             "balance": float(account.balance),
             "tx_amount": amount,

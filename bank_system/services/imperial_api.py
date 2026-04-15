@@ -4,9 +4,9 @@ Maps BankingService (DSA-backed) to the Imperial frontend state.
 All data and operations are driven by Python; frontend only displays and calls this API.
 """
 
-from datetime import datetime
-import sys
 import os
+import sys
+from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

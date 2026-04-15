@@ -12,8 +12,8 @@ Generates chart-ready data for:
 8. Risk heatmap data
 """
 
-from datetime import datetime, timedelta
 from collections import defaultdict
+from datetime import datetime, timedelta
 
 
 class AnalyticsEngine:

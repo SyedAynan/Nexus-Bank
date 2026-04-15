@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 from sklearn.ensemble import IsolationForest
@@ -32,7 +32,7 @@ class FraudEngine:
         )
         self._trained = False
 
-    def _build_features(self, txs: List[Transaction]) -> np.ndarray:
+    def _build_features(self, txs: list[Transaction]) -> np.ndarray:
         if not txs:
             return np.zeros((0, 2))
 
@@ -102,7 +102,7 @@ class FraudEngine:
             reason=reason,
         )
 
-    def get_open_alerts(self, db: Session, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_open_alerts(self, db: Session, limit: int = 50) -> list[dict[str, Any]]:
         alerts = (
             db.query(FraudAlert)
             .filter(FraudAlert.acknowledged.is_(False))

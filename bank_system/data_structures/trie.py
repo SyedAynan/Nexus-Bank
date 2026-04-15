@@ -13,16 +13,15 @@ Time Complexity:
 Space Complexity: O(N * M) where N = words, M = avg length
 """
 
-from typing import Dict, List, Optional, Tuple
 
 
 class TrieNode:
     __slots__ = ("children", "is_end", "data")
 
     def __init__(self) -> None:
-        self.children: Dict[str, "TrieNode"] = {}
+        self.children: dict[str, TrieNode] = {}
         self.is_end: bool = False
-        self.data: Optional[dict] = None  # metadata attached at word end
+        self.data: dict | None = None  # metadata attached at word end
 
 
 class Trie:
@@ -36,7 +35,7 @@ class Trie:
     # Core operations
     # ------------------------------------------------------------------
 
-    def insert(self, word: str, data: Optional[dict] = None) -> None:
+    def insert(self, word: str, data: dict | None = None) -> None:
         """Insert a word (lowercased) with optional metadata."""
         node = self.root
         for ch in word.lower():
@@ -55,12 +54,12 @@ class Trie:
 
     def starts_with(
         self, prefix: str, limit: int = 20
-    ) -> List[Tuple[str, Optional[dict]]]:
+    ) -> list[tuple[str, dict | None]]:
         """Return up to *limit* words starting with *prefix*."""
         node = self._find_node(prefix.lower())
         if node is None:
             return []
-        results: List[Tuple[str, Optional[dict]]] = []
+        results: list[tuple[str, dict | None]] = []
         self._collect(node, list(prefix.lower()), results, limit)
         return results
 
@@ -94,7 +93,7 @@ class Trie:
     # Private helpers
     # ------------------------------------------------------------------
 
-    def _find_node(self, key: str) -> Optional[TrieNode]:
+    def _find_node(self, key: str) -> TrieNode | None:
         node = self.root
         for ch in key:
             if ch not in node.children:

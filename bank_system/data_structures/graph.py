@@ -5,7 +5,7 @@ Time Complexity: Add edge O(1), BFS/DFS O(V+E), Cycle detection O(V+E)
 Space Complexity: O(V+E) where V=accounts, E=transfers between them
 """
 
-from collections import deque, defaultdict
+from collections import defaultdict, deque
 
 
 class ComplianceGraph:

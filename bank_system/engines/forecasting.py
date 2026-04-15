@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from typing import List
 
 import numpy as np
 from sqlalchemy.orm import Session
@@ -12,7 +11,7 @@ from bank_system.schemas.analytics import ForecastSeries, TimeSeriesPoint
 class ForecastingEngine:
     def build_cashflow_forecast(
         self, db: Session, horizon_days: int = 30
-    ) -> List[ForecastSeries]:
+    ) -> list[ForecastSeries]:
         now = datetime.utcnow()
         since = now - timedelta(days=90)
         txs = (

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 
 from pydantic import BaseModel
 
@@ -11,7 +10,7 @@ class TimeSeriesPoint(BaseModel):
 
 class ForecastSeries(BaseModel):
     label: str
-    points: List[TimeSeriesPoint]
+    points: list[TimeSeriesPoint]
 
 
 class DashboardKPI(BaseModel):
