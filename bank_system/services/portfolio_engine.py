@@ -20,7 +20,13 @@ from typing import Dict, Any
 
 
 class PortfolioEngine:
-    ASSET_CLASSES = ["equities", "bonds", "alternatives", "real_estate", "private_equity"]
+    ASSET_CLASSES = [
+        "equities",
+        "bonds",
+        "alternatives",
+        "real_estate",
+        "private_equity",
+    ]
 
     def __init__(self, banking_service):
         self.bank = banking_service
@@ -66,7 +72,7 @@ class PortfolioEngine:
             allocation[k] = allocation[k] / total_alloc
 
         # Diversification index: 1 - sum(p_i^2)
-        div_index = 1.0 - sum(p ** 2 for p in allocation.values())
+        div_index = 1.0 - sum(p**2 for p in allocation.values())
 
         # Simple VaR-like metric: assume portfolio volatility scaling from diversification
         # Higher diversification -> lower risk factor.
@@ -79,4 +85,3 @@ class PortfolioEngine:
             "diversification_index": round(div_index, 4),
             "value_at_risk_95": round(var_95, 4),
         }
-

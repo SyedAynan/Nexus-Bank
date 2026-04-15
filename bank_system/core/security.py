@@ -100,4 +100,3 @@ def parse_device_name(user_agent: str) -> str:
         os_name = "iPad"
 
     return f"{browser} — {os_name}"
-

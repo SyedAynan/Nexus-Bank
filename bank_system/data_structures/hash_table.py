@@ -6,18 +6,19 @@ Space Complexity: O(n)
 Python dict is a hash table with open addressing + dynamic resizing.
 """
 
-
 import threading
+
 
 class AccountHashTable:
     """
     Hash table wrapper for O(1) account lookup.
     Also maintains a secondary index by email and owner name.
     """
+
     def __init__(self):
-        self._table = {}            # Primary: account_id -> account_dict
-        self._email_index = {}      # Secondary: email -> account_id
-        self._owner_index = {}      # Secondary: owner_name -> [account_ids]
+        self._table = {}  # Primary: account_id -> account_dict
+        self._email_index = {}  # Secondary: email -> account_id
+        self._owner_index = {}  # Secondary: owner_name -> [account_ids]
         self._lock = threading.RLock()
 
     def put(self, account_id, account):
@@ -25,10 +26,10 @@ class AccountHashTable:
         with self._lock:
             self._table[account_id] = account
             # Maintain secondary indices
-            email = account.get('email', '')
+            email = account.get("email", "")
             if email:
                 self._email_index[email] = account_id
-            owner = account.get('owner_name', '')
+            owner = account.get("owner_name", "")
             if owner:
                 if owner not in self._owner_index:
                     self._owner_index[owner] = []
@@ -57,12 +58,14 @@ class AccountHashTable:
         with self._lock:
             account = self._table.pop(account_id, None)
             if account:
-                email = account.get('email', '')
+                email = account.get("email", "")
                 if email in self._email_index:
                     del self._email_index[email]
-                owner = account.get('owner_name', '')
+                owner = account.get("owner_name", "")
                 if owner in self._owner_index:
-                    self._owner_index[owner] = [i for i in self._owner_index[owner] if i != account_id]
+                    self._owner_index[owner] = [
+                        i for i in self._owner_index[owner] if i != account_id
+                    ]
             return account
 
     def exists(self, account_id):

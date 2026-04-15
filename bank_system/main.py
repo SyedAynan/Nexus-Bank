@@ -73,12 +73,14 @@ async def lifespan(app: FastAPI):
 
     try:
         from bank_system.seed import seed_if_empty
+
         seed_if_empty()
         logging.info("Database seeded successfully.")
     except Exception as e:
         logging.error(f"Seed failed (non-fatal): {e}")
 
     import asyncio
+
     task = asyncio.create_task(simulation_loop())
 
     try:
@@ -89,13 +91,31 @@ async def lifespan(app: FastAPI):
 
 OPENAPI_TAGS = [
     {"name": "system", "description": "Health checks and system status"},
-    {"name": "auth", "description": "Authentication — login, register, token refresh, logout"},
-    {"name": "banking", "description": "Core banking — accounts, deposits, withdrawals, transfers"},
+    {
+        "name": "auth",
+        "description": "Authentication — login, register, token refresh, logout",
+    },
+    {
+        "name": "banking",
+        "description": "Core banking — accounts, deposits, withdrawals, transfers",
+    },
     {"name": "analytics", "description": "Dashboard KPIs, charts, and reporting data"},
-    {"name": "admin", "description": "Admin console — user management, audit logs, system stats"},
-    {"name": "intelligence", "description": "AI engines — risk analysis, AML, forecasting, portfolio intelligence"},
-    {"name": "dsa", "description": "DSA Showcase — data structure visualizations and benchmarks"},
-    {"name": "services", "description": "Integrated services — OAuth, WebAuthn, Email, BillPay, FX, Feature Flags, Export"},
+    {
+        "name": "admin",
+        "description": "Admin console — user management, audit logs, system stats",
+    },
+    {
+        "name": "intelligence",
+        "description": "AI engines — risk analysis, AML, forecasting, portfolio intelligence",
+    },
+    {
+        "name": "dsa",
+        "description": "DSA Showcase — data structure visualizations and benchmarks",
+    },
+    {
+        "name": "services",
+        "description": "Integrated services — OAuth, WebAuthn, Email, BillPay, FX, Feature Flags, Export",
+    },
 ]
 
 app = FastAPI(
@@ -130,9 +150,9 @@ register_exception_handlers(app)
 
 # CORS — restrict to known origins (never use '*' in production)
 ALLOWED_ORIGINS = [
-    "http://localhost:3000",   # React dev server
-    "http://localhost:5173",   # Vite dev server
-    "http://localhost:8000",   # FastAPI self
+    "http://localhost:3000",  # React dev server
+    "http://localhost:5173",  # Vite dev server
+    "http://localhost:8000",  # FastAPI self
     "http://127.0.0.1:8000",
 ]
 
@@ -141,16 +161,20 @@ _frontend_url = os.environ.get("FRONTEND_URL", "").strip()
 if _frontend_url:
     ALLOWED_ORIGINS.append(_frontend_url)
     # Also allow www subdomain variant
-    if _frontend_url.startswith("https://") and not _frontend_url.startswith("https://www."):
+    if _frontend_url.startswith("https://") and not _frontend_url.startswith(
+        "https://www."
+    ):
         ALLOWED_ORIGINS.append(_frontend_url.replace("https://", "https://www."))
 
 if settings.environment == "development":
-    ALLOWED_ORIGINS.extend([
-        "http://localhost:4173",   # Vite preview
-        "http://localhost:3001",   # Alt dev server
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-    ])
+    ALLOWED_ORIGINS.extend(
+        [
+            "http://localhost:4173",  # Vite preview
+            "http://localhost:3001",  # Alt dev server
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:3000",
+        ]
+    )
 
 app.add_middleware(
     CORSMiddleware,
@@ -175,10 +199,19 @@ app.add_middleware(RequestLoggerMiddleware)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
-@app.get("/api/health", tags=["system"], summary="Health Check", description="Returns service health and environment info.")
+@app.get(
+    "/api/health",
+    tags=["system"],
+    summary="Health Check",
+    description="Returns service health and environment info.",
+)
 @app.get("/health", tags=["system"], include_in_schema=False)
 def healthcheck() -> Dict[str, str]:
-    return {"status": "healthy", "environment": settings.environment, "version": "3.0.0"}
+    return {
+        "status": "healthy",
+        "environment": settings.environment,
+        "version": "3.0.0",
+    }
 
 
 @app.websocket("/ws/dashboard")
@@ -284,4 +317,6 @@ app.include_router(analytics_routes.router)
 app.include_router(admin_routes.router)
 app.include_router(intelligence_routes.router)
 app.include_router(dsa_admin_routes.router)  # Admin-only DSA visualization
-app.include_router(services_routes.router)  # OAuth, WebAuthn, Email, BillPay, FX, Flags, Export
+app.include_router(
+    services_routes.router
+)  # OAuth, WebAuthn, Email, BillPay, FX, Flags, Export

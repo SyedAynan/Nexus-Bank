@@ -12,16 +12,18 @@ _redis_instance = None
 
 class FakeRedis:
     """In-memory fallback when Redis is unavailable (local dev only).
-    
+
     Supports TTL-based key expiration for correct OTP/session behavior.
     """
 
     def __init__(self):
-        self._store = {}        # key -> value
-        self._expiry = {}       # key -> expiry_timestamp (epoch)
+        self._store = {}  # key -> value
+        self._expiry = {}  # key -> expiry_timestamp (epoch)
         self._sets = {}
         self._sorted_sets = {}
-        logger.warning("Using in-memory FakeRedis — data will not persist across restarts")
+        logger.warning(
+            "Using in-memory FakeRedis — data will not persist across restarts"
+        )
 
     def _is_expired(self, key):
         """Check if a key has expired and remove it if so."""
@@ -111,7 +113,8 @@ class FakeRedis:
     def zremrangebyscore(self, key, min_score, max_score):
         if key in self._sorted_sets:
             self._sorted_sets[key] = {
-                k: v for k, v in self._sorted_sets[key].items()
+                k: v
+                for k, v in self._sorted_sets[key].items()
                 if not (float(min_score) <= float(v) <= float(max_score))
             }
 
@@ -181,4 +184,3 @@ def get_redis():
             logger.warning("Redis not available — using in-memory fallback")
             _redis_instance = FakeRedis()
     return _redis_instance
-

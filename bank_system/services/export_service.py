@@ -3,6 +3,7 @@ NEXA Export Service — CSV + PDF Statement Generation
 Generates downloadable transaction statements in CSV and PDF formats.
 PDF uses basic HTML-to-text formatting (no external dependencies required).
 """
+
 import csv
 import io
 import logging
@@ -15,7 +16,9 @@ logger = logging.getLogger(__name__)
 class ExportService:
     """Transaction export service for CSV and PDF generation."""
 
-    def generate_csv(self, transactions: List[Dict], account_info: Optional[Dict] = None) -> str:
+    def generate_csv(
+        self, transactions: List[Dict], account_info: Optional[Dict] = None
+    ) -> str:
         """Generate CSV content from transactions."""
         output = io.StringIO()
         writer = csv.writer(output)
@@ -25,7 +28,9 @@ class ExportService:
             writer.writerow(["NEXA Banking — Account Statement"])
             writer.writerow([f"Account: {account_info.get('account_number', 'N/A')}"])
             writer.writerow([f"Type: {account_info.get('account_type', 'N/A')}"])
-            writer.writerow([f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"])
+            writer.writerow(
+                [f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"]
+            )
             writer.writerow([])
 
         # Column headers
@@ -50,20 +55,32 @@ class ExportService:
             else:
                 amount_str = f"+${abs(amount):,.2f}"
 
-            writer.writerow([date, tx_type, desc, amount_str, f"${running_balance:,.2f}"])
+            writer.writerow(
+                [date, tx_type, desc, amount_str, f"${running_balance:,.2f}"]
+            )
 
         # Summary
         writer.writerow([])
         writer.writerow(["Summary"])
         writer.writerow([f"Total Transactions: {len(transactions)}"])
-        total_in = sum(t.get("amount", 0) for t in transactions if t.get("type") in ("deposit", "interest", "transfer_in"))
-        total_out = sum(t.get("amount", 0) for t in transactions if t.get("type") in ("withdrawal", "transfer_out", "emi"))
+        total_in = sum(
+            t.get("amount", 0)
+            for t in transactions
+            if t.get("type") in ("deposit", "interest", "transfer_in")
+        )
+        total_out = sum(
+            t.get("amount", 0)
+            for t in transactions
+            if t.get("type") in ("withdrawal", "transfer_out", "emi")
+        )
         writer.writerow([f"Total Credits: ${total_in:,.2f}"])
         writer.writerow([f"Total Debits: ${total_out:,.2f}"])
 
         return output.getvalue()
 
-    def generate_pdf_content(self, transactions: List[Dict], account_info: Optional[Dict] = None) -> str:
+    def generate_pdf_content(
+        self, transactions: List[Dict], account_info: Optional[Dict] = None
+    ) -> str:
         """Generate PDF-ready HTML content for statements.
         This returns HTML that can be rendered as a PDF by the frontend or wkhtmltopdf.
         """
@@ -92,13 +109,21 @@ class ExportService:
             rows += f"""
             <tr>
                 <td style="padding:8px 12px; border-bottom:1px solid #e5e7eb;">{date}</td>
-                <td style="padding:8px 12px; border-bottom:1px solid #e5e7eb;">{tx_type.replace('_',' ').title()}</td>
+                <td style="padding:8px 12px; border-bottom:1px solid #e5e7eb;">{tx_type.replace("_", " ").title()}</td>
                 <td style="padding:8px 12px; border-bottom:1px solid #e5e7eb;">{desc}</td>
                 <td style="padding:8px 12px; border-bottom:1px solid #e5e7eb; text-align:right; font-weight:600;">{amt_html}</td>
             </tr>"""
 
-        total_in = sum(t.get("amount", 0) for t in transactions if t.get("type") in ("deposit", "interest", "transfer_in"))
-        total_out = sum(t.get("amount", 0) for t in transactions if t.get("type") in ("withdrawal", "transfer_out", "emi"))
+        total_in = sum(
+            t.get("amount", 0)
+            for t in transactions
+            if t.get("type") in ("deposit", "interest", "transfer_in")
+        )
+        total_out = sum(
+            t.get("amount", 0)
+            for t in transactions
+            if t.get("type") in ("withdrawal", "transfer_out", "emi")
+        )
 
         html = f"""<!DOCTYPE html>
 <html>
@@ -169,7 +194,9 @@ class ExportService:
 </html>"""
         return html
 
-    def generate_audit_report(self, audit_entries: List[Dict], report_type: str = "general") -> str:
+    def generate_audit_report(
+        self, audit_entries: List[Dict], report_type: str = "general"
+    ) -> str:
         """Generate audit trail CSV for compliance."""
         output = io.StringIO()
         writer = csv.writer(output)
@@ -177,17 +204,21 @@ class ExportService:
         writer.writerow([f"NEXA Banking — Audit Report ({report_type.upper()})"])
         writer.writerow([f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"])
         writer.writerow([])
-        writer.writerow(["Timestamp", "User", "Action", "Details", "IP Address", "Risk Level"])
+        writer.writerow(
+            ["Timestamp", "User", "Action", "Details", "IP Address", "Risk Level"]
+        )
 
         for entry in audit_entries:
-            writer.writerow([
-                entry.get("timestamp", ""),
-                entry.get("user", "system"),
-                entry.get("action", ""),
-                entry.get("details", ""),
-                entry.get("ip_address", "N/A"),
-                entry.get("risk_level", "low"),
-            ])
+            writer.writerow(
+                [
+                    entry.get("timestamp", ""),
+                    entry.get("user", "system"),
+                    entry.get("action", ""),
+                    entry.get("details", ""),
+                    entry.get("ip_address", "N/A"),
+                    entry.get("risk_level", "low"),
+                ]
+            )
 
         return output.getvalue()
 

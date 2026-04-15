@@ -2,6 +2,7 @@
 NEXA Bill Pay Service — Scheduled Payments + Recurring Transfers
 Manages scheduled and recurring payment configurations.
 """
+
 import time
 import logging
 from typing import List, Dict, Any, Optional
@@ -15,14 +16,62 @@ class BillPayService:
     def __init__(self):
         self._scheduled: List[Dict] = []
         self._payees: List[Dict] = [
-            {"id": "payee-001", "name": "Electricity Company", "category": "utilities", "account": "UTIL-001", "logo": "⚡"},
-            {"id": "payee-002", "name": "Water Authority", "category": "utilities", "account": "UTIL-002", "logo": "💧"},
-            {"id": "payee-003", "name": "Internet Provider", "category": "telecom", "account": "TEL-001", "logo": "🌐"},
-            {"id": "payee-004", "name": "Mobile Carrier", "category": "telecom", "account": "TEL-002", "logo": "📱"},
-            {"id": "payee-005", "name": "Property Insurance", "category": "insurance", "account": "INS-001", "logo": "🏠"},
-            {"id": "payee-006", "name": "Auto Insurance", "category": "insurance", "account": "INS-002", "logo": "🚗"},
-            {"id": "payee-007", "name": "Credit Card Payment", "category": "finance", "account": "CC-001", "logo": "💳"},
-            {"id": "payee-008", "name": "Gym Membership", "category": "lifestyle", "account": "GYM-001", "logo": "🏋️"},
+            {
+                "id": "payee-001",
+                "name": "Electricity Company",
+                "category": "utilities",
+                "account": "UTIL-001",
+                "logo": "⚡",
+            },
+            {
+                "id": "payee-002",
+                "name": "Water Authority",
+                "category": "utilities",
+                "account": "UTIL-002",
+                "logo": "💧",
+            },
+            {
+                "id": "payee-003",
+                "name": "Internet Provider",
+                "category": "telecom",
+                "account": "TEL-001",
+                "logo": "🌐",
+            },
+            {
+                "id": "payee-004",
+                "name": "Mobile Carrier",
+                "category": "telecom",
+                "account": "TEL-002",
+                "logo": "📱",
+            },
+            {
+                "id": "payee-005",
+                "name": "Property Insurance",
+                "category": "insurance",
+                "account": "INS-001",
+                "logo": "🏠",
+            },
+            {
+                "id": "payee-006",
+                "name": "Auto Insurance",
+                "category": "insurance",
+                "account": "INS-002",
+                "logo": "🚗",
+            },
+            {
+                "id": "payee-007",
+                "name": "Credit Card Payment",
+                "category": "finance",
+                "account": "CC-001",
+                "logo": "💳",
+            },
+            {
+                "id": "payee-008",
+                "name": "Gym Membership",
+                "category": "lifestyle",
+                "account": "GYM-001",
+                "logo": "🏋️",
+            },
         ]
         self._seed_demo()
         logger.info(f"BillPay: {len(self._scheduled)} scheduled payments initialized")
@@ -32,28 +81,64 @@ class BillPayService:
         now = time.time()
         self._scheduled = [
             {
-                "id": "bill-001", "payee_id": "payee-001", "payee_name": "Electricity Company",
-                "amount": 142.50, "frequency": "monthly", "next_date": "2026-03-15",
-                "status": "active", "auto_pay": True, "created_at": now - 86400 * 30,
-                "category": "utilities", "logo": "⚡", "last_paid": "2026-02-15", "total_paid": 1710.00,
+                "id": "bill-001",
+                "payee_id": "payee-001",
+                "payee_name": "Electricity Company",
+                "amount": 142.50,
+                "frequency": "monthly",
+                "next_date": "2026-03-15",
+                "status": "active",
+                "auto_pay": True,
+                "created_at": now - 86400 * 30,
+                "category": "utilities",
+                "logo": "⚡",
+                "last_paid": "2026-02-15",
+                "total_paid": 1710.00,
             },
             {
-                "id": "bill-002", "payee_id": "payee-003", "payee_name": "Internet Provider",
-                "amount": 79.99, "frequency": "monthly", "next_date": "2026-03-01",
-                "status": "active", "auto_pay": True, "created_at": now - 86400 * 60,
-                "category": "telecom", "logo": "🌐", "last_paid": "2026-02-01", "total_paid": 959.88,
+                "id": "bill-002",
+                "payee_id": "payee-003",
+                "payee_name": "Internet Provider",
+                "amount": 79.99,
+                "frequency": "monthly",
+                "next_date": "2026-03-01",
+                "status": "active",
+                "auto_pay": True,
+                "created_at": now - 86400 * 60,
+                "category": "telecom",
+                "logo": "🌐",
+                "last_paid": "2026-02-01",
+                "total_paid": 959.88,
             },
             {
-                "id": "bill-003", "payee_id": "payee-007", "payee_name": "Credit Card Payment",
-                "amount": 500.00, "frequency": "monthly", "next_date": "2026-03-20",
-                "status": "active", "auto_pay": False, "created_at": now - 86400 * 90,
-                "category": "finance", "logo": "💳", "last_paid": "2026-02-20", "total_paid": 6000.00,
+                "id": "bill-003",
+                "payee_id": "payee-007",
+                "payee_name": "Credit Card Payment",
+                "amount": 500.00,
+                "frequency": "monthly",
+                "next_date": "2026-03-20",
+                "status": "active",
+                "auto_pay": False,
+                "created_at": now - 86400 * 90,
+                "category": "finance",
+                "logo": "💳",
+                "last_paid": "2026-02-20",
+                "total_paid": 6000.00,
             },
             {
-                "id": "bill-004", "payee_id": "payee-005", "payee_name": "Property Insurance",
-                "amount": 245.00, "frequency": "quarterly", "next_date": "2026-04-01",
-                "status": "active", "auto_pay": True, "created_at": now - 86400 * 120,
-                "category": "insurance", "logo": "🏠", "last_paid": "2026-01-01", "total_paid": 980.00,
+                "id": "bill-004",
+                "payee_id": "payee-005",
+                "payee_name": "Property Insurance",
+                "amount": 245.00,
+                "frequency": "quarterly",
+                "next_date": "2026-04-01",
+                "status": "active",
+                "auto_pay": True,
+                "created_at": now - 86400 * 120,
+                "category": "insurance",
+                "logo": "🏠",
+                "last_paid": "2026-01-01",
+                "total_paid": 980.00,
             },
         ]
 
@@ -110,7 +195,9 @@ class BillPayService:
         return {
             "total_scheduled": len(self._scheduled),
             "active": len(active),
-            "monthly_total": sum(p["amount"] for p in active if p["frequency"] == "monthly"),
+            "monthly_total": sum(
+                p["amount"] for p in active if p["frequency"] == "monthly"
+            ),
             "total_paid_all_time": sum(p.get("total_paid", 0) for p in self._scheduled),
             "auto_pay_count": sum(1 for p in active if p.get("auto_pay")),
             "categories": list(set(p.get("category", "other") for p in active)),

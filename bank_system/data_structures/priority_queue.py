@@ -14,19 +14,20 @@ class LoanPriorityQueue:
     Priority = lower score means HIGHER priority (e.g., urgency score).
     Priority formula: lower risk + higher credit score = higher priority (lower heap key).
     """
+
     def __init__(self):
-        self._heap = []             # List of (priority_score, counter, loan_dict)
-        self._counter = 0           # Tiebreaker for equal priorities (FIFO within same priority)
-        self._entry_finder = {}     # Map loan_id -> entry for fast lookup
+        self._heap = []  # List of (priority_score, counter, loan_dict)
+        self._counter = 0  # Tiebreaker for equal priorities (FIFO within same priority)
+        self._entry_finder = {}  # Map loan_id -> entry for fast lookup
 
     def _compute_priority(self, loan):
         """
         Lower number = higher priority.
         Formula: 100 - credit_score + loan_amount/100000 + urgency_penalty
         """
-        credit_score = loan.get('credit_score', 600)
-        amount = loan.get('amount', 0)
-        urgency = loan.get('urgency', 0)    # 0=normal, -10=urgent
+        credit_score = loan.get("credit_score", 600)
+        amount = loan.get("amount", 0)
+        urgency = loan.get("urgency", 0)  # 0=normal, -10=urgent
         return (100 - credit_score) + (amount / 100000) - urgency
 
     def enqueue_loan(self, loan):
@@ -34,15 +35,15 @@ class LoanPriorityQueue:
         priority = self._compute_priority(loan)
         self._counter += 1
         entry = [priority, self._counter, loan]
-        self._entry_finder[loan['loan_id']] = entry
+        self._entry_finder[loan["loan_id"]] = entry
         heapq.heappush(self._heap, entry)
 
     def dequeue_loan(self):
         """Remove and return the highest priority loan. O(log n)"""
         while self._heap:
             priority, count, loan = heapq.heappop(self._heap)
-            if loan is not None:    # Not a removed/cancelled entry
-                self._entry_finder.pop(loan['loan_id'], None)
+            if loan is not None:  # Not a removed/cancelled entry
+                self._entry_finder.pop(loan["loan_id"], None)
                 return loan
         return None
 
@@ -53,7 +54,7 @@ class LoanPriorityQueue:
         """
         if loan_id in self._entry_finder:
             entry = self._entry_finder.pop(loan_id)
-            entry[2] = None     # Mark as removed
+            entry[2] = None  # Mark as removed
 
     def peek(self):
         """View highest priority loan without removing. O(1)"""

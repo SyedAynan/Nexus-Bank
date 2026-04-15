@@ -33,7 +33,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
     def _build_csp(self, is_dev: bool) -> str:
         """Build Content-Security-Policy based on environment.
-        
+
         Development mode allows inline styles/scripts for Vite HMR.
         Production mode uses strict CSP.
         """
@@ -53,7 +53,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "frame-ancestors 'none'"
             )
         else:
-            # Production: Strict CSP — no inline scripts/styles 
+            # Production: Strict CSP — no inline scripts/styles
             return (
                 "default-src 'self'; "
                 "script-src 'self' https://cdn.jsdelivr.net https://unpkg.com; "

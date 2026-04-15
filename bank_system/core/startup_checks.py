@@ -4,6 +4,7 @@ NEXA Startup Validation
 Validates critical environment configuration before the app starts.
 Fails fast on missing or insecure secrets in production.
 """
+
 import logging
 import sys
 

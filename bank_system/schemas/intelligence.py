@@ -34,4 +34,3 @@ class AMLEdgeView(BaseModel):
 class AMLNetworkView(BaseModel):
     nodes: List[AMLNodeView]
     edges: List[AMLEdgeView]
-

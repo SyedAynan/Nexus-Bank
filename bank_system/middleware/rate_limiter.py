@@ -22,7 +22,7 @@ from bank_system.core.redis_client import get_redis
 RATE_LIMITS = {
     "default": (100, 60),
     "unauthenticated": (30, 60),
-    "login": (15, 60),     # MFA flow needs 2 requests per attempt
+    "login": (15, 60),  # MFA flow needs 2 requests per attempt
     "register": (10, 60),
 }
 

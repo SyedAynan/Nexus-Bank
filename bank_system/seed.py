@@ -14,7 +14,14 @@ from datetime import datetime, timedelta
 from bank_system.core.db import SessionLocal
 from bank_system.core.security import hash_password
 from bank_system.models.db_models import (
-    Account, FraudAlert, Loan, SecurityEvent, SecurityEventType, Transaction, User, UserRole,
+    Account,
+    FraudAlert,
+    Loan,
+    SecurityEvent,
+    SecurityEventType,
+    Transaction,
+    User,
+    UserRole,
 )
 
 
@@ -154,7 +161,17 @@ def seed_if_empty() -> None:
             ("NB-MRC-002", 50000, 7.5, 48, 590, 0.68, "rejected", 0.25, "high"),
         ]
 
-        for acc_num, principal, rate, term, credit, dti, status, prob, risk in loan_data:
+        for (
+            acc_num,
+            principal,
+            rate,
+            term,
+            credit,
+            dti,
+            status,
+            prob,
+            risk,
+        ) in loan_data:
             if acc_num not in accounts:
                 continue
             loan = Loan(
@@ -174,12 +191,18 @@ def seed_if_empty() -> None:
         db.commit()
 
         # ── Fraud Alerts ──
-        high_risk_txs = db.query(Transaction).filter(
-            Transaction.fraud_score > 0.5
-        ).limit(5).all()
+        high_risk_txs = (
+            db.query(Transaction).filter(Transaction.fraud_score > 0.5).limit(5).all()
+        )
 
         for tx in high_risk_txs:
-            severity = "critical" if tx.fraud_score > 0.8 else "high" if tx.fraud_score > 0.6 else "medium"
+            severity = (
+                "critical"
+                if tx.fraud_score > 0.8
+                else "high"
+                if tx.fraud_score > 0.6
+                else "medium"
+            )
             reasons = [
                 "Unusual transaction amount detected",
                 "Transaction outside normal operating hours",
@@ -202,17 +225,57 @@ def seed_if_empty() -> None:
         # ── Security Events ──
         event_types = [
             (SecurityEventType.login_success, "admin", "Successful admin login"),
-            (SecurityEventType.login_success, "john_doe", "Successful login from Chrome/Windows"),
-            (SecurityEventType.login_failure, "emily_chen", "Incorrect password - attempt 1"),
-            (SecurityEventType.login_failure, "emily_chen", "Incorrect password - attempt 2"),
-            (SecurityEventType.login_success, "emily_chen", "Successful login after retry"),
-            (SecurityEventType.login_success, "marcus_williams", "New user registration"),
+            (
+                SecurityEventType.login_success,
+                "john_doe",
+                "Successful login from Chrome/Windows",
+            ),
+            (
+                SecurityEventType.login_failure,
+                "emily_chen",
+                "Incorrect password - attempt 1",
+            ),
+            (
+                SecurityEventType.login_failure,
+                "emily_chen",
+                "Incorrect password - attempt 2",
+            ),
+            (
+                SecurityEventType.login_success,
+                "emily_chen",
+                "Successful login after retry",
+            ),
+            (
+                SecurityEventType.login_success,
+                "marcus_williams",
+                "New user registration",
+            ),
             (SecurityEventType.mfa_challenge, "admin", "MFA enabled for admin account"),
-            (SecurityEventType.login_success, "john_doe", "Password changed successfully"),
-            (SecurityEventType.login_success, "sarah_analyst", "Analyst login from office IP"),
-            (SecurityEventType.login_failure, "unknown_user", "Brute force attempt detected"),
-            (SecurityEventType.login_failure, "unknown_user", "Rate limited - IP blocked"),
-            (SecurityEventType.account_lockout, "unknown_user", "Account locked after 5 failures"),
+            (
+                SecurityEventType.login_success,
+                "john_doe",
+                "Password changed successfully",
+            ),
+            (
+                SecurityEventType.login_success,
+                "sarah_analyst",
+                "Analyst login from office IP",
+            ),
+            (
+                SecurityEventType.login_failure,
+                "unknown_user",
+                "Brute force attempt detected",
+            ),
+            (
+                SecurityEventType.login_failure,
+                "unknown_user",
+                "Rate limited - IP blocked",
+            ),
+            (
+                SecurityEventType.account_lockout,
+                "unknown_user",
+                "Account locked after 5 failures",
+            ),
         ]
 
         for event_type, username, details in event_types:
@@ -221,7 +284,8 @@ def seed_if_empty() -> None:
                 event_type=event_type,
                 ip_address=f"192.168.{random.randint(1, 255)}.{random.randint(1, 255)}",
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0",
-                created_at=now - timedelta(days=random.randint(0, 30), hours=random.randint(0, 23)),
+                created_at=now
+                - timedelta(days=random.randint(0, 30), hours=random.randint(0, 23)),
                 details=details,
             )
             db.add(event)

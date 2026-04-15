@@ -2,7 +2,12 @@ from typing import List
 
 from sqlalchemy.orm import Session
 
-from bank_system.models.db_models import Account, FinancialHealthSnapshot, Transaction, TransactionType
+from bank_system.models.db_models import (
+    Account,
+    FinancialHealthSnapshot,
+    Transaction,
+    TransactionType,
+)
 from bank_system.schemas.intelligence import FinancialHealthSummary
 
 
@@ -56,11 +61,15 @@ class FinancialHealthEngine:
         if health_score >= 80:
             rec = "Excellent habits. Consider increasing investments in growth assets."
         elif health_score >= 60:
-            rec = "Good position. Automate monthly savings and track discretionary spend."
+            rec = (
+                "Good position. Automate monthly savings and track discretionary spend."
+            )
         elif health_score >= 40:
             rec = "Review high-cost debt and set up a realistic savings plan."
         else:
-            rec = "High risk. Focus on emergency fund, reduce debt, and limit new credit."
+            rec = (
+                "High risk. Focus on emergency fund, reduce debt, and limit new credit."
+            )
 
         snap = FinancialHealthSnapshot(
             user_id=user_id,
@@ -81,4 +90,3 @@ class FinancialHealthEngine:
             recommendations=rec,
             created_at=snap.created_at,
         )
-

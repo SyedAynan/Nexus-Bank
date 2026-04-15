@@ -9,9 +9,7 @@ class Settings(BaseSettings):
     debug: bool = Field(default=True)
 
     # Database
-    database_url: str = Field(
-        default="postgresql+psycopg2://nexa:nexa@db:5432/nexa"
-    )
+    database_url: str = Field(default="postgresql+psycopg2://nexa:nexa@db:5432/nexa")
 
     # Redis
     redis_url: str = Field(default="redis://redis:6379/0")
@@ -37,4 +35,3 @@ class Settings(BaseSettings):
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     return Settings()
-

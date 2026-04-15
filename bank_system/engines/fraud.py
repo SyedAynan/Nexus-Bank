@@ -38,10 +38,7 @@ class FraudEngine:
 
         amounts = np.array([float(abs(t.amount)) for t in txs])
         ages = np.array(
-            [
-                (txs[-1].created_at - t.created_at).total_seconds() / 3600.0
-                for t in txs
-            ]
+            [(txs[-1].created_at - t.created_at).total_seconds() / 3600.0 for t in txs]
         )
 
         return np.vstack([amounts, ages]).T

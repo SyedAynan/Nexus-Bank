@@ -8,8 +8,8 @@ Space Complexity: O(n)
 
 class BSTNode:
     def __init__(self, account_number, account_ref):
-        self.account_number = account_number    # Key
-        self.account_ref = account_ref          # Reference to Account object
+        self.account_number = account_number  # Key
+        self.account_ref = account_ref  # Reference to Account object
         self.left = None
         self.right = None
 
@@ -19,6 +19,7 @@ class AccountBST:
     BST keyed on account_number.
     Enables sorted traversal and range queries (e.g. accounts between A1000-A2000).
     """
+
     def __init__(self):
         self.root = None
         self._size = 0

@@ -15,12 +15,14 @@ engine_kwargs = {
 
 # SQLite does not support connection pool tuning
 if not settings.database_url.startswith("sqlite"):
-    engine_kwargs.update({
-        "pool_size": 10,
-        "max_overflow": 20,
-        "pool_recycle": 3600,
-        "pool_timeout": 30,
-    })
+    engine_kwargs.update(
+        {
+            "pool_size": 10,
+            "max_overflow": 20,
+            "pool_recycle": 3600,
+            "pool_timeout": 30,
+        }
+    )
 else:
     engine_kwargs["connect_args"] = {"check_same_thread": False}
 
@@ -50,4 +52,3 @@ def session_scope() -> Session:
         raise
     finally:
         session.close()
-

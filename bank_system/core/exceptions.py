@@ -3,6 +3,7 @@ NEXA Centralized Exception Handling
 ====================================
 Custom exception classes and global handlers for consistent API error responses.
 """
+
 from typing import Optional
 
 from fastapi import FastAPI, Request
@@ -27,26 +28,36 @@ class AppException(Exception):
 
 class NotFoundError(AppException):
     def __init__(self, resource: str = "Resource", error_code: str = "NOT_FOUND"):
-        super().__init__(status_code=404, detail=f"{resource} not found", error_code=error_code)
+        super().__init__(
+            status_code=404, detail=f"{resource} not found", error_code=error_code
+        )
 
 
 class ForbiddenError(AppException):
-    def __init__(self, detail: str = "Insufficient permissions", error_code: str = "FORBIDDEN"):
+    def __init__(
+        self, detail: str = "Insufficient permissions", error_code: str = "FORBIDDEN"
+    ):
         super().__init__(status_code=403, detail=detail, error_code=error_code)
 
 
 class ConflictError(AppException):
-    def __init__(self, detail: str = "Resource already exists", error_code: str = "CONFLICT"):
+    def __init__(
+        self, detail: str = "Resource already exists", error_code: str = "CONFLICT"
+    ):
         super().__init__(status_code=409, detail=detail, error_code=error_code)
 
 
 class ValidationError(AppException):
-    def __init__(self, detail: str = "Validation failed", error_code: str = "VALIDATION_ERROR"):
+    def __init__(
+        self, detail: str = "Validation failed", error_code: str = "VALIDATION_ERROR"
+    ):
         super().__init__(status_code=422, detail=detail, error_code=error_code)
 
 
 class RateLimitError(AppException):
-    def __init__(self, detail: str = "Too many requests", error_code: str = "RATE_LIMITED"):
+    def __init__(
+        self, detail: str = "Too many requests", error_code: str = "RATE_LIMITED"
+    ):
         super().__init__(status_code=429, detail=detail, error_code=error_code)
 
 

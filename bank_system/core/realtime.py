@@ -28,4 +28,3 @@ ws_manager = ConnectionManager()
 
 def get_ws_manager() -> ConnectionManager:
     return ws_manager
-

@@ -37,9 +37,11 @@ def _refresh_whitelist() -> set[str]:
     try:
         db: DBSession = SessionLocal()
         try:
-            rows = db.query(IPWhitelist.ip_address).filter(
-                IPWhitelist.is_active.is_(True)
-            ).all()
+            rows = (
+                db.query(IPWhitelist.ip_address)
+                .filter(IPWhitelist.is_active.is_(True))
+                .all()
+            )
             _cached_ips = {r[0] for r in rows}
         finally:
             db.close()
@@ -84,10 +86,14 @@ class IPWhitelistMiddleware(BaseHTTPMiddleware):
                 return await call_next(request)
             else:
                 # Production with empty whitelist blocks all admin access
-                logger.warning("Admin access blocked: no IPs in whitelist (production mode)")
+                logger.warning(
+                    "Admin access blocked: no IPs in whitelist (production mode)"
+                )
                 return JSONResponse(
                     status_code=403,
-                    content={"detail": "Admin access restricted. Configure IP whitelist."},
+                    content={
+                        "detail": "Admin access restricted. Configure IP whitelist."
+                    },
                 )
 
         # Extract client IP

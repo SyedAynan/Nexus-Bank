@@ -18,6 +18,7 @@ fraud_engine = FraudEngine()
 
 # ── Schemas ──
 
+
 class UserUpdate(BaseModel):
     role: Optional[str] = None
     is_locked: Optional[bool] = None
@@ -25,6 +26,7 @@ class UserUpdate(BaseModel):
 
 
 # ── User Management Endpoints ──
+
 
 @router.get("/users")
 def list_users(
@@ -38,7 +40,7 @@ def list_users(
             "id": u.id,
             "username": u.username,
             "email": u.email,
-            "role": u.role.value if hasattr(u.role, 'value') else u.role,
+            "role": u.role.value if hasattr(u.role, "value") else u.role,
             "is_active": u.is_active,
             "is_locked": u.is_locked,
             "failed_login_attempts": u.failed_login_attempts,
@@ -79,6 +81,7 @@ def update_user(
 
 
 # ── Existing Endpoints ──
+
 
 @router.get("/live-users", response_model=List[str])
 def live_users(

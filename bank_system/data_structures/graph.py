@@ -15,10 +15,11 @@ class ComplianceGraph:
     - Edges = Transfer transactions (with total amount as weight)
     Used to detect: circular transfer networks, high-risk hubs, suspicious clusters
     """
+
     def __init__(self):
-        self.adj = defaultdict(dict)    # {source: {dest: total_amount}}
+        self.adj = defaultdict(dict)  # {source: {dest: total_amount}}
         self.nodes = set()
-        self.risk_scores = {}           # Account risk scores
+        self.risk_scores = {}  # Account risk scores
 
     def add_transfer(self, from_acc, to_acc, amount):
         """Record a transfer between accounts. O(1)"""
@@ -93,7 +94,9 @@ class ComplianceGraph:
     def get_high_risk_accounts(self, threshold=50):
         """Return accounts above risk threshold. O(V)"""
         self.compute_risk_scores()
-        return {acc: score for acc, score in self.risk_scores.items() if score >= threshold}
+        return {
+            acc: score for acc, score in self.risk_scores.items() if score >= threshold
+        }
 
     def get_edges(self):
         """Return all edges as list of (from, to, amount). O(E)"""

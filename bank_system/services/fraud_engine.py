@@ -22,9 +22,9 @@ class FraudEngine:
         self.bank = banking_service
         # Sliding window: account_id -> deque of (timestamp, amount)
         self.velocity_windows = defaultdict(lambda: deque())
-        self.VELOCITY_WINDOW_SECONDS = 3600   # 1 hour
-        self.VELOCITY_MAX_TRANSACTIONS = 5    # flag if >5 txns/hour
-        self.alerts = []                       # Persistent alert log
+        self.VELOCITY_WINDOW_SECONDS = 3600  # 1 hour
+        self.VELOCITY_MAX_TRANSACTIONS = 5  # flag if >5 txns/hour
+        self.alerts = []  # Persistent alert log
 
     # ─────────────────────────────────────────────
     # MAIN SCORER
@@ -43,31 +43,31 @@ class FraudEngine:
         signals = {}
 
         # 1. Z-Score anomaly
-        signals['zscore'] = self._zscore_signal(amount, history, txn_type)
+        signals["zscore"] = self._zscore_signal(amount, history, txn_type)
 
         # 2. Velocity check
-        signals['velocity'] = self._velocity_signal(account_id, timestamp)
+        signals["velocity"] = self._velocity_signal(account_id, timestamp)
 
         # 3. Round number detector
-        signals['round_number'] = self._round_number_signal(amount)
+        signals["round_number"] = self._round_number_signal(amount)
 
         # 4. Time-of-day anomaly
-        signals['time_anomaly'] = self._time_anomaly_signal(timestamp, history)
+        signals["time_anomaly"] = self._time_anomaly_signal(timestamp, history)
 
         # 5. Large amount relative to balance
-        signals['balance_ratio'] = self._balance_ratio_signal(amount, account, txn_type)
+        signals["balance_ratio"] = self._balance_ratio_signal(amount, account, txn_type)
 
         # 6. Graph neighbor risk
-        signals['graph_risk'] = self._graph_risk_signal(account_id)
+        signals["graph_risk"] = self._graph_risk_signal(account_id)
 
         # Weighted composite score
         weights = {
-            'zscore': 0.30,
-            'velocity': 0.25,
-            'round_number': 0.10,
-            'time_anomaly': 0.10,
-            'balance_ratio': 0.15,
-            'graph_risk': 0.10,
+            "zscore": 0.30,
+            "velocity": 0.25,
+            "round_number": 0.10,
+            "time_anomaly": 0.10,
+            "balance_ratio": 0.15,
+            "graph_risk": 0.10,
         }
         composite = sum(signals[k] * weights[k] for k in signals)
         composite = min(100, round(composite, 1))
@@ -77,26 +77,26 @@ class FraudEngine:
 
         # Determine severity
         if composite >= 70:
-            severity = 'critical'
+            severity = "critical"
         elif composite >= 45:
-            severity = 'high'
+            severity = "high"
         elif composite >= 25:
-            severity = 'medium'
+            severity = "medium"
         else:
-            severity = 'low'
+            severity = "low"
 
         result = {
-            'account_id': account_id,
-            'amount': amount,
-            'type': txn_type,
-            'composite_score': composite,
-            'severity': severity,
-            'signals': signals,
-            'timestamp': timestamp.isoformat(),
-            'flagged': composite >= 45
+            "account_id": account_id,
+            "amount": amount,
+            "type": txn_type,
+            "composite_score": composite,
+            "severity": severity,
+            "signals": signals,
+            "timestamp": timestamp.isoformat(),
+            "flagged": composite >= 45,
         }
 
-        if result['flagged']:
+        if result["flagged"]:
             self._record_alert(result)
 
         return result
@@ -106,7 +106,7 @@ class FraudEngine:
     # ─────────────────────────────────────────────
     def _zscore_signal(self, amount, history, txn_type):
         """Flag if amount is unusually far from this account's historical mean."""
-        amounts = [t['amount'] for t in history if t['type'] == txn_type]
+        amounts = [t["amount"] for t in history if t["type"] == txn_type]
         if len(amounts) < 3:
             return 0  # Not enough history
         mean = statistics.mean(amounts)
@@ -133,7 +133,13 @@ class FraudEngine:
         if amount <= 0:
             return 0
         # Check if divisible by large round numbers
-        for divisor, score in [(10000, 60), (5000, 50), (1000, 35), (500, 20), (100, 10)]:
+        for divisor, score in [
+            (10000, 60),
+            (5000, 50),
+            (1000, 35),
+            (500, 20),
+            (100, 10),
+        ]:
             if amount % divisor == 0:
                 return score
         return 0
@@ -145,8 +151,7 @@ class FraudEngine:
         if 0 <= hour <= 5:
             # Check if account has history at these hours
             late_night_count = sum(
-                1 for t in history
-                if int(t['timestamp'][11:13]) <= 5
+                1 for t in history if int(t["timestamp"][11:13]) <= 5
             )
             if late_night_count == 0:
                 return 65  # Never transacted at night
@@ -155,9 +160,9 @@ class FraudEngine:
 
     def _balance_ratio_signal(self, amount, account, txn_type):
         """Withdrawing a large fraction of balance is suspicious."""
-        if txn_type != 'withdrawal' or not account:
+        if txn_type != "withdrawal" or not account:
             return 0
-        balance = account.get('balance', 0)
+        balance = account.get("balance", 0)
         if balance <= 0:
             return 0
         ratio = amount / balance
@@ -187,29 +192,32 @@ class FraudEngine:
             window.popleft()
 
     def _record_alert(self, result):
-        self.alerts.insert(0, {
-            'alert_id': f"ALT{len(self.alerts)+1:04d}",
-            'account_id': result['account_id'],
-            'amount': result['amount'],
-            'type': result['type'],
-            'score': result['composite_score'],
-            'severity': result['severity'],
-            'signals': result['signals'],
-            'timestamp': result['timestamp'],
-            'status': 'open'   # open | reviewed | dismissed
-        })
+        self.alerts.insert(
+            0,
+            {
+                "alert_id": f"ALT{len(self.alerts) + 1:04d}",
+                "account_id": result["account_id"],
+                "amount": result["amount"],
+                "type": result["type"],
+                "score": result["composite_score"],
+                "severity": result["severity"],
+                "signals": result["signals"],
+                "timestamp": result["timestamp"],
+                "status": "open",  # open | reviewed | dismissed
+            },
+        )
         self.alerts = self.alerts[:200]  # Keep last 200
 
     def get_alerts(self, limit=50, severity=None):
         alerts = self.alerts
         if severity:
-            alerts = [a for a in alerts if a['severity'] == severity]
+            alerts = [a for a in alerts if a["severity"] == severity]
         return alerts[:limit]
 
     def dismiss_alert(self, alert_id):
         for a in self.alerts:
-            if a['alert_id'] == alert_id:
-                a['status'] = 'dismissed'
+            if a["alert_id"] == alert_id:
+                a["status"] = "dismissed"
                 return True
         return False
 
@@ -217,9 +225,9 @@ class FraudEngine:
         """Full risk profile for an account."""
         history = self.bank.get_transaction_history(account_id, limit=100)
         if not history:
-            return {'account_id': account_id, 'risk_level': 'unknown', 'score': 0}
+            return {"account_id": account_id, "risk_level": "unknown", "score": 0}
 
-        amounts = [t['amount'] for t in history]
+        amounts = [t["amount"] for t in history]
         mean_amount = statistics.mean(amounts) if amounts else 0
         max_amount = max(amounts) if amounts else 0
         velocity_score = self._velocity_signal(account_id, datetime.now())
@@ -227,14 +235,14 @@ class FraudEngine:
 
         score = min(100, (velocity_score * 0.4 + graph_score * 0.6))
         return {
-            'account_id': account_id,
-            'transaction_count': len(history),
-            'mean_amount': round(mean_amount, 2),
-            'max_amount': max_amount,
-            'velocity_score': velocity_score,
-            'graph_risk_score': graph_score,
-            'composite_risk': round(score, 1),
-            'risk_level': 'high' if score >= 60 else 'medium' if score >= 30 else 'low'
+            "account_id": account_id,
+            "transaction_count": len(history),
+            "mean_amount": round(mean_amount, 2),
+            "max_amount": max_amount,
+            "velocity_score": velocity_score,
+            "graph_risk_score": graph_score,
+            "composite_risk": round(score, 1),
+            "risk_level": "high" if score >= 60 else "medium" if score >= 30 else "low",
         }
 
     def bulk_screen_accounts(self):
@@ -242,9 +250,9 @@ class FraudEngine:
         accounts = self.bank.get_all_accounts()
         profiles = []
         for acc in accounts:
-            profile = self.get_account_risk_profile(acc['account_id'])
-            profile['owner_name'] = acc['owner_name']
-            profile['balance'] = acc['balance']
+            profile = self.get_account_risk_profile(acc["account_id"])
+            profile["owner_name"] = acc["owner_name"]
+            profile["balance"] = acc["balance"]
             profiles.append(profile)
-        profiles.sort(key=lambda x: x['composite_risk'], reverse=True)
+        profiles.sort(key=lambda x: x["composite_risk"], reverse=True)
         return profiles

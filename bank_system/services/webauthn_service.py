@@ -3,6 +3,7 @@ NEXA WebAuthn/Passkey Service — FIDO2 Passkey Registration + Verification
 Implements credential registration and assertion flows.
 Without py_webauthn and HTTPS, runs in simulation mode for demos.
 """
+
 import os
 import logging
 import hashlib
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 # Check if py_webauthn is available
 try:
     import webauthn  # noqa: F401
+
     WEBAUTHN_AVAILABLE = True
 except ImportError:
     WEBAUTHN_AVAILABLE = False
@@ -44,13 +46,21 @@ class WebAuthnService:
             "total_credentials": sum(len(c) for c in self._credentials.values()),
         }
 
-    def generate_registration_options(self, user_id: str, username: str) -> Dict[str, Any]:
+    def generate_registration_options(
+        self, user_id: str, username: str
+    ) -> Dict[str, Any]:
         """Generate registration options (challenge) for passkey creation."""
-        challenge = base64.urlsafe_b64encode(
-            hashlib.sha256(f"{user_id}-{time.time()}".encode()).digest()
-        ).decode().rstrip("=")
+        challenge = (
+            base64.urlsafe_b64encode(
+                hashlib.sha256(f"{user_id}-{time.time()}".encode()).digest()
+            )
+            .decode()
+            .rstrip("=")
+        )
 
-        session_id = hashlib.sha256(f"reg-{user_id}-{time.time()}".encode()).hexdigest()[:32]
+        session_id = hashlib.sha256(
+            f"reg-{user_id}-{time.time()}".encode()
+        ).hexdigest()[:32]
         self._challenges[session_id] = challenge
 
         return {
@@ -63,7 +73,7 @@ class WebAuthnService:
                 "displayName": username,
             },
             "pubKeyCredParams": [
-                {"type": "public-key", "alg": -7},   # ES256
+                {"type": "public-key", "alg": -7},  # ES256
                 {"type": "public-key", "alg": -257},  # RS256
             ],
             "timeout": 60000,
@@ -76,7 +86,9 @@ class WebAuthnService:
             "mode": self.mode,
         }
 
-    def verify_registration(self, session_id: str, user_id: str, credential: Dict) -> Dict[str, Any]:
+    def verify_registration(
+        self, session_id: str, user_id: str, credential: Dict
+    ) -> Dict[str, Any]:
         """Verify registration response and store credential."""
         if session_id not in self._challenges:
             return {"success": False, "error": "Invalid or expired session"}
@@ -107,11 +119,17 @@ class WebAuthnService:
         # Production flow would use py_webauthn here
         return {"success": True, "mode": "production"}
 
-    def generate_authentication_options(self, user_id: Optional[str] = None) -> Dict[str, Any]:
+    def generate_authentication_options(
+        self, user_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Generate authentication options for passkey login."""
-        challenge = base64.urlsafe_b64encode(
-            hashlib.sha256(f"auth-{time.time()}".encode()).digest()
-        ).decode().rstrip("=")
+        challenge = (
+            base64.urlsafe_b64encode(
+                hashlib.sha256(f"auth-{time.time()}".encode()).digest()
+            )
+            .decode()
+            .rstrip("=")
+        )
 
         session_id = hashlib.sha256(f"auth-{time.time()}".encode()).hexdigest()[:32]
         self._challenges[session_id] = challenge
@@ -133,7 +151,9 @@ class WebAuthnService:
             "mode": self.mode,
         }
 
-    def verify_authentication(self, session_id: str, credential: Dict) -> Dict[str, Any]:
+    def verify_authentication(
+        self, session_id: str, credential: Dict
+    ) -> Dict[str, Any]:
         """Verify authentication assertion."""
         if session_id not in self._challenges:
             return {"success": False, "error": "Invalid or expired session"}
@@ -158,7 +178,9 @@ class WebAuthnService:
         """Revoke a specific credential."""
         if user_id in self._credentials:
             self._credentials[user_id] = [
-                c for c in self._credentials[user_id] if c["credential_id"] != credential_id
+                c
+                for c in self._credentials[user_id]
+                if c["credential_id"] != credential_id
             ]
             return True
         return False

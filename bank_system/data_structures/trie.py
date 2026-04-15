@@ -53,7 +53,9 @@ class Trie:
         node = self._find_node(word.lower())
         return node is not None and node.is_end
 
-    def starts_with(self, prefix: str, limit: int = 20) -> List[Tuple[str, Optional[dict]]]:
+    def starts_with(
+        self, prefix: str, limit: int = 20
+    ) -> List[Tuple[str, Optional[dict]]]:
         """Return up to *limit* words starting with *prefix*."""
         node = self._find_node(prefix.lower())
         if node is None:

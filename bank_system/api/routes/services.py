@@ -2,6 +2,7 @@
 NEXA Services API — Unified routes for OAuth, WebAuthn, Email, BillPay, MultiCurrency, Feature Flags
 All endpoints now require authentication (BUG-015 fix).
 """
+
 from typing import Annotated, Optional, Dict, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -57,7 +58,9 @@ def oauth_authorize(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     try:
-        return oauth_service.get_authorization_url(req.provider, req.redirect_uri, req.state)
+        return oauth_service.get_authorization_url(
+            req.provider, req.redirect_uri, req.state
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -104,7 +107,9 @@ def webauthn_register_verify(
     req: WebAuthnRegisterVerify,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    return webauthn_service.verify_registration(req.session_id, req.user_id, req.credential)
+    return webauthn_service.verify_registration(
+        req.session_id, req.user_id, req.credential
+    )
 
 
 @router.post("/webauthn/authenticate/options")
@@ -163,7 +168,9 @@ def send_transaction_alert(
     req: EmailAlertRequest,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    return email_service.send_transaction_alert(req.to_email, req.tx_type, req.amount, req.account)
+    return email_service.send_transaction_alert(
+        req.to_email, req.tx_type, req.amount, req.account
+    )
 
 
 @router.get("/email/log")
@@ -366,23 +373,79 @@ def export_csv(
     """Export transaction history as CSV."""
     # Demo data for export
     demo_txns = [
-        {"date": "2026-02-28", "type": "deposit", "description": "Salary Credit", "amount": 5000.00},
-        {"date": "2026-02-25", "type": "withdrawal", "description": "ATM Withdrawal", "amount": 200.00},
-        {"date": "2026-02-22", "type": "transfer_out", "description": "Rent Payment", "amount": 1500.00},
-        {"date": "2026-02-20", "type": "deposit", "description": "Freelance Income", "amount": 800.00},
-        {"date": "2026-02-18", "type": "withdrawal", "description": "Grocery Store", "amount": 125.50},
-        {"date": "2026-02-15", "type": "deposit", "description": "Client Payment", "amount": 2200.00},
-        {"date": "2026-02-12", "type": "withdrawal", "description": "Subscription Services", "amount": 45.99},
-        {"date": "2026-02-10", "type": "transfer_out", "description": "Insurance Premium", "amount": 350.00},
-        {"date": "2026-02-08", "type": "deposit", "description": "Investment Dividend", "amount": 175.00},
-        {"date": "2026-02-05", "type": "withdrawal", "description": "Dining Out", "amount": 85.00},
+        {
+            "date": "2026-02-28",
+            "type": "deposit",
+            "description": "Salary Credit",
+            "amount": 5000.00,
+        },
+        {
+            "date": "2026-02-25",
+            "type": "withdrawal",
+            "description": "ATM Withdrawal",
+            "amount": 200.00,
+        },
+        {
+            "date": "2026-02-22",
+            "type": "transfer_out",
+            "description": "Rent Payment",
+            "amount": 1500.00,
+        },
+        {
+            "date": "2026-02-20",
+            "type": "deposit",
+            "description": "Freelance Income",
+            "amount": 800.00,
+        },
+        {
+            "date": "2026-02-18",
+            "type": "withdrawal",
+            "description": "Grocery Store",
+            "amount": 125.50,
+        },
+        {
+            "date": "2026-02-15",
+            "type": "deposit",
+            "description": "Client Payment",
+            "amount": 2200.00,
+        },
+        {
+            "date": "2026-02-12",
+            "type": "withdrawal",
+            "description": "Subscription Services",
+            "amount": 45.99,
+        },
+        {
+            "date": "2026-02-10",
+            "type": "transfer_out",
+            "description": "Insurance Premium",
+            "amount": 350.00,
+        },
+        {
+            "date": "2026-02-08",
+            "type": "deposit",
+            "description": "Investment Dividend",
+            "amount": 175.00,
+        },
+        {
+            "date": "2026-02-05",
+            "type": "withdrawal",
+            "description": "Dining Out",
+            "amount": 85.00,
+        },
     ]
-    acct_info = {"account_number": f"NX-{account_id:04d}", "account_type": "savings", "balance": 15000.00}
+    acct_info = {
+        "account_number": f"NX-{account_id:04d}",
+        "account_type": "savings",
+        "balance": 15000.00,
+    }
     content = export_service.generate_csv(demo_txns, acct_info)
     return StreamingResponse(
         iter([content]),
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename=nexa_statement_{account_id}.csv"},
+        headers={
+            "Content-Disposition": f"attachment; filename=nexa_statement_{account_id}.csv"
+        },
     )
 
 
@@ -393,18 +456,72 @@ def export_pdf_html(
 ):
     """Export statement as printable HTML (PDF-ready)."""
     demo_txns = [
-        {"date": "2026-02-28", "type": "deposit", "description": "Salary Credit", "amount": 5000.00},
-        {"date": "2026-02-25", "type": "withdrawal", "description": "ATM Withdrawal", "amount": 200.00},
-        {"date": "2026-02-22", "type": "transfer_out", "description": "Rent Payment", "amount": 1500.00},
-        {"date": "2026-02-20", "type": "deposit", "description": "Freelance Income", "amount": 800.00},
-        {"date": "2026-02-18", "type": "withdrawal", "description": "Grocery Store", "amount": 125.50},
-        {"date": "2026-02-15", "type": "deposit", "description": "Client Payment", "amount": 2200.00},
-        {"date": "2026-02-12", "type": "withdrawal", "description": "Subscription Services", "amount": 45.99},
-        {"date": "2026-02-10", "type": "transfer_out", "description": "Insurance Premium", "amount": 350.00},
-        {"date": "2026-02-08", "type": "deposit", "description": "Investment Dividend", "amount": 175.00},
-        {"date": "2026-02-05", "type": "withdrawal", "description": "Dining Out", "amount": 85.00},
+        {
+            "date": "2026-02-28",
+            "type": "deposit",
+            "description": "Salary Credit",
+            "amount": 5000.00,
+        },
+        {
+            "date": "2026-02-25",
+            "type": "withdrawal",
+            "description": "ATM Withdrawal",
+            "amount": 200.00,
+        },
+        {
+            "date": "2026-02-22",
+            "type": "transfer_out",
+            "description": "Rent Payment",
+            "amount": 1500.00,
+        },
+        {
+            "date": "2026-02-20",
+            "type": "deposit",
+            "description": "Freelance Income",
+            "amount": 800.00,
+        },
+        {
+            "date": "2026-02-18",
+            "type": "withdrawal",
+            "description": "Grocery Store",
+            "amount": 125.50,
+        },
+        {
+            "date": "2026-02-15",
+            "type": "deposit",
+            "description": "Client Payment",
+            "amount": 2200.00,
+        },
+        {
+            "date": "2026-02-12",
+            "type": "withdrawal",
+            "description": "Subscription Services",
+            "amount": 45.99,
+        },
+        {
+            "date": "2026-02-10",
+            "type": "transfer_out",
+            "description": "Insurance Premium",
+            "amount": 350.00,
+        },
+        {
+            "date": "2026-02-08",
+            "type": "deposit",
+            "description": "Investment Dividend",
+            "amount": 175.00,
+        },
+        {
+            "date": "2026-02-05",
+            "type": "withdrawal",
+            "description": "Dining Out",
+            "amount": 85.00,
+        },
     ]
-    acct_info = {"account_number": f"NX-{account_id:04d}", "account_type": "savings", "balance": 15000.00}
+    acct_info = {
+        "account_number": f"NX-{account_id:04d}",
+        "account_type": "savings",
+        "balance": 15000.00,
+    }
     html = export_service.generate_pdf_content(demo_txns, acct_info)
     return HTMLResponse(content=html)
 
@@ -416,15 +533,52 @@ def export_audit_trail(
 ):
     """Export audit trail as CSV."""
     demo_audit = [
-        {"timestamp": "2026-02-28 10:15:00", "user": "admin", "action": "user_login", "details": "Successful login", "ip_address": "192.168.1.100", "risk_level": "low"},
-        {"timestamp": "2026-02-28 10:20:00", "user": "admin", "action": "account_create", "details": "Created account NX-0001", "ip_address": "192.168.1.100", "risk_level": "low"},
-        {"timestamp": "2026-02-28 10:30:00", "user": "user01", "action": "transfer", "details": "Transfer $5000 to NX-0002", "ip_address": "10.0.0.50", "risk_level": "medium"},
-        {"timestamp": "2026-02-28 11:00:00", "user": "system", "action": "fraud_alert", "details": "Unusual activity detected on NX-0003", "ip_address": "N/A", "risk_level": "high"},
-        {"timestamp": "2026-02-28 11:15:00", "user": "admin", "action": "role_change", "details": "Changed user02 role to analyst", "ip_address": "192.168.1.100", "risk_level": "medium"},
+        {
+            "timestamp": "2026-02-28 10:15:00",
+            "user": "admin",
+            "action": "user_login",
+            "details": "Successful login",
+            "ip_address": "192.168.1.100",
+            "risk_level": "low",
+        },
+        {
+            "timestamp": "2026-02-28 10:20:00",
+            "user": "admin",
+            "action": "account_create",
+            "details": "Created account NX-0001",
+            "ip_address": "192.168.1.100",
+            "risk_level": "low",
+        },
+        {
+            "timestamp": "2026-02-28 10:30:00",
+            "user": "user01",
+            "action": "transfer",
+            "details": "Transfer $5000 to NX-0002",
+            "ip_address": "10.0.0.50",
+            "risk_level": "medium",
+        },
+        {
+            "timestamp": "2026-02-28 11:00:00",
+            "user": "system",
+            "action": "fraud_alert",
+            "details": "Unusual activity detected on NX-0003",
+            "ip_address": "N/A",
+            "risk_level": "high",
+        },
+        {
+            "timestamp": "2026-02-28 11:15:00",
+            "user": "admin",
+            "action": "role_change",
+            "details": "Changed user02 role to analyst",
+            "ip_address": "192.168.1.100",
+            "risk_level": "medium",
+        },
     ]
     content = export_service.generate_audit_report(demo_audit, report_type)
     return StreamingResponse(
         iter([content]),
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename=nexa_audit_{report_type}.csv"},
+        headers={
+            "Content-Disposition": f"attachment; filename=nexa_audit_{report_type}.csv"
+        },
     )

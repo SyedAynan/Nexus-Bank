@@ -13,6 +13,7 @@ class TransactionQueue:
     FIFO Queue for pending transaction processing.
     deque enables O(1) append and popleft.
     """
+
     def __init__(self):
         self._queue = deque()
 

@@ -36,7 +36,9 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_locked = Column(Boolean, default=False)
     failed_login_attempts = Column(Integer, default=0)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
 
     accounts = relationship("Account", back_populates="owner")
 
@@ -48,7 +50,9 @@ class SessionToken(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     jti = Column(String(64), unique=True, nullable=False)
     token_type = Column(String(20), nullable=False)  # access | refresh
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
     expires_at = Column(DateTime, nullable=False)
     revoked = Column(Boolean, default=False, nullable=False)
 
@@ -70,7 +74,9 @@ class Account(Base):
     balance = Column(Numeric(19, 4), default=0.0)
     currency = Column(String(10), default="USD")
     status = Column(String(20), default="active")  # active | frozen | closed
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
 
     owner = relationship("User", back_populates="accounts")
     transactions = relationship(
@@ -98,7 +104,9 @@ class Transaction(Base):
     amount = Column(Numeric(19, 4), nullable=False)
     type = Column(SAEnum(TransactionType), nullable=False)
     description = Column(String(255), default="")
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), index=True
+    )
     is_simulated = Column(Boolean, default=False)
     fraud_score = Column(Numeric(10, 4), default=0.0)
     risk_level = Column(String(10), default="low")
@@ -242,4 +250,3 @@ class IPWhitelist(Base):
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     is_active = Column(Boolean, default=True, nullable=False)
-

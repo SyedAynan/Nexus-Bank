@@ -2,6 +2,7 @@
 NEXA Multi-Currency Service — FX Rates + Multi-Currency Wallet
 Static FX rates with fallback. Can be upgraded to live API (Fixer.io, ExchangeRate-API).
 """
+
 import os
 import time
 import logging
@@ -61,7 +62,12 @@ class MultiCurrencyService:
         self._conversion_log: List[Dict] = []
         # Simulated wallets
         self._wallets: Dict[str, Dict[str, float]] = {
-            "default": {"USD": 25000.00, "EUR": 5000.00, "GBP": 3000.00, "JPY": 500000.00},
+            "default": {
+                "USD": 25000.00,
+                "EUR": 5000.00,
+                "GBP": 3000.00,
+                "JPY": 500000.00,
+            },
         }
         logger.info(f"FX Service: mode={self.mode}, {len(self._rates)} currencies")
 
@@ -78,7 +84,9 @@ class MultiCurrencyService:
             "currencies": len(converted),
         }
 
-    def convert(self, amount: float, from_currency: str, to_currency: str) -> Dict[str, Any]:
+    def convert(
+        self, amount: float, from_currency: str, to_currency: str
+    ) -> Dict[str, Any]:
         from_rate = self._rates.get(from_currency.upper(), 1.0)
         to_rate = self._rates.get(to_currency.upper(), 1.0)
         rate = to_rate / from_rate
@@ -108,13 +116,17 @@ class MultiCurrencyService:
         for curr, amt in wallet.items():
             usd_value = amt / self._rates.get(curr, 1.0)
             info = CURRENCY_INFO.get(curr, {"name": curr, "symbol": curr, "flag": "🏳️"})
-            holdings.append({
-                "currency": curr,
-                "balance": amt,
-                "usd_value": round(usd_value, 2),
-                "percentage": round(usd_value / total_usd * 100, 1) if total_usd else 0,
-                **info,
-            })
+            holdings.append(
+                {
+                    "currency": curr,
+                    "balance": amt,
+                    "usd_value": round(usd_value, 2),
+                    "percentage": round(usd_value / total_usd * 100, 1)
+                    if total_usd
+                    else 0,
+                    **info,
+                }
+            )
         holdings.sort(key=lambda x: x["usd_value"], reverse=True)
         return {
             "total_usd": round(total_usd, 2),
@@ -124,7 +136,11 @@ class MultiCurrencyService:
 
     def get_currencies(self) -> List[Dict]:
         return [
-            {"code": k, "rate": v, **CURRENCY_INFO.get(k, {"name": k, "symbol": k, "flag": "🏳️"})}
+            {
+                "code": k,
+                "rate": v,
+                **CURRENCY_INFO.get(k, {"name": k, "symbol": k, "flag": "🏳️"}),
+            }
             for k, v in self._rates.items()
         ]
 

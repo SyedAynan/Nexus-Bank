@@ -74,4 +74,3 @@ class LoanRead(BaseModel):
 
     class Config:
         from_attributes = True
-

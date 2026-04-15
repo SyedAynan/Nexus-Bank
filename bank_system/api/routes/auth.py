@@ -9,7 +9,12 @@ from fastapi.responses import ORJSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from bank_system.api.deps import get_current_active_user, get_ip_ua, log_security_event, oauth2_scheme
+from bank_system.api.deps import (
+    get_current_active_user,
+    get_ip_ua,
+    log_security_event,
+    oauth2_scheme,
+)
 from bank_system.core.config import get_settings
 from bank_system.core.db import get_db
 from bank_system.core.redis_client import get_redis
@@ -35,8 +40,8 @@ settings = get_settings()
 logger = logging.getLogger("nexa.auth")
 
 # ── OTP Configuration ──
-OTP_EXPIRY_SECONDS = 300   # 5 minutes
-OTP_MAX_ATTEMPTS = 3       # Max failed OTP attempts before invalidation
+OTP_EXPIRY_SECONDS = 300  # 5 minutes
+OTP_MAX_ATTEMPTS = 3  # Max failed OTP attempts before invalidation
 
 
 def _generate_otp() -> str:
@@ -181,11 +186,17 @@ def verify_otp(
         redis.delete(f"otp:{user.username}")
         redis.delete(attempt_key)
         log_security_event(
-            db, user=user, username=user.username,
+            db,
+            user=user,
+            username=user.username,
             event_type=SecurityEventType.mfa_failure,
-            ip=ip, ua=ua, details="OTP max attempts exceeded — OTP invalidated",
+            ip=ip,
+            ua=ua,
+            details="OTP max attempts exceeded — OTP invalidated",
         )
-        raise HTTPException(status_code=429, detail="Too many OTP attempts. Please login again.")
+        raise HTTPException(
+            status_code=429, detail="Too many OTP attempts. Please login again."
+        )
 
     cached = redis.get(f"otp:{user.username}")
 
@@ -256,17 +267,19 @@ def verify_otp(
 
 # ── Token Refresh Endpoint (BUG-015 Fix) ──
 
+
 @router.post("/refresh", response_model=Token)
 async def refresh_token(
     request: Request,
     db: Annotated[Session, Depends(get_db)],
 ):
     """Refresh an access token using a valid refresh token.
-    
-    Implements token rotation: old refresh token is invalidated and a new 
+
+    Implements token rotation: old refresh token is invalidated and a new
     pair (access + refresh) is issued. This prevents refresh token reuse attacks.
     """
     import orjson
+
     refresh_str = None
 
     # Get from JSON body
@@ -302,10 +315,14 @@ async def refresh_token(
 
     # Revoke old session if it exists
     if old_jti:
-        old_session = db.query(SessionToken).filter(
-            SessionToken.jti == old_jti,
-            SessionToken.user_id == user.id,
-        ).first()
+        old_session = (
+            db.query(SessionToken)
+            .filter(
+                SessionToken.jti == old_jti,
+                SessionToken.user_id == user.id,
+            )
+            .first()
+        )
         if old_session:
             old_session.revoked = True
 
@@ -357,10 +374,14 @@ def logout(
         payload = decode_token(token)
         jti = payload.get("jti")
         if jti:
-            session = db.query(SessionToken).filter(
-                SessionToken.jti == jti,
-                SessionToken.user_id == current_user.id,
-            ).first()
+            session = (
+                db.query(SessionToken)
+                .filter(
+                    SessionToken.jti == jti,
+                    SessionToken.user_id == current_user.id,
+                )
+                .first()
+            )
             if session:
                 session.revoked = True
                 db.commit()
@@ -394,7 +415,7 @@ def list_sessions(
         db.query(SessionToken)
         .filter(
             SessionToken.user_id == current_user.id,
-            SessionToken.revoked.is_(False),      # Fixed: SQLAlchemy proper comparison
+            SessionToken.revoked.is_(False),  # Fixed: SQLAlchemy proper comparison
             SessionToken.expires_at > now,
         )
         .order_by(SessionToken.last_active.desc())
@@ -418,11 +439,15 @@ def revoke_session(
     db: Annotated[Session, Depends(get_db)],
 ):
     """Revoke a specific session. Cannot revoke your own current session."""
-    session = db.query(SessionToken).filter(
-        SessionToken.id == session_id,
-        SessionToken.user_id == current_user.id,
-        SessionToken.revoked.is_(False),           # Fixed: SQLAlchemy proper comparison
-    ).first()
+    session = (
+        db.query(SessionToken)
+        .filter(
+            SessionToken.id == session_id,
+            SessionToken.user_id == current_user.id,
+            SessionToken.revoked.is_(False),  # Fixed: SQLAlchemy proper comparison
+        )
+        .first()
+    )
 
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -463,7 +488,7 @@ def revoke_all_sessions(
         db.query(SessionToken)
         .filter(
             SessionToken.user_id == current_user.id,
-            SessionToken.revoked.is_(False),       # Fixed: SQLAlchemy proper comparison
+            SessionToken.revoked.is_(False),  # Fixed: SQLAlchemy proper comparison
             SessionToken.expires_at > now,
         )
         .all()
@@ -480,6 +505,7 @@ def revoke_all_sessions(
 
 
 # ── Account Unlock (Admin Only) ──
+
 
 @router.post("/unlock/{username}")
 def unlock_account(

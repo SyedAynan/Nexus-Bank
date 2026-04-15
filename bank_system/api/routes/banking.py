@@ -40,7 +40,7 @@ router = APIRouter(prefix="/api/banking", tags=["banking"])
 
 def _generate_account_number() -> str:
     """Generate a globally unique account number.
-    
+
     Format: NX-XXXXXXXX (8 hex chars from UUID4)
     Collision probability: 1 in 4 billion — far safer than deposit-based generation.
     """
@@ -49,20 +49,17 @@ def _generate_account_number() -> str:
 
 def _get_account_with_lock(db: Session, account_id: int) -> Account:
     """Fetch an account with a database-level row lock (SELECT FOR UPDATE).
-    
+
     This prevents race conditions where two concurrent requests could both
     read the same balance and make conflicting updates (double-spend).
-    
+
     The lock is held until the transaction commits/rollbacks.
     """
     try:
         # Use with_for_update() for PostgreSQL row-level locking
         # Falls back gracefully on SQLite (which uses file-level locks)
         account = (
-            db.query(Account)
-            .filter(Account.id == account_id)
-            .with_for_update()
-            .first()
+            db.query(Account).filter(Account.id == account_id).with_for_update().first()
         )
     except Exception:
         # SQLite doesn't support FOR UPDATE — fallback to normal query
@@ -72,6 +69,7 @@ def _get_account_with_lock(db: Session, account_id: int) -> Account:
 
 # ── Account Management ──
 
+
 @router.post("/accounts", response_model=AccountRead, status_code=201)
 def create_account(
     payload: AccountCreate,
@@ -79,13 +77,13 @@ def create_account(
     current_user=Depends(get_current_active_user),  # Any authenticated user can create
 ):
     """Create a new bank account.
-    
+
     All authenticated users can create accounts for themselves.
     Admin/analyst users can create accounts (assigned to themselves).
     """
     # Generate unique account number (BUG-005 fix)
     account_number = _generate_account_number()
-    
+
     # Ensure uniqueness (extremely unlikely collision, but belt-and-suspenders)
     while db.query(Account).filter(Account.account_number == account_number).first():
         account_number = _generate_account_number()
@@ -132,6 +130,7 @@ def get_account(
 
 # ── Transactions (Admin/Analyst) ──
 
+
 @router.post("/transactions", response_model=TransactionRead)
 def create_transaction(
     payload: TransactionCreate,
@@ -160,10 +159,14 @@ def create_transaction(
         # Atomic transfer with both accounts locked (BUG-007 fix)
         counter = _get_account_with_lock(db, payload.counterparty_account_id)
         if not counter:
-            raise HTTPException(status_code=404, detail="Counterparty account not found")
+            raise HTTPException(
+                status_code=404, detail="Counterparty account not found"
+            )
 
         if counter.status != "active":
-            raise HTTPException(status_code=400, detail="Counterparty account is not active")
+            raise HTTPException(
+                status_code=400, detail="Counterparty account is not active"
+            )
 
         if account.balance < payload.amount:
             raise HTTPException(status_code=400, detail="Insufficient funds")
@@ -202,7 +205,10 @@ def list_all_transactions(
 
     if current_user.role == UserRole.user:
         user_account_ids = [
-            a.id for a in db.query(Account.id).filter(Account.owner_id == current_user.id).all()
+            a.id
+            for a in db.query(Account.id)
+            .filter(Account.owner_id == current_user.id)
+            .all()
         ]
         q = q.filter(Transaction.account_id.in_(user_account_ids))
 
@@ -248,6 +254,7 @@ def list_transactions(
 
 # ── Loans ──
 
+
 @router.post("/loans", response_model=LoanRead)
 def create_loan(
     payload: LoanCreate,
@@ -261,7 +268,9 @@ def create_loan(
 
     # Regular users can only apply for loans on their own accounts
     if current_user.role == UserRole.user and account.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Can only apply for loans on your own accounts")
+        raise HTTPException(
+            status_code=403, detail="Can only apply for loans on your own accounts"
+        )
 
     dti = payload.debt_to_income
     credit = payload.credit_score
@@ -320,7 +329,7 @@ def create_user_transaction(
     current_user=Depends(get_current_active_user),
 ):
     """Allow regular users to make deposits/withdrawals on their own accounts.
-    
+
     Uses database row locking for balance integrity.
     """
     # Only allow deposit & withdrawal for user-facing endpoint
@@ -340,7 +349,9 @@ def create_user_transaction(
 
     # Regular users can only transact on their own accounts
     if current_user.role == UserRole.user and account.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="You can only transact on your own accounts")
+        raise HTTPException(
+            status_code=403, detail="You can only transact on your own accounts"
+        )
 
     if payload.type == TransactionType.withdrawal and account.balance < payload.amount:
         raise HTTPException(status_code=400, detail="Insufficient funds")
@@ -371,18 +382,20 @@ def user_transfer(
     current_user=Depends(get_current_active_user),
 ):
     """User-facing transfer with atomic locking.
-    
+
     Both source and target accounts are locked simultaneously to prevent
     race conditions and ensure atomic balance updates.
     """
     if not payload.counterparty_account_id:
-        raise HTTPException(status_code=400, detail="Counterparty account ID required for transfers")
+        raise HTTPException(
+            status_code=400, detail="Counterparty account ID required for transfers"
+        )
 
     # Lock both accounts in consistent order to prevent deadlocks
     # Always lock lower ID first
     id_a = min(payload.account_id, payload.counterparty_account_id)
     id_b = max(payload.account_id, payload.counterparty_account_id)
-    
+
     account_a = _get_account_with_lock(db, id_a)
     account_b = _get_account_with_lock(db, id_b)
 
@@ -404,7 +417,9 @@ def user_transfer(
 
     # Regular users can only transfer from their own accounts
     if current_user.role == UserRole.user and source.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="You can only transfer from your own accounts")
+        raise HTTPException(
+            status_code=403, detail="You can only transfer from your own accounts"
+        )
 
     if source.balance < payload.amount:
         raise HTTPException(status_code=400, detail="Insufficient funds")
@@ -447,7 +462,11 @@ def get_transaction_lifecycle(
     if current_user.role == UserRole.user and account.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    base_time = tx.created_at.replace(tzinfo=timezone.utc) if tx.created_at.tzinfo is None else tx.created_at
+    base_time = (
+        tx.created_at.replace(tzinfo=timezone.utc)
+        if tx.created_at.tzinfo is None
+        else tx.created_at
+    )
 
     lifecycle_stages = [
         {

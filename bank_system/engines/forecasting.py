@@ -58,4 +58,3 @@ class ForecastingEngine:
         db.add(snap)
         db.commit()
         return [ForecastSeries(label="net_flow", points=series)]
-

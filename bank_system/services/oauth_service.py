@@ -4,6 +4,7 @@ Supports Google, Apple, Microsoft with simulation fallback.
 When API keys are configured via env vars, real OAuth flows activate.
 Without keys, a simulated flow returns demo tokens for development/demo.
 """
+
 import os
 import logging
 import hashlib
@@ -97,7 +98,9 @@ class OAuthService:
             for name, p in self.providers.items()
         }
 
-    def get_authorization_url(self, provider: str, redirect_uri: str, state: Optional[str] = None) -> Dict[str, str]:
+    def get_authorization_url(
+        self, provider: str, redirect_uri: str, state: Optional[str] = None
+    ) -> Dict[str, str]:
         """Generate authorization URL for the given provider."""
         if provider not in self.providers:
             raise ValueError(f"Unknown provider: {provider}")
@@ -111,13 +114,18 @@ class OAuthService:
                 "redirect_uri": redirect_uri,
                 "response_type": "code",
                 "scope": " ".join(config.get("scopes", [])),
-                "state": state or hashlib.sha256(str(time.time()).encode()).hexdigest()[:16],
+                "state": state
+                or hashlib.sha256(str(time.time()).encode()).hexdigest()[:16],
             }
             base_url = config["auth_url"]
             if "{tenant}" in base_url:
                 base_url = base_url.replace("{tenant}", config.get("tenant", "common"))
             query = "&".join(f"{k}={v}" for k, v in params.items())
-            return {"url": f"{base_url}?{query}", "state": params["state"], "mode": "production"}
+            return {
+                "url": f"{base_url}?{query}",
+                "state": params["state"],
+                "mode": "production",
+            }
         else:
             # Simulation mode — return a simulated callback URL
             sim_state = state or f"sim-{int(time.time())}"
@@ -127,7 +135,9 @@ class OAuthService:
                 "mode": "simulation",
             }
 
-    def exchange_code(self, provider: str, code: str, redirect_uri: str) -> Dict[str, Any]:
+    def exchange_code(
+        self, provider: str, code: str, redirect_uri: str
+    ) -> Dict[str, Any]:
         """Exchange authorization code for user profile."""
         if provider not in self.providers:
             raise ValueError(f"Unknown provider: {provider}")

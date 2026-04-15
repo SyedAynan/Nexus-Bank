@@ -145,7 +145,9 @@ class RiskIntelligenceEngine:
     # ─────────────────────────────────────────────
     # STRESS TESTING
     # ─────────────────────────────────────────────
-    def run_stress_test(self, scenarios: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def run_stress_test(
+        self, scenarios: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
         Simple Monte Carlo style stress testing over the current loan book and balances.
 
@@ -163,7 +165,9 @@ class RiskIntelligenceEngine:
         rate_shock_bps = float(scenarios.get("rate_shock_bps", 200.0))
         liquidity_shock = float(scenarios.get("liquidity_shock", 0.10))
 
-        loans = getattr(self.bank, "processed_loans", []) + self.bank.get_pending_loans()
+        loans = (
+            getattr(self.bank, "processed_loans", []) + self.bank.get_pending_loans()
+        )
         accounts = self.bank.get_all_accounts()
         total_loan_amount = sum(loan.get("amount", 0.0) for loan in loans) or 1.0
         total_balance = sum(a.get("balance", 0.0) for a in accounts) or 1.0
@@ -173,7 +177,9 @@ class RiskIntelligenceEngine:
 
         for _ in range(runs):
             # Randomise default rate around base default rate
-            default_rate = max(0.0, random.gauss(base_default_rate, base_default_rate * 0.4))
+            default_rate = max(
+                0.0, random.gauss(base_default_rate, base_default_rate * 0.4)
+            )
             shocked_rate = rate_shock_bps / 10000.0
             shocked_liquidity = liquidity_shock * random.uniform(0.8, 1.2)
 
@@ -321,7 +327,11 @@ class RiskIntelligenceEngine:
         Use loan scoring engine and recent loan decisions as a proxy for
         credit volatility / uncertainty.
         """
-        loans = [loan for loan in self.bank.processed_loans if loan.get("account_id") == account_id]
+        loans = [
+            loan
+            for loan in self.bank.processed_loans
+            if loan.get("account_id") == account_id
+        ]
         if not loans:
             return 20.0
 
@@ -385,4 +395,3 @@ class RiskIntelligenceEngine:
         if score < 80.0:
             return "high"
         return "critical"
-

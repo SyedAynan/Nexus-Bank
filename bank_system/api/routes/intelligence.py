@@ -9,7 +9,11 @@ from bank_system.engines.aml import AMLEngine
 from bank_system.engines.financial_health import FinancialHealthEngine
 from bank_system.engines.portfolio import PortfolioEngine
 from bank_system.models.db_models import Account, UserRole
-from bank_system.schemas.intelligence import AMLNetworkView, FinancialHealthSummary, PortfolioInsight
+from bank_system.schemas.intelligence import (
+    AMLNetworkView,
+    FinancialHealthSummary,
+    PortfolioInsight,
+)
 
 
 router = APIRouter(prefix="/api/intelligence", tags=["intelligence"])
@@ -61,4 +65,3 @@ def aml_network(
             for e in res["edges"]
         ],
     )
-

@@ -24,7 +24,9 @@ def dashboard_kpi(
 ):
     now = datetime.utcnow()
     since_24h = now - timedelta(hours=24)
-    total_balance = db.query(func.coalesce(func.sum(Account.balance), 0.0)).scalar() or 0.0
+    total_balance = (
+        db.query(func.coalesce(func.sum(Account.balance), 0.0)).scalar() or 0.0
+    )
     tx_24h = (
         db.query(func.count(Transaction.id))
         .filter(Transaction.created_at >= since_24h)
@@ -62,4 +64,3 @@ def forecast_cashflow(
     current_user=Depends(get_current_active_user),
 ):
     return forecast_engine.build_cashflow_forecast(db)
-

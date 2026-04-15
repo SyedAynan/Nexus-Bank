@@ -54,12 +54,20 @@ class PolicyEngine:
         self.role_permissions = {
             "admin": {"*"},
             "staff": {"accounts:view", "accounts:tx", "loans:view", "analytics:view"},
-            "auditor": {"accounts:view", "loans:view", "analytics:view", "audit:view", "risk:view"},
+            "auditor": {
+                "accounts:view",
+                "loans:view",
+                "analytics:view",
+                "audit:view",
+                "risk:view",
+            },
             "rm": {"accounts:view_assigned"},
             "risk": {"risk:view", "risk:act"},
         }
 
-    def is_allowed(self, role: str, permission: str, attributes: Optional[Dict[str, Any]] = None) -> bool:
+    def is_allowed(
+        self, role: str, permission: str, attributes: Optional[Dict[str, Any]] = None
+    ) -> bool:
         """
         ABAC-friendly entry: attributes can later hold branch, entity flags, etc.
         For now we only match role → permission sets.
@@ -139,4 +147,3 @@ class SecurityEngine:
 
     def get_events(self, limit: int = 50) -> List[Dict[str, Any]]:
         return [e.to_dict() for e in self.login_events[:limit]]
-

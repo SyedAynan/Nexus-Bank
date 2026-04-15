@@ -61,4 +61,3 @@ class SessionRead(BaseModel):
 
     class Config:
         from_attributes = True
-

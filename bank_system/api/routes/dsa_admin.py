@@ -42,7 +42,11 @@ def dsa_overview(
                 "name": "Linked List",
                 "module": "TransactionLinkedList",
                 "use_case": "Transaction history chaining",
-                "time_complexity": {"insert": "O(1)", "traverse": "O(n)", "search": "O(n)"},
+                "time_complexity": {
+                    "insert": "O(1)",
+                    "traverse": "O(n)",
+                    "search": "O(n)",
+                },
                 "space_complexity": "O(n)",
             },
             {
@@ -63,21 +67,33 @@ def dsa_overview(
                 "name": "Binary Search Tree",
                 "module": "AccountBST",
                 "use_case": "Sorted account ordering",
-                "time_complexity": {"insert": "O(log n)", "search": "O(log n)", "in_order": "O(n)"},
+                "time_complexity": {
+                    "insert": "O(log n)",
+                    "search": "O(log n)",
+                    "in_order": "O(n)",
+                },
                 "space_complexity": "O(n)",
             },
             {
                 "name": "Hash Table",
                 "module": "AccountHashTable",
                 "use_case": "O(1) account lookup by ID",
-                "time_complexity": {"insert": "O(1)", "lookup": "O(1)", "delete": "O(1)"},
+                "time_complexity": {
+                    "insert": "O(1)",
+                    "lookup": "O(1)",
+                    "delete": "O(1)",
+                },
                 "space_complexity": "O(n)",
             },
             {
                 "name": "Graph",
                 "module": "ComplianceGraph",
                 "use_case": "AML transaction relationship mapping & cycle detection",
-                "time_complexity": {"add_edge": "O(1)", "dfs": "O(V+E)", "cycle_detect": "O(V+E)"},
+                "time_complexity": {
+                    "add_edge": "O(1)",
+                    "dfs": "O(V+E)",
+                    "cycle_detect": "O(V+E)",
+                },
                 "space_complexity": "O(V+E)",
             },
             {
@@ -91,14 +107,23 @@ def dsa_overview(
                 "name": "Trie (Prefix Tree)",
                 "module": "Trie",
                 "use_case": "Fast autocomplete search for users/accounts",
-                "time_complexity": {"insert": "O(m)", "search": "O(m)", "prefix": "O(m+k)"},
+                "time_complexity": {
+                    "insert": "O(m)",
+                    "search": "O(m)",
+                    "prefix": "O(m+k)",
+                },
                 "space_complexity": "O(N × M)",
             },
             {
                 "name": "Sorting Algorithms",
                 "module": "SortingAlgorithms",
                 "use_case": "Transaction ordering, risk ranking, top-K queries",
-                "algorithms": ["Merge Sort", "Quick Sort", "Heap Sort", "Counting Sort"],
+                "algorithms": [
+                    "Merge Sort",
+                    "Quick Sort",
+                    "Heap Sort",
+                    "Counting Sort",
+                ],
             },
         ],
         "total_structures": 9,
@@ -138,7 +163,11 @@ def trie_search(
         for acc in accounts:
             _trie.insert(
                 acc.account_number,
-                data={"id": acc.id, "balance": float(acc.balance), "status": acc.status},
+                data={
+                    "id": acc.id,
+                    "balance": float(acc.balance),
+                    "status": acc.status,
+                },
             )
 
     results = _trie.starts_with(prefix, limit=limit)
@@ -156,10 +185,7 @@ def sorting_benchmark(
 ):
     """Run all sorting algorithms on transaction data and return performance stats."""
     transactions = (
-        db.query(Transaction)
-        .order_by(Transaction.created_at.desc())
-        .limit(500)
-        .all()
+        db.query(Transaction).order_by(Transaction.created_at.desc()).limit(500).all()
     )
 
     if not transactions:
@@ -182,25 +208,53 @@ def sorting_benchmark(
     start = time.perf_counter()
     _, merge_stats = merge_sort(tx_dicts, key=lambda x: x["amount"])
     merge_time = round((time.perf_counter() - start) * 1000, 3)
-    results.append({"algorithm": "Merge Sort", "sort_by": "amount", "time_ms": merge_time, "stats": merge_stats})
+    results.append(
+        {
+            "algorithm": "Merge Sort",
+            "sort_by": "amount",
+            "time_ms": merge_time,
+            "stats": merge_stats,
+        }
+    )
 
     # Quick Sort by fraud_score
     start = time.perf_counter()
     _, quick_stats = quick_sort(tx_dicts, key=lambda x: x["fraud_score"], reverse=True)
     quick_time = round((time.perf_counter() - start) * 1000, 3)
-    results.append({"algorithm": "Quick Sort", "sort_by": "fraud_score (desc)", "time_ms": quick_time, "stats": quick_stats})
+    results.append(
+        {
+            "algorithm": "Quick Sort",
+            "sort_by": "fraud_score (desc)",
+            "time_ms": quick_time,
+            "stats": quick_stats,
+        }
+    )
 
     # Heap Sort by amount
     start = time.perf_counter()
     _, heap_stats = heap_sort(tx_dicts, key=lambda x: x["amount"], reverse=True)
     heap_time = round((time.perf_counter() - start) * 1000, 3)
-    results.append({"algorithm": "Heap Sort", "sort_by": "amount (desc)", "time_ms": heap_time, "stats": heap_stats})
+    results.append(
+        {
+            "algorithm": "Heap Sort",
+            "sort_by": "amount (desc)",
+            "time_ms": heap_time,
+            "stats": heap_stats,
+        }
+    )
 
     # Counting Sort by risk_level
     start = time.perf_counter()
     _, count_stats = counting_sort_by_risk(tx_dicts)
     count_time = round((time.perf_counter() - start) * 1000, 3)
-    results.append({"algorithm": "Counting Sort", "sort_by": "risk_level", "time_ms": count_time, "stats": count_stats})
+    results.append(
+        {
+            "algorithm": "Counting Sort",
+            "sort_by": "risk_level",
+            "time_ms": count_time,
+            "stats": count_stats,
+        }
+    )
 
     return {
         "data_points": len(tx_dicts),

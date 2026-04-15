@@ -7,6 +7,7 @@ All data and operations are driven by Python; frontend only displays and calls t
 from datetime import datetime
 import sys
 import os
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
@@ -49,27 +50,34 @@ def build_imperial_state(bank):
         if not balance_history and a.get("balance") is not None:
             balance_history = [a["balance"]]
 
-        accounts.append({
-            "id": acc_id,
-            "name": a.get("owner_name", ""),
-            "type": (a.get("account_type") or "Savings").replace("checking", "Current").replace("savings", "Savings").replace("business", "Current"),
-            "balance": round(float(a.get("balance", 0)), 2),
-            "status": a.get("status", "active"),
-            "phone": a.get("phone", "+91 00000 00000"),
-            "email": a.get("email", ""),
-            "pan": a.get("pan", "—"),
-            "aadhaar": a.get("aadhaar", "—"),
-            "dob": a.get("dob", "—"),
-            "branch": a.get("branch", "Main Branch"),
-            "openedDate": _format_date(a.get("created_at", "")),
-            "relationshipManager": a.get("relationshipManager", "System"),
-            "creditScore": a.get("credit_score", 700),
-            "kycStatus": a.get("kycStatus", "complete"),
-            "category": a.get("category", "Standard"),
-            "balanceHistory": balance_history or [0],
-            "failedTxCount": a.get("failedTxCount", 0),
-            "lastTxDate": a.get("lastTxDate", _format_date(a.get("created_at", ""))),
-        })
+        accounts.append(
+            {
+                "id": acc_id,
+                "name": a.get("owner_name", ""),
+                "type": (a.get("account_type") or "Savings")
+                .replace("checking", "Current")
+                .replace("savings", "Savings")
+                .replace("business", "Current"),
+                "balance": round(float(a.get("balance", 0)), 2),
+                "status": a.get("status", "active"),
+                "phone": a.get("phone", "+91 00000 00000"),
+                "email": a.get("email", ""),
+                "pan": a.get("pan", "—"),
+                "aadhaar": a.get("aadhaar", "—"),
+                "dob": a.get("dob", "—"),
+                "branch": a.get("branch", "Main Branch"),
+                "openedDate": _format_date(a.get("created_at", "")),
+                "relationshipManager": a.get("relationshipManager", "System"),
+                "creditScore": a.get("credit_score", 700),
+                "kycStatus": a.get("kycStatus", "complete"),
+                "category": a.get("category", "Standard"),
+                "balanceHistory": balance_history or [0],
+                "failedTxCount": a.get("failedTxCount", 0),
+                "lastTxDate": a.get(
+                    "lastTxDate", _format_date(a.get("created_at", ""))
+                ),
+            }
+        )
 
     all_txns = bank.get_all_recent_transactions(100)
     transactions = []
@@ -80,63 +88,69 @@ def build_imperial_state(bank):
             ttype = "credit"
         elif ttype == "withdrawal":
             ttype = "debit"
-        transactions.append({
-            "ref": t.get("transaction_id", ""),
-            "date": _format_date(ts),
-            "time": _format_time(ts),
-            "fromAcc": t.get("account_id", ""),
-            "toAcc": None,
-            "clientName": _account_name(bank, t.get("account_id", "")),
-            "type": ttype,
-            "amount": round(float(t.get("amount", 0)), 2),
-            "balanceAfter": round(float(t.get("balance_after", 0)), 2),
-            "description": t.get("description", ""),
-            "channel": "Online",
-            "status": "success",
-            "processedBy": "System",
-            "reversed": False,
-            "reversalRef": None,
-        })
+        transactions.append(
+            {
+                "ref": t.get("transaction_id", ""),
+                "date": _format_date(ts),
+                "time": _format_time(ts),
+                "fromAcc": t.get("account_id", ""),
+                "toAcc": None,
+                "clientName": _account_name(bank, t.get("account_id", "")),
+                "type": ttype,
+                "amount": round(float(t.get("amount", 0)), 2),
+                "balanceAfter": round(float(t.get("balance_after", 0)), 2),
+                "description": t.get("description", ""),
+                "channel": "Online",
+                "status": "success",
+                "processedBy": "System",
+                "reversed": False,
+                "reversalRef": None,
+            }
+        )
 
     pending_loans = bank.get_pending_loans()
     processed = getattr(bank, "processed_loans", []) or []
     loans = []
     for L in processed[:20]:
-        loans.append({
-            "id": L.get("loan_id", ""),
-            "accId": L.get("account_id", ""),
-            "clientName": L.get("owner_name", ""),
-            "type": (L.get("purpose") or "Personal Loan").title(),
-            "principal": round(float(L.get("amount", 0)), 2),
-            "rate": 11.5,
-            "tenureMonths": 36,
-            "emiAmount": round(float(L.get("amount", 0)) / 36, 2),
-            "disbursedDate": _format_date(L.get("processed_at", "")),
-            "dueDate": "",
-            "paidAmount": 0,
-            "status": L.get("status", "active"),
-            "nextEmiDate": "",
-            "nextEmiAmount": 0,
-            "notes": "",
-        })
+        loans.append(
+            {
+                "id": L.get("loan_id", ""),
+                "accId": L.get("account_id", ""),
+                "clientName": L.get("owner_name", ""),
+                "type": (L.get("purpose") or "Personal Loan").title(),
+                "principal": round(float(L.get("amount", 0)), 2),
+                "rate": 11.5,
+                "tenureMonths": 36,
+                "emiAmount": round(float(L.get("amount", 0)) / 36, 2),
+                "disbursedDate": _format_date(L.get("processed_at", "")),
+                "dueDate": "",
+                "paidAmount": 0,
+                "status": L.get("status", "active"),
+                "nextEmiDate": "",
+                "nextEmiAmount": 0,
+                "notes": "",
+            }
+        )
     for L in pending_loans[:10]:
-        loans.append({
-            "id": L.get("loan_id", ""),
-            "accId": L.get("account_id", ""),
-            "clientName": L.get("owner_name", ""),
-            "type": (L.get("purpose") or "Personal Loan").title(),
-            "principal": round(float(L.get("amount", 0)), 2),
-            "rate": 11.5,
-            "tenureMonths": 36,
-            "emiAmount": round(float(L.get("amount", 0)) / 36, 2),
-            "disbursedDate": "",
-            "dueDate": "",
-            "paidAmount": 0,
-            "status": "pending",
-            "nextEmiDate": "",
-            "nextEmiAmount": 0,
-            "notes": "",
-        })
+        loans.append(
+            {
+                "id": L.get("loan_id", ""),
+                "accId": L.get("account_id", ""),
+                "clientName": L.get("owner_name", ""),
+                "type": (L.get("purpose") or "Personal Loan").title(),
+                "principal": round(float(L.get("amount", 0)), 2),
+                "rate": 11.5,
+                "tenureMonths": 36,
+                "emiAmount": round(float(L.get("amount", 0)) / 36, 2),
+                "disbursedDate": "",
+                "dueDate": "",
+                "paidAmount": 0,
+                "status": "pending",
+                "nextEmiDate": "",
+                "nextEmiAmount": 0,
+                "notes": "",
+            }
+        )
 
     alerts = []
     try:
@@ -144,32 +158,36 @@ def build_imperial_state(bank):
         for cycle in compliance.get("cycles_detected", [])[:5]:
             if cycle:
                 acc_id = cycle[0] if isinstance(cycle[0], str) else str(cycle[0])
-                alerts.append({
-                    "id": "ALERT-" + acc_id,
-                    "accId": acc_id,
-                    "clientName": _account_name(bank, acc_id),
-                    "severity": "critical",
-                    "type": "Circular Transfer Pattern",
+                alerts.append(
+                    {
+                        "id": "ALERT-" + acc_id,
+                        "accId": acc_id,
+                        "clientName": _account_name(bank, acc_id),
+                        "severity": "critical",
+                        "type": "Circular Transfer Pattern",
+                        "amount": 0,
+                        "description": "Multiple accounts forming circular transfer chain",
+                        "flaggedDate": _format_date(datetime.now().isoformat()),
+                        "status": "pending",
+                        "reviewedBy": None,
+                    }
+                )
+        for hr in compliance.get("high_risk_accounts", [])[:5]:
+            aid = hr.get("account_id", hr) if isinstance(hr, dict) else hr
+            alerts.append(
+                {
+                    "id": "ALERT-RISK-" + str(aid),
+                    "accId": str(aid),
+                    "clientName": _account_name(bank, str(aid)),
+                    "severity": "high",
+                    "type": "Unusual Activity",
                     "amount": 0,
-                    "description": "Multiple accounts forming circular transfer chain",
+                    "description": "Account flagged in compliance check",
                     "flaggedDate": _format_date(datetime.now().isoformat()),
                     "status": "pending",
                     "reviewedBy": None,
-                })
-        for hr in compliance.get("high_risk_accounts", [])[:5]:
-            aid = hr.get("account_id", hr) if isinstance(hr, dict) else hr
-            alerts.append({
-                "id": "ALERT-RISK-" + str(aid),
-                "accId": str(aid),
-                "clientName": _account_name(bank, str(aid)),
-                "severity": "high",
-                "type": "Unusual Activity",
-                "amount": 0,
-                "description": "Account flagged in compliance check",
-                "flaggedDate": _format_date(datetime.now().isoformat()),
-                "status": "pending",
-                "reviewedBy": None,
-            })
+                }
+            )
     except Exception:
         pass
 
@@ -179,15 +197,19 @@ def build_imperial_state(bank):
         ts = log.get("timestamp", "")
         if isinstance(ts, str) and "T" in ts:
             ts = ts.replace("T", " ").split(".")[0]
-        auditLog.append({
-            "timestamp": ts,
-            "category": log.get("action", "SYSTEM").split("_")[0] if log.get("action") else "SYSTEM",
-            "action": (log.get("action") or "ACTION").replace("_", " "),
-            "account": log.get("details", "")[:20] or "—",
-            "performedBy": log.get("user", "System"),
-            "details": log.get("details", ""),
-            "reference": log.get("log_id", "—"),
-        })
+        auditLog.append(
+            {
+                "timestamp": ts,
+                "category": log.get("action", "SYSTEM").split("_")[0]
+                if log.get("action")
+                else "SYSTEM",
+                "action": (log.get("action") or "ACTION").replace("_", " "),
+                "account": log.get("details", "")[:20] or "—",
+                "performedBy": log.get("user", "System"),
+                "details": log.get("details", ""),
+                "reference": log.get("log_id", "—"),
+            }
+        )
 
     analytics = bank.get_analytics()
 
@@ -256,15 +278,23 @@ def _account_name(bank, account_id):
 
 def create_account_from_imperial(bank, form_data, user="Administrator"):
     """Create account from Imperial frontend form. All logic in Python."""
-    name = form_data.get("name") or form_data.get("owner_name") or form_data.get("clientName", "")
+    name = (
+        form_data.get("name")
+        or form_data.get("owner_name")
+        or form_data.get("clientName", "")
+    )
     email = form_data.get("email", "")
     account_type = form_data.get("type") or form_data.get("account_type", "savings")
-    initial_deposit = float(form_data.get("initialDeposit") or form_data.get("initial_deposit", 0))
+    initial_deposit = float(
+        form_data.get("initialDeposit") or form_data.get("initial_deposit", 0)
+    )
     result = bank.create_account(name, email, account_type, initial_deposit, user=user)
     return result
 
 
-def process_transaction_from_imperial(bank, from_acc, to_acc, amount, txn_type, description, user="Administrator"):
+def process_transaction_from_imperial(
+    bank, from_acc, to_acc, amount, txn_type, description, user="Administrator"
+):
     """Process transaction from Imperial frontend. All logic in Python."""
     amount = float(amount)
     if txn_type in ("credit", "deposit"):
@@ -289,7 +319,10 @@ def search_clients_imperial(bank, query):
     """Client search for Imperial UI. Uses Python search / name matching."""
     if not query or not str(query).strip():
         accounts = bank.get_all_accounts()
-        return [{"id": a.get("account_id"), "name": a.get("owner_name", "")} for a in accounts]
+        return [
+            {"id": a.get("account_id"), "name": a.get("owner_name", "")}
+            for a in accounts
+        ]
     q = str(query).strip().lower()
     accounts = bank.get_all_accounts()
     out = []
@@ -297,7 +330,13 @@ def search_clients_imperial(bank, query):
         name = (a.get("owner_name") or "").lower()
         acc_id = (a.get("account_id") or "").lower()
         email = (a.get("email") or "").lower()
-        if q in name or q in acc_id or q in email or name.startswith(q) or acc_id.startswith(q):
+        if (
+            q in name
+            or q in acc_id
+            or q in email
+            or name.startswith(q)
+            or acc_id.startswith(q)
+        ):
             out.append({"id": a.get("account_id"), "name": a.get("owner_name", "")})
     return out[:20]
 

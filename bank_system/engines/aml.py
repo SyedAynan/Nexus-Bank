@@ -115,8 +115,7 @@ class AMLEngine:
         db.commit()
 
         node_view = [
-            {"account_id": n.account_id, "risk_score": n.risk_score}
-            for n in nodes
+            {"account_id": n.account_id, "risk_score": n.risk_score} for n in nodes
         ]
 
         edge_view = [
@@ -129,9 +128,7 @@ class AMLEngine:
         ]
 
         suspicious_clusters = [
-            {"accounts": cyc, "size": len(cyc)}
-            for cyc in cycles
-            if len(cyc) >= 3
+            {"accounts": cyc, "size": len(cyc)} for cyc in cycles if len(cyc) >= 3
         ]
 
         return {

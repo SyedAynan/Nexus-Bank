@@ -18,9 +18,9 @@ class Account:
         self.account_id = gen_id("ACC")
         self.owner_name = owner_name
         self.email = email
-        self.account_type = account_type    # savings | checking | business
+        self.account_type = account_type  # savings | checking | business
         self.balance = initial_deposit
-        self.status = "active"              # active | frozen | closed
+        self.status = "active"  # active | frozen | closed
         self.created_at = datetime.now().isoformat()
         self.account_number = int(uuid.uuid4().int % 1_000_000_000)
 
@@ -33,20 +33,22 @@ class Account:
             "account_type": self.account_type,
             "balance": self.balance,
             "status": self.status,
-            "created_at": self.created_at
+            "created_at": self.created_at,
         }
 
 
 class LoanApplication:
-    def __init__(self, account_id, owner_name, amount, purpose, credit_score, urgency=0):
+    def __init__(
+        self, account_id, owner_name, amount, purpose, credit_score, urgency=0
+    ):
         self.loan_id = gen_id("LOAN")
         self.account_id = account_id
         self.owner_name = owner_name
         self.amount = amount
         self.purpose = purpose
-        self.credit_score = credit_score    # 300-850
-        self.urgency = urgency              # 0=normal, 10=urgent
-        self.status = "pending"             # pending | approved | rejected
+        self.credit_score = credit_score  # 300-850
+        self.urgency = urgency  # 0=normal, 10=urgent
+        self.status = "pending"  # pending | approved | rejected
         self.applied_at = datetime.now().isoformat()
         self.processed_at = None
 
@@ -61,9 +63,8 @@ class LoanApplication:
             "urgency": self.urgency,
             "status": self.status,
             "applied_at": self.applied_at,
-            "processed_at": self.processed_at
+            "processed_at": self.processed_at,
         }
-
 
 
 class User:
@@ -84,7 +85,7 @@ class User:
             "user_id": self.user_id,
             "username": self.username,
             "role": self.role,
-            "created_at": self.created_at
+            "created_at": self.created_at,
         }
 
 
@@ -94,7 +95,7 @@ class AuditLog:
         self.user = user
         self.action = action
         self.details = details
-        self.severity = severity            # info | warning | critical
+        self.severity = severity  # info | warning | critical
         self.timestamp = datetime.now().isoformat()
 
     def to_dict(self):
@@ -104,5 +105,5 @@ class AuditLog:
             "action": self.action,
             "details": self.details,
             "severity": self.severity,
-            "timestamp": self.timestamp
+            "timestamp": self.timestamp,
         }

@@ -9,13 +9,17 @@ from .trie import Trie
 from .sorting import merge_sort, quick_sort, heap_sort, counting_sort_by_risk
 
 __all__ = [
-    'TransactionLinkedList', 'TransactionNode',
-    'UndoStack',
-    'TransactionQueue',
-    'AccountBST',
-    'AccountHashTable',
-    'ComplianceGraph',
-    'LoanPriorityQueue',
-    'Trie',
-    'merge_sort', 'quick_sort', 'heap_sort', 'counting_sort_by_risk',
+    "TransactionLinkedList",
+    "TransactionNode",
+    "UndoStack",
+    "TransactionQueue",
+    "AccountBST",
+    "AccountHashTable",
+    "ComplianceGraph",
+    "LoanPriorityQueue",
+    "Trie",
+    "merge_sort",
+    "quick_sort",
+    "heap_sort",
+    "counting_sort_by_risk",
 ]

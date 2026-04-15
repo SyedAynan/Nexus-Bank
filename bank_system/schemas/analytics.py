@@ -20,4 +20,3 @@ class DashboardKPI(BaseModel):
     fraud_alerts_open: int
     active_loans: int
     avg_health_score: float
-

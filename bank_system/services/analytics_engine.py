@@ -31,63 +31,57 @@ class AnalyticsEngine:
         # Build day buckets
         buckets = {}
         for i in range(days):
-            d = (now - timedelta(days=days - 1 - i)).strftime('%m/%d')
-            buckets[d] = {'deposits': 0, 'withdrawals': 0, 'transfers': 0, 'count': 0}
+            d = (now - timedelta(days=days - 1 - i)).strftime("%m/%d")
+            buckets[d] = {"deposits": 0, "withdrawals": 0, "transfers": 0, "count": 0}
 
         for t in all_txns:
             try:
-                ts = datetime.fromisoformat(t['timestamp'])
-                day_key = ts.strftime('%m/%d')
+                ts = datetime.fromisoformat(t["timestamp"])
+                day_key = ts.strftime("%m/%d")
                 if day_key in buckets:
-                    txn_type = t.get('type', '')
-                    if txn_type == 'deposit':
-                        buckets[day_key]['deposits'] += t['amount']
-                    elif txn_type == 'withdrawal':
-                        buckets[day_key]['withdrawals'] += t['amount']
-                    buckets[day_key]['count'] += 1
+                    txn_type = t.get("type", "")
+                    if txn_type == "deposit":
+                        buckets[day_key]["deposits"] += t["amount"]
+                    elif txn_type == "withdrawal":
+                        buckets[day_key]["withdrawals"] += t["amount"]
+                    buckets[day_key]["count"] += 1
             except Exception:
                 continue
 
         # Enrich with simulated historical data for visual depth
         days_list = list(buckets.keys())
         for i, day in enumerate(days_list):
-            if buckets[day]['count'] == 0 and i < days - 5:
+            if buckets[day]["count"] == 0 and i < days - 5:
                 seed = hash(day) % 1000
-                buckets[day]['deposits'] = 5000 + (seed * 37 % 15000)
-                buckets[day]['withdrawals'] = 3000 + (seed * 13 % 8000)
-                buckets[day]['count'] = 3 + (seed % 8)
+                buckets[day]["deposits"] = 5000 + (seed * 37 % 15000)
+                buckets[day]["withdrawals"] = 3000 + (seed * 13 % 8000)
+                buckets[day]["count"] = 3 + (seed % 8)
 
         labels = list(buckets.keys())
         return {
-            'labels': labels,
-            'deposits': [round(buckets[d]['deposits'], 2) for d in labels],
-            'withdrawals': [round(buckets[d]['withdrawals'], 2) for d in labels],
-            'counts': [buckets[d]['count'] for d in labels]
+            "labels": labels,
+            "deposits": [round(buckets[d]["deposits"], 2) for d in labels],
+            "withdrawals": [round(buckets[d]["withdrawals"], 2) for d in labels],
+            "counts": [buckets[d]["count"] for d in labels],
         }
 
     def get_balance_distribution(self):
         """Balance distribution across accounts (histogram buckets)."""
         accounts = self.bank.get_all_accounts()
-        buckets = {
-            '$0-1K': 0, '$1K-5K': 0, '$5K-25K': 0,
-            '$25K-100K': 0, '$100K+': 0
-        }
+        buckets = {"$0-1K": 0, "$1K-5K": 0, "$5K-25K": 0, "$25K-100K": 0, "$100K+": 0}
         for acc in accounts:
-            b = acc.get('balance', 0)
+            b = acc.get("balance", 0)
             if b < 1000:
-                buckets['$0-1K'] += 1
+                buckets["$0-1K"] += 1
             elif b < 5000:
-                buckets['$1K-5K'] += 1
+                buckets["$1K-5K"] += 1
             elif b < 25000:
-                buckets['$5K-25K'] += 1
+                buckets["$5K-25K"] += 1
             elif b < 100000:
-                buckets['$25K-100K'] += 1
+                buckets["$25K-100K"] += 1
             else:
-                buckets['$100K+'] += 1
-        return {
-            'labels': list(buckets.keys()),
-            'values': list(buckets.values())
-        }
+                buckets["$100K+"] += 1
+        return {"labels": list(buckets.keys()), "values": list(buckets.values())}
 
     def get_txn_type_breakdown(self):
         """Pie chart: breakdown by transaction type."""
@@ -95,13 +89,13 @@ class AnalyticsEngine:
         counts = defaultdict(int)
         totals = defaultdict(float)
         for t in all_txns:
-            typ = t.get('type', 'other')
+            typ = t.get("type", "other")
             counts[typ] += 1
-            totals[typ] += t.get('amount', 0)
+            totals[typ] += t.get("amount", 0)
         return {
-            'labels': list(counts.keys()),
-            'counts': list(counts.values()),
-            'totals': [round(totals[k], 2) for k in counts.keys()]
+            "labels": list(counts.keys()),
+            "counts": list(counts.values()),
+            "totals": [round(totals[k], 2) for k in counts.keys()],
         }
 
     def get_account_type_breakdown(self):
@@ -110,41 +104,46 @@ class AnalyticsEngine:
         counts = defaultdict(int)
         balances = defaultdict(float)
         for acc in accounts:
-            t = acc.get('account_type', 'other')
+            t = acc.get("account_type", "other")
             counts[t] += 1
-            balances[t] += acc.get('balance', 0)
+            balances[t] += acc.get("balance", 0)
         return {
-            'labels': list(counts.keys()),
-            'counts': list(counts.values()),
-            'balances': [round(balances[k], 2) for k in counts.keys()]
+            "labels": list(counts.keys()),
+            "counts": list(counts.values()),
+            "balances": [round(balances[k], 2) for k in counts.keys()],
         }
 
     def get_loan_status_breakdown(self):
         """Loan pipeline funnel data."""
         pending = self.bank.loan_queue.size()
         processed = self.bank.processed_loans
-        approved = sum(1 for loan in processed if loan['status'] == 'approved')
-        rejected = sum(1 for loan in processed if loan['status'] == 'rejected')
-        approved_vol = sum(loan['amount'] for loan in processed if loan['status'] == 'approved')
+        approved = sum(1 for loan in processed if loan["status"] == "approved")
+        rejected = sum(1 for loan in processed if loan["status"] == "rejected")
+        approved_vol = sum(
+            loan["amount"] for loan in processed if loan["status"] == "approved"
+        )
         return {
-            'labels': ['Pending', 'Approved', 'Rejected'],
-            'counts': [pending, approved, rejected],
-            'approved_volume': round(approved_vol, 2),
-            'approval_rate': round(approved / max(1, approved + rejected) * 100, 1)
+            "labels": ["Pending", "Approved", "Rejected"],
+            "counts": [pending, approved, rejected],
+            "approved_volume": round(approved_vol, 2),
+            "approval_rate": round(approved / max(1, approved + rejected) * 100, 1),
         }
 
-    def get_top_accounts(self, by='balance', limit=5):
+    def get_top_accounts(self, by="balance", limit=5):
         """Top N accounts by balance or transaction count."""
         accounts = self.bank.get_all_accounts()
-        if by == 'balance':
-            accounts.sort(key=lambda x: x['balance'], reverse=True)
-        return [{
-            'account_id': a['account_id'],
-            'owner_name': a['owner_name'],
-            'balance': a['balance'],
-            'type': a['account_type'],
-            'status': a['status']
-        } for a in accounts[:limit]]
+        if by == "balance":
+            accounts.sort(key=lambda x: x["balance"], reverse=True)
+        return [
+            {
+                "account_id": a["account_id"],
+                "owner_name": a["owner_name"],
+                "balance": a["balance"],
+                "type": a["account_type"],
+                "status": a["status"],
+            }
+            for a in accounts[:limit]
+        ]
 
     def get_monthly_flow(self):
         """Net cash flow per month (last 6 months)."""
@@ -153,45 +152,47 @@ class AnalyticsEngine:
         months = {}
         for i in range(6):
             d = now - timedelta(days=i * 30)
-            key = d.strftime('%b %Y')
-            months[key] = {'inflow': 0, 'outflow': 0}
+            key = d.strftime("%b %Y")
+            months[key] = {"inflow": 0, "outflow": 0}
 
         month_keys = list(months.keys())
         for t in all_txns:
             try:
-                ts = datetime.fromisoformat(t['timestamp'])
-                key = ts.strftime('%b %Y')
+                ts = datetime.fromisoformat(t["timestamp"])
+                key = ts.strftime("%b %Y")
                 if key in months:
-                    if t['type'] == 'deposit':
-                        months[key]['inflow'] += t['amount']
-                    elif t['type'] == 'withdrawal':
-                        months[key]['outflow'] += t['amount']
+                    if t["type"] == "deposit":
+                        months[key]["inflow"] += t["amount"]
+                    elif t["type"] == "withdrawal":
+                        months[key]["outflow"] += t["amount"]
             except Exception:
                 continue
 
         # Simulate past months
         for i, key in enumerate(month_keys):
-            if months[key]['inflow'] == 0 and i > 0:
+            if months[key]["inflow"] == 0 and i > 0:
                 seed = hash(key) % 500
-                months[key]['inflow'] = 20000 + seed * 100
-                months[key]['outflow'] = 12000 + seed * 60
+                months[key]["inflow"] = 20000 + seed * 100
+                months[key]["outflow"] = 12000 + seed * 60
 
         labels = list(reversed(month_keys))
         return {
-            'labels': labels,
-            'inflow': [round(months[k]['inflow'], 2) for k in labels],
-            'outflow': [round(months[k]['outflow'], 2) for k in labels],
-            'net': [round(months[k]['inflow'] - months[k]['outflow'], 2) for k in labels]
+            "labels": labels,
+            "inflow": [round(months[k]["inflow"], 2) for k in labels],
+            "outflow": [round(months[k]["outflow"], 2) for k in labels],
+            "net": [
+                round(months[k]["inflow"] - months[k]["outflow"], 2) for k in labels
+            ],
         }
 
     def get_kpi_delta(self):
         """Calculate % change vs yesterday for KPIs (simulated for demo)."""
         return {
-            'balance_delta': +3.2,
-            'accounts_delta': +1,
-            'deposits_delta': +8.7,
-            'withdrawals_delta': -2.1,
-            'loans_delta': -1,
+            "balance_delta": +3.2,
+            "accounts_delta": +1,
+            "deposits_delta": +8.7,
+            "withdrawals_delta": -2.1,
+            "loans_delta": -1,
         }
 
     def get_regulatory_kpis(self):
@@ -211,10 +212,12 @@ class AnalyticsEngine:
                 return self._kpi_cache
 
         accounts = self.bank.get_all_accounts()
-        loans = self.bank.get_pending_loans() + getattr(self.bank, "processed_loans", [])
+        loans = self.bank.get_pending_loans() + getattr(
+            self.bank, "processed_loans", []
+        )
 
-        total_assets = sum(a.get('balance', 0.0) for a in accounts)
-        total_loans = sum(loan.get('amount', 0.0) for loan in loans)
+        total_assets = sum(a.get("balance", 0.0) for a in accounts)
+        total_loans = sum(loan.get("amount", 0.0) for loan in loans)
         # Assume simple risk-weighted assets as loans * factor
         rwa = total_loans * 0.85
 
@@ -224,26 +227,30 @@ class AnalyticsEngine:
 
         # NPL approximation: loans with status overdue/defaulted
         npl_amount = sum(
-            loan.get('amount', 0.0)
+            loan.get("amount", 0.0)
             for loan in loans
-            if str(loan.get('status', '')).lower() in ('overdue', 'defaulted')
+            if str(loan.get("status", "")).lower() in ("overdue", "defaulted")
         )
         npl_ratio = (npl_amount / total_loans * 100.0) if total_loans else 0.0
 
         # Liquidity coverage: high-level proxy of deposits vs stressed outflow
         stressed_outflow = total_loans * 0.05
-        lcr = ((total_assets - total_loans) / stressed_outflow * 100.0) if stressed_outflow else 0.0
+        lcr = (
+            ((total_assets - total_loans) / stressed_outflow * 100.0)
+            if stressed_outflow
+            else 0.0
+        )
 
         result = {
-            'cet1_ratio': round(cet1_ratio, 2),
-            'capital_adequacy_ratio': round(cet1_ratio * 1.1, 2),
-            'npl_ratio': round(npl_ratio, 2),
-            'liquidity_coverage_ratio': round(lcr, 2),
-            'totals': {
-                'assets': round(total_assets, 2),
-                'loans': round(total_loans, 2),
-                'npl_amount': round(npl_amount, 2),
-            }
+            "cet1_ratio": round(cet1_ratio, 2),
+            "capital_adequacy_ratio": round(cet1_ratio * 1.1, 2),
+            "npl_ratio": round(npl_ratio, 2),
+            "liquidity_coverage_ratio": round(lcr, 2),
+            "totals": {
+                "assets": round(total_assets, 2),
+                "loans": round(total_loans, 2),
+                "npl_amount": round(npl_amount, 2),
+            },
         }
         self._kpi_cache = result
         self._kpi_cache_ts = _dt.now()
@@ -257,14 +264,14 @@ class AnalyticsEngine:
         for i in range(days):
             d = now - timedelta(days=days - 1 - i)
             # Find last transaction balance on or before this day
-            day_str = d.strftime('%Y-%m-%d')
+            day_str = d.strftime("%Y-%m-%d")
             bal = None
             for t in history:
-                if t['timestamp'][:10] <= day_str:
-                    bal = t['balance_after']
+                if t["timestamp"][:10] <= day_str:
+                    bal = t["balance_after"]
                     break
             if bal is None and history:
-                bal = history[-1]['balance_after']
+                bal = history[-1]["balance_after"]
             points.append(round(bal or 0, 2))
         return points
 
@@ -277,18 +284,18 @@ class AnalyticsEngine:
 
         for t in all_txns:
             try:
-                ts = datetime.fromisoformat(t['timestamp'])
+                ts = datetime.fromisoformat(t["timestamp"])
                 age = (now - ts).days
                 if age <= days:
-                    if t['type'] == 'deposit':
-                        current_deps += t['amount']
-                    elif t['type'] == 'withdrawal':
-                        current_with += t['amount']
+                    if t["type"] == "deposit":
+                        current_deps += t["amount"]
+                    elif t["type"] == "withdrawal":
+                        current_with += t["amount"]
                 elif age <= days * 2:
-                    if t['type'] == 'deposit':
-                        prev_deps += t['amount']
-                    elif t['type'] == 'withdrawal':
-                        prev_with += t['amount']
+                    if t["type"] == "deposit":
+                        prev_deps += t["amount"]
+                    elif t["type"] == "withdrawal":
+                        prev_with += t["amount"]
             except Exception:
                 continue
 
@@ -305,13 +312,21 @@ class AnalyticsEngine:
             return round((curr - prev) / prev * 100, 1)
 
         return {
-            'current': {'deposits': round(current_deps, 2), 'withdrawals': round(current_with, 2),
-                        'net': round(current_deps - current_with, 2)},
-            'previous': {'deposits': round(prev_deps, 2), 'withdrawals': round(prev_with, 2),
-                         'net': round(prev_deps - prev_with, 2)},
-            'change': {'deposits': pct(current_deps, prev_deps),
-                       'withdrawals': pct(current_with, prev_with),
-                       'net': pct(current_deps - current_with, prev_deps - prev_with)}
+            "current": {
+                "deposits": round(current_deps, 2),
+                "withdrawals": round(current_with, 2),
+                "net": round(current_deps - current_with, 2),
+            },
+            "previous": {
+                "deposits": round(prev_deps, 2),
+                "withdrawals": round(prev_with, 2),
+                "net": round(prev_deps - prev_with, 2),
+            },
+            "change": {
+                "deposits": pct(current_deps, prev_deps),
+                "withdrawals": pct(current_with, prev_with),
+                "net": pct(current_deps - current_with, prev_deps - prev_with),
+            },
         }
 
     def get_hourly_heatmap(self):
@@ -321,22 +336,47 @@ class AnalyticsEngine:
         amounts = [0.0] * 24
         for t in all_txns:
             try:
-                h = int(t['timestamp'][11:13])
+                h = int(t["timestamp"][11:13])
                 hours[h] += 1
-                amounts[h] += t['amount']
+                amounts[h] += t["amount"]
             except Exception:
                 continue
         # Enrich with realistic banking pattern if thin
         if sum(hours) < 10:
-            pattern = [1,0,0,0,1,2,5,9,14,16,13,11,10,12,11,10,9,8,7,6,4,3,2,1]
+            pattern = [
+                1,
+                0,
+                0,
+                0,
+                1,
+                2,
+                5,
+                9,
+                14,
+                16,
+                13,
+                11,
+                10,
+                12,
+                11,
+                10,
+                9,
+                8,
+                7,
+                6,
+                4,
+                3,
+                2,
+                1,
+            ]
             for i, p in enumerate(pattern):
                 hours[i] += p * 3
                 amounts[i] += p * 2000
         return {
-            'hours': list(range(24)),
-            'counts': hours,
-            'amounts': [round(a, 2) for a in amounts],
-            'labels': [f'{h:02d}:00' for h in range(24)]
+            "hours": list(range(24)),
+            "counts": hours,
+            "amounts": [round(a, 2) for a in amounts],
+            "labels": [f"{h:02d}:00" for h in range(24)],
         }
 
     def get_account_growth(self):
@@ -346,65 +386,70 @@ class AnalyticsEngine:
         labels, counts = [], []
         for i in range(12):
             d = now - timedelta(days=(11 - i) * 30)
-            labels.append(d.strftime('%b'))
-            seed = hash(d.strftime('%Y%m')) % 3
+            labels.append(d.strftime("%b"))
+            seed = hash(d.strftime("%Y%m")) % 3
             counts.append(base + i + seed)
-        return {'labels': labels, 'counts': counts}
+        return {"labels": labels, "counts": counts}
 
     def get_risk_distribution(self):
         """Distribution of accounts across risk levels."""
         from services.fraud_engine import FraudEngine
+
         fe = FraudEngine(self.bank)
         profiles = fe.bulk_screen_accounts()
-        low = sum(1 for p in profiles if p['composite_risk'] < 30)
-        med = sum(1 for p in profiles if 30 <= p['composite_risk'] < 60)
-        high = sum(1 for p in profiles if p['composite_risk'] >= 60)
-        return {'labels': ['Low Risk', 'Medium Risk', 'High Risk'],
-                'counts': [low, med, high],
-                'colors': ['#4ECDC4', '#F5A623', '#E05252']}
+        low = sum(1 for p in profiles if p["composite_risk"] < 30)
+        med = sum(1 for p in profiles if 30 <= p["composite_risk"] < 60)
+        high = sum(1 for p in profiles if p["composite_risk"] >= 60)
+        return {
+            "labels": ["Low Risk", "Medium Risk", "High Risk"],
+            "counts": [low, med, high],
+            "colors": ["#4ECDC4", "#F5A623", "#E05252"],
+        }
 
     def get_loan_score_distribution(self):
         """Distribution of AI loan scores across all pending loans."""
         from services.loan_scoring import LoanScoringEngine
+
         scorer = LoanScoringEngine(self.bank)
         loans = self.bank.get_pending_loans() + self.bank.processed_loans
-        buckets = {'0-40': 0, '41-55': 0, '56-70': 0, '71-85': 0, '86-100': 0}
+        buckets = {"0-40": 0, "41-55": 0, "56-70": 0, "71-85": 0, "86-100": 0}
         for loan in loans:
             try:
                 r = scorer.score_loan(
-                    loan['account_id'], loan['amount'],
-                    loan.get('purpose', 'personal'),
-                    loan.get('credit_score', 650)
+                    loan["account_id"],
+                    loan["amount"],
+                    loan.get("purpose", "personal"),
+                    loan.get("credit_score", 650),
                 )
-                s = r['composite_score']
+                s = r["composite_score"]
                 if s <= 40:
-                    buckets['0-40'] += 1
+                    buckets["0-40"] += 1
                 elif s <= 55:
-                    buckets['41-55'] += 1
+                    buckets["41-55"] += 1
                 elif s <= 70:
-                    buckets['56-70'] += 1
+                    buckets["56-70"] += 1
                 elif s <= 85:
-                    buckets['71-85'] += 1
+                    buckets["71-85"] += 1
                 else:
-                    buckets['86-100'] += 1
+                    buckets["86-100"] += 1
             except Exception:
                 pass
-        return {'labels': list(buckets.keys()), 'counts': list(buckets.values())}
+        return {"labels": list(buckets.keys()), "counts": list(buckets.values())}
 
     def get_full_dashboard_data(self):
         """Single call to get all chart data for the analytics dashboard."""
         return {
-            'volume_chart': self.get_transaction_volume_chart(14),
-            'balance_dist': self.get_balance_distribution(),
-            'txn_breakdown': self.get_txn_type_breakdown(),
-            'account_types': self.get_account_type_breakdown(),
-            'loan_status': self.get_loan_status_breakdown(),
-            'top_accounts': self.get_top_accounts(),
-            'monthly_flow': self.get_monthly_flow(),
-            'kpi_deltas': self.get_kpi_delta(),
-            'volume_comparison': self.get_volume_comparison(14),
-            'hourly_heatmap': self.get_hourly_heatmap(),
-            'account_growth': self.get_account_growth(),
-            'risk_distribution': self.get_risk_distribution(),
-            'loan_score_dist': self.get_loan_score_distribution(),
+            "volume_chart": self.get_transaction_volume_chart(14),
+            "balance_dist": self.get_balance_distribution(),
+            "txn_breakdown": self.get_txn_type_breakdown(),
+            "account_types": self.get_account_type_breakdown(),
+            "loan_status": self.get_loan_status_breakdown(),
+            "top_accounts": self.get_top_accounts(),
+            "monthly_flow": self.get_monthly_flow(),
+            "kpi_deltas": self.get_kpi_delta(),
+            "volume_comparison": self.get_volume_comparison(14),
+            "hourly_heatmap": self.get_hourly_heatmap(),
+            "account_growth": self.get_account_growth(),
+            "risk_distribution": self.get_risk_distribution(),
+            "loan_score_dist": self.get_loan_score_distribution(),
         }

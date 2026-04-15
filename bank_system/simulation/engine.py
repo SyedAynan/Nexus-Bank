@@ -3,6 +3,7 @@ NEXA Simulation Engine — Non-blocking background transaction generator.
 BUG-010 fix: DB operations now run via asyncio.to_thread() to avoid
 blocking the event loop and freezing WebSocket/API responses.
 """
+
 import asyncio
 import logging
 import random
@@ -42,9 +43,7 @@ def _run_simulation_tick() -> dict | None:
         account = random.choice(accounts)
         amount = round(random.uniform(10, 500), 2)
 
-        tx_type = random.choice(
-            [TransactionType.deposit, TransactionType.withdrawal]
-        )
+        tx_type = random.choice([TransactionType.deposit, TransactionType.withdrawal])
 
         if tx_type == TransactionType.withdrawal and float(account.balance) < amount:
             tx_type = TransactionType.deposit
@@ -126,7 +125,7 @@ async def simulation_loop():
 
         except Exception as e:
             consecutive_errors += 1
-            backoff = min(15 * (2 ** consecutive_errors), max_backoff)
+            backoff = min(15 * (2**consecutive_errors), max_backoff)
             logger.error(
                 f"Simulation error (attempt {consecutive_errors}): {e}. "
                 f"Retrying in {backoff}s."

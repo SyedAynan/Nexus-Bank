@@ -8,25 +8,40 @@ from datetime import datetime
 # Robust imports — work as both a package and standalone module
 try:
     from data_structures import (
-        TransactionLinkedList, TransactionNode,
-        UndoStack, TransactionQueue,
-        AccountBST, AccountHashTable,
-        ComplianceGraph, LoanPriorityQueue
+        TransactionLinkedList,
+        TransactionNode,
+        UndoStack,
+        TransactionQueue,
+        AccountBST,
+        AccountHashTable,
+        ComplianceGraph,
+        LoanPriorityQueue,
     )
 except ImportError:
     from bank_system.data_structures import (
-        TransactionLinkedList, TransactionNode,
-        UndoStack, TransactionQueue,
-        AccountBST, AccountHashTable,
-        ComplianceGraph, LoanPriorityQueue
+        TransactionLinkedList,
+        TransactionNode,
+        UndoStack,
+        TransactionQueue,
+        AccountBST,
+        AccountHashTable,
+        ComplianceGraph,
+        LoanPriorityQueue,
     )
 
 try:
-    from bank_system.models.models import Account, LoanApplication, User, AuditLog, gen_id
+    from bank_system.models.models import (
+        Account,
+        LoanApplication,
+        User,
+        AuditLog,
+        gen_id,
+    )
 except ImportError:
     from models.models import Account, LoanApplication, User, AuditLog, gen_id
 import hashlib
 import threading
+
 
 class BankingService:
     """
@@ -54,10 +69,10 @@ class BankingService:
         self.account_bst = AccountBST()
 
         # DSA: Transaction Linked Lists — per account history
-        self.transaction_histories = {}     # account_id -> TransactionLinkedList
+        self.transaction_histories = {}  # account_id -> TransactionLinkedList
 
         # DSA: Stack — undo operations per account
-        self.undo_stacks = {}               # account_id -> UndoStack
+        self.undo_stacks = {}  # account_id -> UndoStack
 
         # DSA: Queue — pending transaction processor
         self.transaction_queue = TransactionQueue()
@@ -72,13 +87,13 @@ class BankingService:
         self.processed_loans = []
 
         # Users and audit
-        self.users = {}                     # username -> User
+        self.users = {}  # username -> User
         self.audit_logs = []
         self._last_audit_hash = "GENESIS"
 
         # Locks for multi-threaded safety
-        self.balance_locks = {}             # account_id -> threading.Lock
-        self._global_lock = threading.Lock() # For creating accounts/locks safely
+        self.balance_locks = {}  # account_id -> threading.Lock
+        self._global_lock = threading.Lock()  # For creating accounts/locks safely
 
         # Initialize default users
         self._seed_users()
@@ -112,21 +127,21 @@ class BankingService:
 
         # Seed some transactions
         ops = [
-            (created_accounts[0]['account_id'], 'deposit', 5000),
-            (created_accounts[0]['account_id'], 'withdrawal', 1200),
-            (created_accounts[1]['account_id'], 'deposit', 3000),
-            (created_accounts[2]['account_id'], 'withdrawal', 5000),
-            (created_accounts[3]['account_id'], 'deposit', 800),
-            (created_accounts[4]['account_id'], 'deposit', 2500),
+            (created_accounts[0]["account_id"], "deposit", 5000),
+            (created_accounts[0]["account_id"], "withdrawal", 1200),
+            (created_accounts[1]["account_id"], "deposit", 3000),
+            (created_accounts[2]["account_id"], "withdrawal", 5000),
+            (created_accounts[3]["account_id"], "deposit", 800),
+            (created_accounts[4]["account_id"], "deposit", 2500),
         ]
         for acc_id, op_type, amount in ops:
-            if op_type == 'deposit':
+            if op_type == "deposit":
                 self.deposit(acc_id, amount, user="system")
             else:
                 self.withdraw(acc_id, amount, user="system")
 
         # Seed some transfers for compliance graph
-        ids = [a['account_id'] for a in created_accounts]
+        ids = [a["account_id"] for a in created_accounts]
         self.transfer(ids[0], ids[1], 2000, user="system")
         self.transfer(ids[1], ids[2], 1500, user="system")
         self.transfer(ids[2], ids[0], 500, user="system")  # Creates cycle
@@ -134,10 +149,31 @@ class BankingService:
 
         # Seed loan applications
         loan_data = [
-            (created_accounts[0]['account_id'], "Alice Mercer", 50000, "Home Renovation", 720, 0),
-            (created_accounts[1]['account_id'], "Bob Tanner", 10000, "Car Purchase", 650, 5),
-            (created_accounts[2]['account_id'], "Carol Nash", 200000, "Business Expansion", 780, 10),
-            (created_accounts[3]['account_id'], "David Kim", 5000, "Personal", 580, 0),
+            (
+                created_accounts[0]["account_id"],
+                "Alice Mercer",
+                50000,
+                "Home Renovation",
+                720,
+                0,
+            ),
+            (
+                created_accounts[1]["account_id"],
+                "Bob Tanner",
+                10000,
+                "Car Purchase",
+                650,
+                5,
+            ),
+            (
+                created_accounts[2]["account_id"],
+                "Carol Nash",
+                200000,
+                "Business Expansion",
+                780,
+                10,
+            ),
+            (created_accounts[3]["account_id"], "David Kim", 5000, "Personal", 580, 0),
         ]
         for acc_id, name, amt, purpose, cs, urgency in loan_data:
             self.apply_loan(acc_id, name, amt, purpose, cs, urgency, user="system")
@@ -145,7 +181,9 @@ class BankingService:
     # ─────────────────────────────────────────────
     # ACCOUNT MANAGEMENT
     # ─────────────────────────────────────────────
-    def create_account(self, owner_name, email, account_type, initial_deposit, user="unknown"):
+    def create_account(
+        self, owner_name, email, account_type, initial_deposit, user="unknown"
+    ):
         acc = Account(owner_name, email, account_type, initial_deposit)
         acc_dict = acc.to_dict()
 
@@ -165,9 +203,17 @@ class BankingService:
 
         # Record initial deposit as transaction
         if initial_deposit > 0:
-            self._record_transaction(acc.account_id, 'deposit', initial_deposit, initial_deposit, "Initial deposit")
+            self._record_transaction(
+                acc.account_id,
+                "deposit",
+                initial_deposit,
+                initial_deposit,
+                "Initial deposit",
+            )
 
-        self._audit(user, "ACCOUNT_CREATE", f"Created account {acc.account_id} for {owner_name}")
+        self._audit(
+            user, "ACCOUNT_CREATE", f"Created account {acc.account_id} for {owner_name}"
+        )
         return acc_dict
 
     def get_account(self, account_id):
@@ -181,8 +227,10 @@ class BankingService:
     def freeze_account(self, account_id, user="unknown"):
         acc = self.account_table.get(account_id)
         if acc:
-            acc['status'] = 'frozen'
-            self._audit(user, "ACCOUNT_FREEZE", f"Froze account {account_id}", "warning")
+            acc["status"] = "frozen"
+            self._audit(
+                user, "ACCOUNT_FREEZE", f"Froze account {account_id}", "warning"
+            )
             return True
         return False
 
@@ -193,7 +241,7 @@ class BankingService:
         acc = self.account_table.get(account_id)
         if not acc:
             return {"success": False, "error": "Account not found"}
-        if acc['status'] != 'active':
+        if acc["status"] != "active":
             return {"success": False, "error": "Account is not active"}
         if amount <= 0:
             return {"success": False, "error": "Amount must be positive"}
@@ -203,69 +251,94 @@ class BankingService:
         if lock:
             lock.acquire()
         try:
-            prev_balance = acc['balance']
-            acc['balance'] += amount
-            acc['balance'] = round(acc['balance'], 2)
+            prev_balance = acc["balance"]
+            acc["balance"] += amount
+            acc["balance"] = round(acc["balance"], 2)
 
             # DSA: Linked List — O(1) prepend
-            txn = self._record_transaction(account_id, 'deposit', amount, acc['balance'], description or "Deposit")
+            txn = self._record_transaction(
+                account_id, "deposit", amount, acc["balance"], description or "Deposit"
+            )
 
             # DSA: Stack — push undo snapshot O(1)
-            self.undo_stacks[account_id].push({
-                "type": "deposit", "amount": amount,
-                "prev_balance": prev_balance,
-                "transaction_id": txn.transaction_id,
-                "timestamp": txn.timestamp
-            })
+            self.undo_stacks[account_id].push(
+                {
+                    "type": "deposit",
+                    "amount": amount,
+                    "prev_balance": prev_balance,
+                    "transaction_id": txn.transaction_id,
+                    "timestamp": txn.timestamp,
+                }
+            )
         finally:
             if lock:
                 lock.release()
 
         self._audit(user, "DEPOSIT", f"Deposited ${amount} to {account_id}")
-        return {"success": True, "balance": acc['balance'], "transaction_id": txn.transaction_id}
+        return {
+            "success": True,
+            "balance": acc["balance"],
+            "transaction_id": txn.transaction_id,
+        }
 
     def withdraw(self, account_id, amount, description="", user="unknown"):
         acc = self.account_table.get(account_id)
         if not acc:
             return {"success": False, "error": "Account not found"}
-        if acc['status'] != 'active':
+        if acc["status"] != "active":
             return {"success": False, "error": "Account is not active"}
         if amount <= 0:
             return {"success": False, "error": "Amount must be positive"}
-        if acc['balance'] < amount:
+        if acc["balance"] < amount:
             return {"success": False, "error": "Insufficient funds"}
 
         lock = self.balance_locks.get(account_id)
         if lock:
             lock.acquire()
         try:
-            prev_balance = acc['balance']
-            acc['balance'] -= amount
-            acc['balance'] = round(acc['balance'], 2)
+            prev_balance = acc["balance"]
+            acc["balance"] -= amount
+            acc["balance"] = round(acc["balance"], 2)
 
-            txn = self._record_transaction(account_id, 'withdrawal', amount, acc['balance'], description or "Withdrawal")
+            txn = self._record_transaction(
+                account_id,
+                "withdrawal",
+                amount,
+                acc["balance"],
+                description or "Withdrawal",
+            )
 
             # DSA: Stack — push undo snapshot O(1)
-            self.undo_stacks[account_id].push({
-                "type": "withdrawal", "amount": amount,
-                "prev_balance": prev_balance,
-                "transaction_id": txn.transaction_id,
-                "timestamp": txn.timestamp
-            })
+            self.undo_stacks[account_id].push(
+                {
+                    "type": "withdrawal",
+                    "amount": amount,
+                    "prev_balance": prev_balance,
+                    "transaction_id": txn.transaction_id,
+                    "timestamp": txn.timestamp,
+                }
+            )
         finally:
             if lock:
                 lock.release()
 
         self._audit(user, "WITHDRAWAL", f"Withdrew ${amount} from {account_id}")
-        return {"success": True, "balance": acc['balance'], "transaction_id": txn.transaction_id}
+        return {
+            "success": True,
+            "balance": acc["balance"],
+            "transaction_id": txn.transaction_id,
+        }
 
     def transfer(self, from_id, to_id, amount, user="unknown"):
         """Transfer money and register in compliance graph."""
         if amount > 50000:
-            return {"success": False, "error": "Transfer exceeds maximum limit of $50,000"}
+            return {
+                "success": False,
+                "error": "Transfer exceeds maximum limit of $50,000",
+            }
 
         w_result = self.withdraw(from_id, amount, f"Transfer to {to_id}", user)
-        if not w_result['success']:
+        if not w_result["success"]:
             return w_result
         d_result = self.deposit(to_id, amount, f"Transfer from {from_id}", user)
 
@@ -274,7 +347,11 @@ class BankingService:
             self.compliance_graph.add_transfer(from_id, to_id, amount)
 
         self._audit(user, "TRANSFER", f"Transfer ${amount} from {from_id} to {to_id}")
-        return {"success": True, "from_balance": w_result['balance'], "to_balance": d_result['balance']}
+        return {
+            "success": True,
+            "from_balance": w_result["balance"],
+            "to_balance": d_result["balance"],
+        }
 
     def undo_last_transaction(self, account_id, user="unknown"):
         """
@@ -284,17 +361,27 @@ class BankingService:
             return {"success": False, "error": "No undo stack"}
 
         stack = self.undo_stacks[account_id]
-        op = stack.pop()    # O(1)
+        op = stack.pop()  # O(1)
         if not op:
             return {"success": False, "error": "Nothing to undo"}
 
         acc = self.account_table.get(account_id)
         # Reverse the operation
-        acc['balance'] = op['prev_balance']
-        self._record_transaction(account_id, 'undo', op['amount'], acc['balance'],
-                                 f"UNDO: {op['type']} of ${op['amount']}")
-        self._audit(user, "UNDO", f"Undid {op['type']} of ${op['amount']} on {account_id}", "warning")
-        return {"success": True, "balance": acc['balance'], "reversed": op}
+        acc["balance"] = op["prev_balance"]
+        self._record_transaction(
+            account_id,
+            "undo",
+            op["amount"],
+            acc["balance"],
+            f"UNDO: {op['type']} of ${op['amount']}",
+        )
+        self._audit(
+            user,
+            "UNDO",
+            f"Undid {op['type']} of ${op['amount']} on {account_id}",
+            "warning",
+        )
+        return {"success": True, "balance": acc["balance"], "reversed": op}
 
     def enqueue_transaction(self, transaction):
         """DSA: Queue — enqueue pending transaction O(1)"""
@@ -305,21 +392,32 @@ class BankingService:
         results = []
         while not self.transaction_queue.is_empty():
             txn = self.transaction_queue.dequeue()
-            if txn['type'] == 'deposit':
-                r = self.deposit(txn['account_id'], txn['amount'], user=user)
-            elif txn['type'] == 'withdrawal':
-                r = self.withdraw(txn['account_id'], txn['amount'], user=user)
+            if txn["type"] == "deposit":
+                r = self.deposit(txn["account_id"], txn["amount"], user=user)
+            elif txn["type"] == "withdrawal":
+                r = self.withdraw(txn["account_id"], txn["amount"], user=user)
             else:
                 r = {"success": False, "error": "Unknown type"}
-            r['transaction'] = txn
+            r["transaction"] = txn
             results.append(r)
         return results
 
     # ─────────────────────────────────────────────
     # LOANS — Priority Queue (Heap)
     # ─────────────────────────────────────────────
-    def apply_loan(self, account_id, owner_name, amount, purpose, credit_score, urgency=0, user="unknown"):
-        loan = LoanApplication(account_id, owner_name, amount, purpose, credit_score, urgency)
+    def apply_loan(
+        self,
+        account_id,
+        owner_name,
+        amount,
+        purpose,
+        credit_score,
+        urgency=0,
+        user="unknown",
+    ):
+        loan = LoanApplication(
+            account_id, owner_name, amount, purpose, credit_score, urgency
+        )
         loan_dict = loan.to_dict()
 
         # DSA: Priority Queue — insert O(log n)
@@ -332,15 +430,25 @@ class BankingService:
         loan = self.loan_queue.dequeue_loan()
         if not loan:
             return {"success": False, "error": "No pending loans"}
-        loan['status'] = decision
-        loan['processed_at'] = datetime.now().isoformat()
+        loan["status"] = decision
+        loan["processed_at"] = datetime.now().isoformat()
         self.processed_loans.append(loan)
 
-        if decision == 'approved':
+        if decision == "approved":
             # Credit the loan amount to account
-            self.deposit(loan['account_id'], loan['amount'], f"Loan approved: {loan['loan_id']}", user)
+            self.deposit(
+                loan["account_id"],
+                loan["amount"],
+                f"Loan approved: {loan['loan_id']}",
+                user,
+            )
 
-        self._audit(user, f"LOAN_{decision.upper()}", f"Loan {loan['loan_id']} {decision}", "warning" if decision == 'rejected' else "info")
+        self._audit(
+            user,
+            f"LOAN_{decision.upper()}",
+            f"Loan {loan['loan_id']} {decision}",
+            "warning" if decision == "rejected" else "info",
+        )
         return {"success": True, "loan": loan}
 
     def get_pending_loans(self):
@@ -360,7 +468,7 @@ class BankingService:
             "cycles_detected": cycles,
             "risk_scores": risk_scores,
             "high_risk_accounts": high_risk,
-            "graph": graph_data
+            "graph": graph_data,
         }
 
     # ─────────────────────────────────────────────
@@ -368,9 +476,9 @@ class BankingService:
     # ─────────────────────────────────────────────
     def get_analytics(self):
         accounts = self.account_table.all_accounts()
-        total_balance = sum(a['balance'] for a in accounts)
+        total_balance = sum(a["balance"] for a in accounts)
         total_accounts = len(accounts)
-        active = sum(1 for a in accounts if a['status'] == 'active')
+        active = sum(1 for a in accounts if a["status"] == "active")
         pending_loans = self.loan_queue.size()
 
         # Collect all transaction totals
@@ -390,7 +498,7 @@ class BankingService:
             "pending_loans": pending_loans,
             "processed_loans": len(self.processed_loans),
             "audit_logs": len(self.audit_logs),
-            "queued_transactions": self.transaction_queue.size()
+            "queued_transactions": self.transaction_queue.size(),
         }
 
     def get_transaction_history(self, account_id, limit=20):
@@ -405,9 +513,9 @@ class BankingService:
         for acc_id, hist in self.transaction_histories.items():
             txns = hist.to_list()
             for t in txns:
-                t['account_id'] = acc_id
+                t["account_id"] = acc_id
             all_txns.extend(txns)
-        all_txns.sort(key=lambda x: x['timestamp'], reverse=True)
+        all_txns.sort(key=lambda x: x["timestamp"], reverse=True)
         return all_txns[:limit]
 
     # ─────────────────────────────────────────────
@@ -422,14 +530,16 @@ class BankingService:
     # ─────────────────────────────────────────────
     # HELPERS
     # ─────────────────────────────────────────────
-    def _record_transaction(self, account_id, type_, amount, balance_after, description):
+    def _record_transaction(
+        self, account_id, type_, amount, balance_after, description
+    ):
         node = TransactionNode(
             transaction_id=gen_id("TXN"),
             type_=type_,
             amount=amount,
             balance_after=balance_after,
             timestamp=datetime.now().isoformat(),
-            description=description
+            description=description,
         )
         # DSA: Linked List prepend O(1)
         self.transaction_histories[account_id].prepend(node)
@@ -441,8 +551,8 @@ class BankingService:
         # Sovereign-style immutable chain: hash with previous hash
         payload = f"{self._last_audit_hash}|{base['timestamp']}|{base['user']}|{base['action']}|{base['details']}|{base['severity']}"
         h = hashlib.sha256(payload.encode("utf-8")).hexdigest()
-        base['prev_hash'] = self._last_audit_hash
-        base['hash'] = h
+        base["prev_hash"] = self._last_audit_hash
+        base["hash"] = h
         self._last_audit_hash = h
         self.audit_logs.append(base)
 

@@ -57,7 +57,7 @@ def fuzzy_score(query, target, threshold=3):
         if query in word or word in query:
             return 70
     # Fuzzy (Levenshtein)
-    dist = levenshtein(query, target[:len(query) + 3])
+    dist = levenshtein(query, target[: len(query) + 3])
     if dist <= threshold:
         return max(0, 60 - dist * 15)
     return 0
@@ -69,7 +69,7 @@ class SearchEngine:
         self.search_history = []
         self.saved_searches = []
         self.MAX_HISTORY = 20
-        self._last_results = []   # Cache last results for export
+        self._last_results = []  # Cache last results for export
 
     def search(self, query, filters=None, limit=20):
         """
@@ -83,7 +83,7 @@ class SearchEngine:
         Returns ranked list of results across all entity types.
         """
         if not query or len(query.strip()) < 1:
-            return {'results': [], 'total': 0, 'query': query}
+            return {"results": [], "total": 0, "query": query}
 
         query = query.strip()
         filters = filters or {}
@@ -92,27 +92,27 @@ class SearchEngine:
         self._record_search(query)
 
         results = []
-        entity = filters.get('entity', None)
+        entity = filters.get("entity", None)
 
-        if entity in (None, 'account'):
+        if entity in (None, "account"):
             results += self._search_accounts(query, filters)
 
-        if entity in (None, 'transaction'):
+        if entity in (None, "transaction"):
             results += self._search_transactions(query, filters)
 
-        if entity in (None, 'loan'):
+        if entity in (None, "loan"):
             results += self._search_loans(query, filters)
 
         # Sort by relevance score (descending)
-        results.sort(key=lambda x: x['relevance'], reverse=True)
+        results.sort(key=lambda x: x["relevance"], reverse=True)
         results = results[:limit]
-        self._last_results = results   # Cache for export
+        self._last_results = results  # Cache for export
 
         return {
-            'results': results,
-            'total': len(results),
-            'query': query,
-            'filters': filters
+            "results": results,
+            "total": len(results),
+            "query": query,
+            "filters": filters,
         }
 
     def _search_accounts(self, query, filters):
@@ -121,36 +121,41 @@ class SearchEngine:
 
         for acc in accounts:
             scores = [
-                fuzzy_score(query, acc.get('owner_name', '')),
-                fuzzy_score(query, acc.get('email', '')),
-                fuzzy_score(query, acc.get('account_id', '')),
-                fuzzy_score(query, acc.get('account_type', '')),
+                fuzzy_score(query, acc.get("owner_name", "")),
+                fuzzy_score(query, acc.get("email", "")),
+                fuzzy_score(query, acc.get("account_id", "")),
+                fuzzy_score(query, acc.get("account_type", "")),
             ]
             best = max(scores)
             if best < 30:
                 continue
 
             # Apply filters
-            if filters.get('status') and acc.get('status') != filters['status']:
+            if filters.get("status") and acc.get("status") != filters["status"]:
                 continue
-            if filters.get('account_type') and acc.get('account_type') != filters['account_type']:
+            if (
+                filters.get("account_type")
+                and acc.get("account_type") != filters["account_type"]
+            ):
                 continue
-            bal = acc.get('balance', 0)
-            if filters.get('amount_min') and bal < float(filters['amount_min']):
+            bal = acc.get("balance", 0)
+            if filters.get("amount_min") and bal < float(filters["amount_min"]):
                 continue
-            if filters.get('amount_max') and bal > float(filters['amount_max']):
+            if filters.get("amount_max") and bal > float(filters["amount_max"]):
                 continue
 
-            results.append({
-                'entity': 'account',
-                'relevance': best,
-                'id': acc['account_id'],
-                'title': acc['owner_name'],
-                'subtitle': f"{acc['account_type'].title()} · {acc['email']}",
-                'meta': f"Balance: ${acc['balance']:,.2f}",
-                'status': acc['status'],
-                'data': acc
-            })
+            results.append(
+                {
+                    "entity": "account",
+                    "relevance": best,
+                    "id": acc["account_id"],
+                    "title": acc["owner_name"],
+                    "subtitle": f"{acc['account_type'].title()} · {acc['email']}",
+                    "meta": f"Balance: ${acc['balance']:,.2f}",
+                    "status": acc["status"],
+                    "data": acc,
+                }
+            )
         return results
 
     def _search_transactions(self, query, filters):
@@ -158,51 +163,53 @@ class SearchEngine:
         results = []
 
         for t in txns:
-            desc = t.get('description', '')
-            txn_id = t.get('transaction_id', '')
-            acc_id = t.get('account_id', '')
-            typ = t.get('type', '')
+            desc = t.get("description", "")
+            txn_id = t.get("transaction_id", "")
+            acc_id = t.get("account_id", "")
+            typ = t.get("type", "")
 
             scores = [
                 fuzzy_score(query, desc),
                 fuzzy_score(query, txn_id),
                 fuzzy_score(query, acc_id),
                 fuzzy_score(query, typ),
-                fuzzy_score(query, str(t.get('amount', ''))),
+                fuzzy_score(query, str(t.get("amount", ""))),
             ]
             best = max(scores)
             if best < 30:
                 continue
 
             # Apply filters
-            amount = t.get('amount', 0)
-            if filters.get('amount_min') and amount < float(filters['amount_min']):
+            amount = t.get("amount", 0)
+            if filters.get("amount_min") and amount < float(filters["amount_min"]):
                 continue
-            if filters.get('amount_max') and amount > float(filters['amount_max']):
+            if filters.get("amount_max") and amount > float(filters["amount_max"]):
                 continue
-            if filters.get('date_from'):
+            if filters.get("date_from"):
                 try:
-                    if t['timestamp'] < filters['date_from']:
+                    if t["timestamp"] < filters["date_from"]:
                         continue
                 except Exception:
                     pass
-            if filters.get('date_to'):
+            if filters.get("date_to"):
                 try:
-                    if t['timestamp'] > filters['date_to']:
+                    if t["timestamp"] > filters["date_to"]:
                         continue
                 except Exception:
                     pass
 
-            results.append({
-                'entity': 'transaction',
-                'relevance': best,
-                'id': txn_id,
-                'title': f"{typ.title()} — ${amount:,.2f}",
-                'subtitle': desc or 'No description',
-                'meta': t['timestamp'][:16].replace('T', ' '),
-                'status': typ,
-                'data': t
-            })
+            results.append(
+                {
+                    "entity": "transaction",
+                    "relevance": best,
+                    "id": txn_id,
+                    "title": f"{typ.title()} — ${amount:,.2f}",
+                    "subtitle": desc or "No description",
+                    "meta": t["timestamp"][:16].replace("T", " "),
+                    "status": typ,
+                    "data": t,
+                }
+            )
         return results
 
     def _search_loans(self, query, filters):
@@ -213,36 +220,38 @@ class SearchEngine:
 
         for loan in all_loans:
             scores = [
-                fuzzy_score(query, loan.get('owner_name', '')),
-                fuzzy_score(query, loan.get('loan_id', '')),
-                fuzzy_score(query, loan.get('purpose', '')),
-                fuzzy_score(query, loan.get('account_id', '')),
-                fuzzy_score(query, loan.get('status', '')),
+                fuzzy_score(query, loan.get("owner_name", "")),
+                fuzzy_score(query, loan.get("loan_id", "")),
+                fuzzy_score(query, loan.get("purpose", "")),
+                fuzzy_score(query, loan.get("account_id", "")),
+                fuzzy_score(query, loan.get("status", "")),
             ]
             best = max(scores)
             if best < 30:
                 continue
 
-            if filters.get('status') and loan.get('status') != filters['status']:
+            if filters.get("status") and loan.get("status") != filters["status"]:
                 continue
 
-            results.append({
-                'entity': 'loan',
-                'relevance': best,
-                'id': loan['loan_id'],
-                'title': f"{loan['owner_name']} — ${loan['amount']:,.2f}",
-                'subtitle': f"{loan['purpose']} · Credit: {loan['credit_score']}",
-                'meta': loan['status'].title(),
-                'status': loan['status'],
-                'data': loan
-            })
+            results.append(
+                {
+                    "entity": "loan",
+                    "relevance": best,
+                    "id": loan["loan_id"],
+                    "title": f"{loan['owner_name']} — ${loan['amount']:,.2f}",
+                    "subtitle": f"{loan['purpose']} · Credit: {loan['credit_score']}",
+                    "meta": loan["status"].title(),
+                    "status": loan["status"],
+                    "data": loan,
+                }
+            )
         return results
 
     def _record_search(self, query):
         """Keep recent search history for suggestions."""
         if query not in self.search_history:
             self.search_history.insert(0, query)
-            self.search_history = self.search_history[:self.MAX_HISTORY]
+            self.search_history = self.search_history[: self.MAX_HISTORY]
 
     def get_suggestions(self, partial, limit=5):
         """Return search suggestions from history + account names."""
@@ -250,19 +259,23 @@ class SearchEngine:
         suggestions = []
         for h in self.search_history:
             if partial in h.lower():
-                suggestions.append({'text': h, 'source': 'history'})
+                suggestions.append({"text": h, "source": "history"})
         for acc in self.bank.get_all_accounts()[:20]:
-            name = acc['owner_name']
-            if partial in name.lower() and name not in [s['text'] for s in suggestions]:
-                suggestions.append({'text': name, 'source': 'account'})
+            name = acc["owner_name"]
+            if partial in name.lower() and name not in [s["text"] for s in suggestions]:
+                suggestions.append({"text": name, "source": "account"})
         return suggestions[:limit]
 
     def save_search(self, name, query, filters):
         """Persist a named search for quick re-use."""
-        entry = {'name': name, 'query': query, 'filters': filters,
-                 'created_at': datetime.now().isoformat()}
+        entry = {
+            "name": name,
+            "query": query,
+            "filters": filters,
+            "created_at": datetime.now().isoformat(),
+        }
         # Replace if name exists
-        self.saved_searches = [s for s in self.saved_searches if s['name'] != name]
+        self.saved_searches = [s for s in self.saved_searches if s["name"] != name]
         self.saved_searches.insert(0, entry)
         return entry
 
@@ -270,48 +283,59 @@ class SearchEngine:
         return self.saved_searches
 
     def delete_saved_search(self, name):
-        self.saved_searches = [s for s in self.saved_searches if s['name'] != name]
+        self.saved_searches = [s for s in self.saved_searches if s["name"] != name]
 
-    def export_results(self, results, fmt='csv'):
+    def export_results(self, results, fmt="csv"):
         """
         Export search results to CSV string or JSON.
         fmt: 'csv' | 'json'
         """
-        if fmt == 'json':
+        if fmt == "json":
             import json
-            return json.dumps([r['data'] for r in results], indent=2, default=str)
+
+            return json.dumps([r["data"] for r in results], indent=2, default=str)
 
         # CSV export
         if not results:
-            return 'No results'
+            return "No results"
         lines = []
         # Header — entity-specific columns
-        entity = results[0]['entity'] if results else 'account'
-        if entity == 'account':
-            lines.append('account_id,owner_name,email,type,balance,status,created_at')
+        entity = results[0]["entity"] if results else "account"
+        if entity == "account":
+            lines.append("account_id,owner_name,email,type,balance,status,created_at")
             for r in results:
-                d = r['data']
-                lines.append(f"{d.get('account_id','')},{d.get('owner_name','')},{d.get('email','')},{d.get('account_type','')},{d.get('balance','')},{d.get('status','')},{d.get('created_at','')[:10]}")
-        elif entity == 'transaction':
-            lines.append('transaction_id,type,amount,balance_after,description,timestamp')
+                d = r["data"]
+                lines.append(
+                    f"{d.get('account_id', '')},{d.get('owner_name', '')},{d.get('email', '')},{d.get('account_type', '')},{d.get('balance', '')},{d.get('status', '')},{d.get('created_at', '')[:10]}"
+                )
+        elif entity == "transaction":
+            lines.append(
+                "transaction_id,type,amount,balance_after,description,timestamp"
+            )
             for r in results:
-                d = r['data']
-                lines.append(f"{d.get('transaction_id','')},{d.get('type','')},{d.get('amount','')},{d.get('balance_after','')},{d.get('description','').replace(',', ';')},{d.get('timestamp','')[:16]}")
-        elif entity == 'loan':
-            lines.append('loan_id,owner_name,amount,purpose,credit_score,status,applied_at')
+                d = r["data"]
+                lines.append(
+                    f"{d.get('transaction_id', '')},{d.get('type', '')},{d.get('amount', '')},{d.get('balance_after', '')},{d.get('description', '').replace(',', ';')},{d.get('timestamp', '')[:16]}"
+                )
+        elif entity == "loan":
+            lines.append(
+                "loan_id,owner_name,amount,purpose,credit_score,status,applied_at"
+            )
             for r in results:
-                d = r['data']
-                lines.append(f"{d.get('loan_id','')},{d.get('owner_name','')},{d.get('amount','')},{d.get('purpose','')},{d.get('credit_score','')},{d.get('status','')},{d.get('applied_at','')[:10]}")
+                d = r["data"]
+                lines.append(
+                    f"{d.get('loan_id', '')},{d.get('owner_name', '')},{d.get('amount', '')},{d.get('purpose', '')},{d.get('credit_score', '')},{d.get('status', '')},{d.get('applied_at', '')[:10]}"
+                )
         else:
-            lines.append('id,title,subtitle,status')
+            lines.append("id,title,subtitle,status")
             for r in results:
                 lines.append(f"{r['id']},{r['title']},{r['subtitle']},{r['status']}")
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     def get_search_analytics(self):
         """Return stats about recent searches."""
         return {
-            'total_searches': len(self.search_history),
-            'recent': self.search_history[:5],
-            'saved_count': len(self.saved_searches)
+            "total_searches": len(self.search_history),
+            "recent": self.search_history[:5],
+            "saved_count": len(self.saved_searches),
         }
