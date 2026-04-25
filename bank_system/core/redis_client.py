@@ -96,6 +96,68 @@ class FakeRedis:
     def scard(self, key):
         return len(self._sets.get(key, set()))
 
+    # ── List operations (for Redis DSA Stack/Queue) ──
+
+    def _get_list(self, key):
+        if key not in self._store or not isinstance(self._store[key], list):
+            self._store[key] = []
+        return self._store[key]
+
+    def lpush(self, key, *values):
+        lst = self._get_list(key)
+        for v in values:
+            lst.insert(0, v)
+        return len(lst)
+
+    def rpush(self, key, *values):
+        lst = self._get_list(key)
+        lst.extend(values)
+        return len(lst)
+
+    def lpop(self, key):
+        lst = self._get_list(key)
+        if lst:
+            return lst.pop(0)
+        return None
+
+    def lindex(self, key, index):
+        lst = self._get_list(key)
+        if 0 <= index < len(lst):
+            return lst[index]
+        return None
+
+    def llen(self, key):
+        lst = self._get_list(key)
+        return len(lst)
+
+    def lrange(self, key, start, end):
+        lst = self._get_list(key)
+        return lst[start:end + 1]
+
+    def ltrim(self, key, start, end):
+        lst = self._get_list(key)
+        self._store[key] = lst[start:end + 1]
+
+    # ── Extended Sorted Set operations (for Redis DSA PriorityQueue) ──
+
+    def zpopmin(self, key, count=1):
+        ss = self._sorted_sets.get(key, {})
+        if not ss:
+            return []
+        sorted_items = sorted(ss.items(), key=lambda x: float(x[1]))
+        result = sorted_items[:count]
+        for member, _ in result:
+            del ss[member]
+        return [(m, float(s)) for m, s in result]
+
+    def zrange(self, key, start, end, withscores=False):
+        ss = self._sorted_sets.get(key, {})
+        sorted_items = sorted(ss.items(), key=lambda x: float(x[1]))
+        sliced = sorted_items[start:end + 1] if end >= 0 else sorted_items[start:]
+        if withscores:
+            return [(m, float(s)) for m, s in sliced]
+        return [m for m, _ in sliced]
+
     def ping(self):
         return True
 
