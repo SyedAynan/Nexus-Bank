@@ -242,3 +242,153 @@ class IPWhitelist(Base):
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     is_active = Column(Boolean, default=True, nullable=False)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# v4.0 — New Models for Architecture Upgrade
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class LedgerEntryType(StrEnum):
+    debit = "debit"
+    credit = "credit"
+
+
+class LedgerEntry(Base):
+    """
+    Double-entry accounting ledger. Every financial operation creates exactly
+    two entries: a debit (money out) and a credit (money in). The sum of all
+    entries for an account equals its balance — no direct balance mutation.
+
+    This replaces the old pattern of `account.balance += amount` with
+    proper auditable, reconcilable ledger entries.
+    """
+
+    __tablename__ = "ledger_entries"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False, index=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
+    entry_type = Column(SAEnum(LedgerEntryType), nullable=False)
+    amount = Column(Numeric(19, 4), nullable=False)
+    balance_after = Column(Numeric(19, 4), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), index=True)
+
+
+class KYCStatus(StrEnum):
+    pending = "pending"
+    in_review = "in_review"
+    approved = "approved"
+    rejected = "rejected"
+    expired = "expired"
+
+
+class KYCVerification(Base):
+    """
+    KYC (Know Your Customer) identity verification pipeline.
+    Tracks document submissions, provider responses, and risk assessments.
+    Supports multiple providers: Onfido, Jumio, Sumsub, etc.
+    """
+
+    __tablename__ = "kyc_verifications"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    status = Column(SAEnum(KYCStatus), default=KYCStatus.pending, nullable=False)
+    document_type = Column(String(50), nullable=True)  # passport, drivers_license, id_card
+    document_hash = Column(String(64), nullable=True)  # SHA-256 of document for dedup
+    provider = Column(String(50), nullable=True)  # onfido, jumio, sumsub
+    provider_ref = Column(String(128), nullable=True)  # External reference ID
+    risk_level = Column(String(10), default="medium")
+    rejection_reason = Column(Text, nullable=True)
+    verified_at = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+
+
+class FraudDecision(StrEnum):
+    approve = "approve"
+    flag = "flag"
+    block = "block"
+
+
+class FraudPrediction(Base):
+    """
+    ML model prediction audit trail. Stores every fraud score computation
+    for regulatory explainability (required by EU AI Act, US SR 11-7).
+    Includes model version, individual model scores, features used,
+    and inference latency for performance monitoring.
+    """
+
+    __tablename__ = "fraud_predictions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=True, index=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
+    model_version = Column(String(20), nullable=False)
+    composite_score = Column(Numeric(6, 4), nullable=False)
+    model_scores = Column(Text, nullable=False)  # JSON: {isolation_forest: 0.7, gbt: 0.3, ...}
+    features_used = Column(Text, nullable=True)  # JSON: feature vector for reproducibility
+    decision = Column(SAEnum(FraudDecision), nullable=False)
+    latency_ms = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), index=True)
+
+
+class TransactionEvent(Base):
+    """
+    Event sourcing for transactions. Instead of storing only final state,
+    we record every state change as an immutable event. This enables:
+    - Full audit trail reconstruction
+    - Time-travel debugging
+    - Event replay for system recovery
+    - CQRS read model rebuilding
+    """
+
+    __tablename__ = "transaction_events"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    aggregate_id = Column(String(64), nullable=False, index=True)  # Transaction or account ID
+    event_type = Column(String(50), nullable=False)  # txn.initiated, txn.validated, txn.completed
+    event_data = Column(Text, nullable=False)  # JSON payload
+    sequence_num = Column(Integer, nullable=False)
+    source_service = Column(String(50), default="banking-service")
+    correlation_id = Column(String(64), nullable=True)  # Links related events across services
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), index=True)
+
+    __table_args__ = (
+        UniqueConstraint("aggregate_id", "sequence_num", name="uq_event_aggregate_seq"),
+    )
+
+
+class PaymentFrequency(StrEnum):
+    daily = "daily"
+    weekly = "weekly"
+    biweekly = "biweekly"
+    monthly = "monthly"
+    quarterly = "quarterly"
+
+
+class ScheduledPayment(Base):
+    """
+    Recurring payment scheduler. Supports daily, weekly, biweekly,
+    monthly, and quarterly frequencies. Integrates with the transaction
+    queue (DSA: Queue) for FIFO processing on trigger.
+    """
+
+    __tablename__ = "scheduled_payments"
+
+    id = Column(Integer, primary_key=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
+    recipient_account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True)
+    recipient_external = Column(String(255), nullable=True)  # External account/IBAN
+    amount = Column(Numeric(19, 4), nullable=False)
+    currency = Column(String(10), default="USD")
+    frequency = Column(SAEnum(PaymentFrequency), nullable=False)
+    description = Column(String(255), default="")
+    next_run_at = Column(DateTime, nullable=False)
+    last_run_at = Column(DateTime, nullable=True)
+    run_count = Column(Integer, default=0)
+    max_runs = Column(Integer, nullable=True)  # NULL = unlimited
+    status = Column(String(20), default="active")  # active, paused, completed, cancelled
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+

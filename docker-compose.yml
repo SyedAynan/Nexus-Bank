@@ -1,5 +1,6 @@
 # ============================================================
-# NEXA — Beyond Fintech | Docker Compose (Development)
+# NEXA v4.0 — Beyond Fintech | Docker Compose (Development)
+# Architecture: Monolith + Event Bus + ML Fraud + Redis DSA
 # ============================================================
 
 services:
@@ -13,6 +14,14 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://nexa:nexa@db:5432/nexa
+      - REDIS_URL=redis://redis:6379/0
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=nexa_graph_2026
+      - EVENT_BUS_MODE=in-process
+      - ML_MODEL_DIR=bank_system/ml_models
     command: >
       uvicorn bank_system.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
@@ -55,7 +64,7 @@ services:
       retries: 5
       start_period: 10s
 
-  # ── Redis Cache ──
+  # ── Redis Cache + DSA Persistence ──
   redis:
     image: redis:7-alpine
     container_name: nexa-redis
@@ -72,6 +81,45 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # ── Neo4j Graph Database (AML / Compliance) ──
+  neo4j:
+    image: neo4j:5-community
+    container_name: nexa-neo4j
+    restart: unless-stopped
+    ports:
+      - "7474:7474"   # Browser UI
+      - "7687:7687"   # Bolt protocol
+    environment:
+      NEO4J_AUTH: neo4j/nexa_graph_2026
+      NEO4J_PLUGINS: '["graph-data-science"]'
+      NEO4J_server_memory_heap_initial__size: 256m
+      NEO4J_server_memory_heap_max__size: 512m
+    volumes:
+      - neo4j_data:/data
+    networks:
+      - nexa-net
+    healthcheck:
+      test: [ "CMD", "neo4j", "status" ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ── Redis Commander (Dev debugging UI) ──
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: nexa-redis-commander
+    ports:
+      - "8081:8081"
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    depends_on:
+      - redis
+    networks:
+      - nexa-net
+    profiles:
+      - debug   # Only starts with: docker compose --profile debug up
 
   # ── React Frontend (Development) ──
   frontend:
@@ -94,9 +142,12 @@ volumes:
     driver: local
   redis_data:
     driver: local
+  neo4j_data:
+    driver: local
   frontend_node_modules:
     driver: local
 
 networks:
   nexa-net:
     driver: bridge
+

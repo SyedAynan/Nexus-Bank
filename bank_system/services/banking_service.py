@@ -1,6 +1,7 @@
 """
-Service Layer: BankingService
-Integrates all 7 DSA structures into real banking operations.
+Service Layer: BankingService (v4.0)
+Integrates all 9 DSA structures + ML Fraud Engine + Event Bus
+into real banking operations.
 """
 
 from datetime import datetime
@@ -40,7 +41,29 @@ try:
 except ImportError:
     from models.models import Account, AuditLog, LoanApplication, User, gen_id
 import hashlib
+import logging
 import threading
+
+# v4.0 — ML Fraud Engine + Event Bus
+try:
+    from bank_system.services.ml_fraud_engine import MLFraudEngine
+except ImportError:
+    MLFraudEngine = None
+
+try:
+    from bank_system.core.event_bus import EventType, get_event_bus
+except ImportError:
+    EventType = None
+    get_event_bus = None
+
+try:
+    from bank_system.core.redis_dsa import create_redis_dsa
+    from bank_system.core.redis_client import get_redis
+except ImportError:
+    create_redis_dsa = None
+    get_redis = None
+
+logger = logging.getLogger("nexa.banking")
 
 
 class BankingService:
@@ -94,6 +117,34 @@ class BankingService:
         # Locks for multi-threaded safety
         self.balance_locks = {}  # account_id -> threading.Lock
         self._global_lock = threading.Lock()  # For creating accounts/locks safely
+
+        # ── v4.0: ML Fraud Engine ──
+        self.ml_fraud_engine = None
+        if MLFraudEngine is not None:
+            try:
+                self.ml_fraud_engine = MLFraudEngine(banking_service=self)
+                logger.info("ML Fraud Engine initialized (Isolation Forest + GBT ensemble)")
+            except Exception as e:
+                logger.warning(f"ML Fraud Engine init failed (non-fatal): {e}")
+
+        # ── v4.0: Event Bus ──
+        self.event_bus = None
+        if get_event_bus is not None:
+            try:
+                self.event_bus = get_event_bus()
+                logger.info("Event bus connected (in-process mode)")
+            except Exception as e:
+                logger.warning(f"Event bus init failed (non-fatal): {e}")
+
+        # ── v4.0: Redis DSA Cache ──
+        self.redis_dsa = None
+        if create_redis_dsa is not None and get_redis is not None:
+            try:
+                redis_client = get_redis()
+                self.redis_dsa = create_redis_dsa(redis_client)
+                logger.info("Redis DSA persistence layer initialized")
+            except Exception as e:
+                logger.warning(f"Redis DSA init failed (non-fatal): {e}")
 
         # Initialize default users
         self._seed_users()
@@ -339,11 +390,64 @@ class BankingService:
             self.compliance_graph.add_transfer(from_id, to_id, amount)
 
         self._audit(user, "TRANSFER", f"Transfer ${amount} from {from_id} to {to_id}")
-        return {
+
+        # ── v4.0: ML Fraud Scoring ──
+        ml_result = None
+        if self.ml_fraud_engine:
+            try:
+                # Get rule-based score first
+                from bank_system.services.fraud_engine import FraudEngine
+                if hasattr(self, '_fraud_engine'):
+                    rule_result = self._fraud_engine.score_transaction(
+                        from_id, amount, "transfer"
+                    )
+                    rule_score = rule_result.get("composite_score", 0)
+                    rule_signals = rule_result.get("signals", {})
+                else:
+                    rule_score = 0
+                    rule_signals = {}
+
+                ml_result = self.ml_fraud_engine.score_transaction(
+                    account_id=from_id,
+                    amount=amount,
+                    txn_type="transfer",
+                    rule_score=rule_score,
+                    rule_signals=rule_signals,
+                )
+            except Exception as e:
+                logger.warning(f"ML fraud scoring failed (non-fatal): {e}")
+
+        # ── v4.0: Publish Event ──
+        if self.event_bus:
+            try:
+                self.event_bus.emit(
+                    "transfer.completed",
+                    data={
+                        "from_id": from_id,
+                        "to_id": to_id,
+                        "amount": amount,
+                        "from_balance": w_result["balance"],
+                        "to_balance": d_result["balance"],
+                        "ml_fraud_score": ml_result.get("ensemble_score") if ml_result else None,
+                    },
+                    source="banking-service",
+                )
+            except Exception as e:
+                logger.warning(f"Event publish failed (non-fatal): {e}")
+
+        result = {
             "success": True,
             "from_balance": w_result["balance"],
             "to_balance": d_result["balance"],
         }
+        if ml_result:
+            result["ml_fraud_assessment"] = {
+                "ensemble_score": ml_result["ensemble_score"],
+                "severity": ml_result["severity"],
+                "decision": ml_result["decision"],
+                "model_version": ml_result["model_version"],
+            }
+        return result
 
     def undo_last_transaction(self, account_id, user="unknown"):
         """

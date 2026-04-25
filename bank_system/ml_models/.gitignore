@@ -1,0 +1,5 @@
+# ML models are stored here after training.
+# This directory is auto-created by the ML Fraud Engine.
+# Do not commit trained model files (.pkl) to version control.
+*.pkl
+*.joblib
