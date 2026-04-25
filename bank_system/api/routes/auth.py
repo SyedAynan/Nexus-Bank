@@ -84,9 +84,12 @@ def login(
     redis = get_redis()
     ip, ua = get_ip_ua(request)
 
+    logger.info(f"[LOGIN] Attempt for username='{form_data.username}' from ip={ip}")
+
     user = db.query(User).filter(User.username == form_data.username).first()
 
     if not user:
+        logger.warning(f"[LOGIN] User NOT FOUND: '{form_data.username}'")
         log_security_event(
             db,
             user=None,
@@ -97,6 +100,7 @@ def login(
             details="Unknown username",
         )
         raise HTTPException(status_code=400, detail="Incorrect username or password")
+
 
     if user.is_locked:
         raise HTTPException(status_code=403, detail="Account locked — contact support")
