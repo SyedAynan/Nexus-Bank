@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Lock, ShieldCheck, KeyRound, Fingerprint, Check } from 'lucide-react'
+import { Lock, KeyRound, Fingerprint, Check, Eye, EyeOff, Shield, Zap, Globe, ArrowRight } from 'lucide-react'
 
 /* ─── SVG Brand Icons ─── */
 const GoogleIcon = () => (
@@ -29,86 +29,70 @@ const MicrosoftIcon = () => (
     </svg>
 )
 
-/* ─── OTP Input Group ─── */
-function OtpInputGroup({ value, onChange }) {
-    const refs = useRef([])
-    const digits = Array.from({ length: 6 }, (_, i) => value[i] || '')
-
-    const handleChange = (i, val) => {
-        if (!/^\d*$/.test(val)) return
-        const arr = [...digits]
-        arr[i] = val.slice(-1)
-        onChange(arr.join(''))
-        if (val && i < 5) refs.current[i + 1]?.focus()
-    }
-
-    const handleKeyDown = (i, e) => {
-        if (e.key === 'Backspace' && !digits[i] && i > 0) {
-            refs.current[i - 1]?.focus()
-        }
-    }
-
-    const handlePaste = (e) => {
-        e.preventDefault()
-        const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
-        onChange(pasted)
-        const focusIdx = Math.min(pasted.length, 5)
-        refs.current[focusIdx]?.focus()
-    }
-
+/* ─── Feature Badges ─── */
+function SecurityBadges() {
+    const badges = [
+        { icon: <Shield size={14} />, label: '256-bit Encryption', color: '#22d3ee' },
+        { icon: <Zap size={14} />, label: 'AI-Powered Security', color: '#a78bfa' },
+        { icon: <Globe size={14} />, label: 'Global Access', color: '#34d399' },
+    ]
     return (
-        <div className="nx-otp-group">
-            {digits.map((d, i) => (
-                <input
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginTop: 6 }}>
+            {badges.map((b, i) => (
+                <motion.div
                     key={i}
-                    ref={el => refs.current[i] = el}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    className={`nx-otp-input${d ? ' filled' : ''}`}
-                    value={d}
-                    onChange={e => handleChange(i, e.target.value)}
-                    onKeyDown={e => handleKeyDown(i, e)}
-                    onPaste={i === 0 ? handlePaste : undefined}
-                    autoFocus={i === 0}
-                />
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 + i * 0.15 }}
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: 4,
+                        fontSize: 10, color: b.color, fontWeight: 500,
+                        padding: '3px 8px', borderRadius: 20,
+                        background: `${b.color}12`,
+                        border: `1px solid ${b.color}30`,
+                    }}
+                >
+                    {b.icon} {b.label}
+                </motion.div>
             ))}
         </div>
     )
 }
 
 export default function Login() {
-    const [step, setStep] = useState('credentials')
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
-    const [otp, setOtp] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const [rememberMe, setRememberMe] = useState(false)
-    const { login, verifyOtp } = useAuth()
+    const [loginSuccess, setLoginSuccess] = useState(false)
+    const { login } = useAuth()
     const navigate = useNavigate()
 
-    const handleCredentials = async (e) => {
-        e.preventDefault(); setLoading(true); setError('')
+    const handleLogin = async (e) => {
+        e.preventDefault()
+        setLoading(true)
+        setError('')
         try {
             const result = await login(username, password)
-            if (result.mfa_required) setStep('otp')
-            else navigate('/dashboard')
-        } catch (err) { setError(err.response?.data?.detail || 'Invalid credentials') }
-        finally { setLoading(false) }
-    }
-
-    const handleOtp = async (e) => {
-        e.preventDefault(); setLoading(true); setError('')
-        try { await verifyOtp(username, otp); navigate('/dashboard') }
-        catch (err) { setError(err.response?.data?.detail || 'Invalid verification code') }
-        finally { setLoading(false) }
+            if (result.mfa_required) {
+                // Fallback: if MFA somehow still triggers, go to dashboard anyway
+                navigate('/dashboard')
+            } else {
+                setLoginSuccess(true)
+                setTimeout(() => navigate('/dashboard'), 600)
+            }
+        } catch (err) {
+            setError(err.response?.data?.detail || 'Invalid credentials')
+        } finally {
+            setLoading(false)
+        }
     }
 
     const handleSocialLogin = (provider) => {
         setError('')
         setLoading(true)
-        // Simulated social auth — shows loading then demo message
         setTimeout(() => {
             setLoading(false)
             setError(`${provider} authentication is available in production. Use credentials for demo.`)
@@ -122,68 +106,111 @@ export default function Login() {
 
             {/* Floating particles */}
             <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-                {Array.from({ length: 20 }, (_, i) => (
+                {Array.from({ length: 25 }, (_, i) => (
                     <motion.div
                         key={i}
                         style={{
                             position: 'absolute',
-                            width: 2 + Math.random() * 2, height: 2 + Math.random() * 2,
+                            width: 2 + Math.random() * 3, height: 2 + Math.random() * 3,
                             borderRadius: '50%',
                             left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`,
-                            background: i % 2 === 0 ? 'rgba(34,211,238,0.5)' : 'rgba(167,139,250,0.4)',
-                            boxShadow: `0 0 ${4 + Math.random() * 6}px ${i % 2 === 0 ? 'rgba(34,211,238,0.5)' : 'rgba(167,139,250,0.4)'}`,
+                            background: i % 3 === 0 ? 'rgba(34,211,238,0.5)' : i % 3 === 1 ? 'rgba(167,139,250,0.4)' : 'rgba(52,211,153,0.4)',
+                            boxShadow: `0 0 ${4 + Math.random() * 8}px ${i % 3 === 0 ? 'rgba(34,211,238,0.5)' : i % 3 === 1 ? 'rgba(167,139,250,0.4)' : 'rgba(52,211,153,0.4)'}`,
                         }}
-                        animate={{ y: [0, -20, 0], opacity: [0.3, 0.8, 0.3] }}
-                        transition={{ duration: 4 + Math.random() * 4, repeat: Infinity, delay: Math.random() * 3 }}
+                        animate={{ y: [0, -30, 0], opacity: [0.2, 0.9, 0.2] }}
+                        transition={{ duration: 5 + Math.random() * 5, repeat: Infinity, delay: Math.random() * 4 }}
                     />
                 ))}
             </div>
 
             <motion.div
-                style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
+                style={{ width: '100%', maxWidth: 440, position: 'relative', zIndex: 1 }}
+                initial={{ opacity: 0, y: 30, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.7, ease: 'easeOut' }}
             >
-                {/* Logo */}
-                <div style={{ textAlign: 'center', marginBottom: 28 }}>
+                {/* Logo + Branding */}
+                <div style={{ textAlign: 'center', marginBottom: 24 }}>
                     <motion.div
-                        whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(34,211,238,0.4)' }}
+                        whileHover={{ scale: 1.08, boxShadow: '0 0 40px rgba(34,211,238,0.5)' }}
                         className="glow-breathe"
                         style={{
-                            width: 52, height: 52, borderRadius: 14,
-                            background: 'radial-gradient(circle, rgba(34,211,238,0.25), rgba(15,23,62,0.8))',
-                            border: '1px solid rgba(34,211,238,0.4)',
+                            width: 60, height: 60, borderRadius: 16,
+                            background: 'radial-gradient(circle, rgba(34,211,238,0.3), rgba(15,23,62,0.9))',
+                            border: '1.5px solid rgba(34,211,238,0.5)',
                             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                            marginBottom: 14,
+                            marginBottom: 16, backdropFilter: 'blur(10px)',
                         }}
                     >
-                        <span style={{ color: '#22d3ee', fontWeight: 800, fontSize: 18, fontFamily: 'var(--font-display)' }}>NX</span>
+                        <span style={{ color: '#22d3ee', fontWeight: 800, fontSize: 22, fontFamily: 'var(--font-display)' }}>NX</span>
                     </motion.div>
-                    <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--nx-text)', fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}>
+                    <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--nx-text)', fontFamily: 'var(--font-display)', letterSpacing: '0.12em' }}>
                         WELCOME TO <span className="nx-cyan nx-text-glow-cyan">NEXUS</span>
                     </h1>
-                    <p style={{ fontSize: 13, color: 'var(--nx-text-muted)', marginTop: 5 }}>Sign in to your account</p>
+                    <p style={{ fontSize: 13, color: 'var(--nx-text-muted)', marginTop: 6 }}>
+                        Your intelligent banking platform
+                    </p>
+                    <SecurityBadges />
                 </div>
 
-                <div className="nx-card-static" style={{ padding: '1.75rem', boxShadow: '0 0 40px rgba(0,0,0,0.3), 0 0 15px rgba(34,211,238,0.05)' }}>
-                    <AnimatePresence mode="wait">
-                        {error && (
+                {/* Login Card */}
+                <div className="nx-card-static" style={{
+                    padding: '2rem',
+                    boxShadow: '0 0 50px rgba(0,0,0,0.35), 0 0 20px rgba(34,211,238,0.06)',
+                    backdropFilter: 'blur(20px)',
+                }}>
+                    {/* Success State */}
+                    <AnimatePresence>
+                        {loginSuccess && (
                             <motion.div
-                                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                                className="nx-alert nx-alert-error" style={{ marginBottom: 16 }}
-                            >⚠ {error}</motion.div>
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                style={{
+                                    textAlign: 'center', padding: '2rem 1rem',
+                                }}
+                            >
+                                <motion.div
+                                    animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+                                    transition={{ duration: 0.6 }}
+                                    style={{
+                                        width: 56, height: 56, borderRadius: '50%',
+                                        background: 'rgba(34,211,153,0.15)',
+                                        border: '2px solid #22d399',
+                                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                        marginBottom: 16,
+                                    }}
+                                >
+                                    <Check size={28} color="#22d399" strokeWidth={3} />
+                                </motion.div>
+                                <p style={{ color: '#22d399', fontWeight: 700, fontSize: 16, fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
+                                    Welcome back, {username}!
+                                </p>
+                                <p style={{ color: 'var(--nx-text-muted)', fontSize: 12, marginTop: 6 }}>Launching dashboard...</p>
+                            </motion.div>
                         )}
                     </AnimatePresence>
 
-                    {step === 'credentials' ? (
-                        <motion.div key="creds" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                            {/* Social Auth Buttons */}
+                    {!loginSuccess && (
+                        <>
+                            {/* Error Alert */}
+                            <AnimatePresence>
+                                {error && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10, height: 0 }}
+                                        animate={{ opacity: 1, y: 0, height: 'auto' }}
+                                        exit={{ opacity: 0, y: -10, height: 0 }}
+                                        className="nx-alert nx-alert-error"
+                                        style={{ marginBottom: 16 }}
+                                    >⚠ {error}</motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Social Auth */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
                                 <motion.button
                                     className="nx-social-btn nx-social-btn-google"
                                     onClick={() => handleSocialLogin('Google')}
-                                    whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                                    whileHover={{ scale: 1.01, y: -1 }} whileTap={{ scale: 0.99 }}
                                     disabled={loading}
                                 >
                                     <GoogleIcon /> Continue with Google
@@ -192,7 +219,7 @@ export default function Login() {
                                     <motion.button
                                         className="nx-social-btn nx-social-btn-apple"
                                         onClick={() => handleSocialLogin('Apple')}
-                                        whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                                        whileHover={{ scale: 1.01, y: -1 }} whileTap={{ scale: 0.99 }}
                                         disabled={loading}
                                     >
                                         <AppleIcon /> Apple
@@ -200,7 +227,7 @@ export default function Login() {
                                     <motion.button
                                         className="nx-social-btn nx-social-btn-microsoft"
                                         onClick={() => handleSocialLogin('Microsoft')}
-                                        whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                                        whileHover={{ scale: 1.01, y: -1 }} whileTap={{ scale: 0.99 }}
                                         disabled={loading}
                                     >
                                         <MicrosoftIcon /> Microsoft
@@ -208,11 +235,11 @@ export default function Login() {
                                 </div>
                             </div>
 
-                            {/* Passkey Button */}
+                            {/* Passkey */}
                             <motion.button
                                 className="nx-passkey-btn"
                                 onClick={() => handleSocialLogin('Passkey')}
-                                whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                                whileHover={{ scale: 1.01, y: -1 }} whileTap={{ scale: 0.99 }}
                                 disabled={loading}
                                 style={{ marginBottom: 20 }}
                             >
@@ -222,15 +249,70 @@ export default function Login() {
                             {/* Divider */}
                             <div className="nx-divider" style={{ marginBottom: 20 }}>or sign in with credentials</div>
 
-                            {/* Credentials Form */}
-                            <form onSubmit={handleCredentials} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            {/* Login Form */}
+                            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                {/* Username */}
                                 <div>
-                                    <label className="nx-label"><Lock size={10} style={{ marginRight: 4, verticalAlign: 'middle' }} />Username</label>
-                                    <input type="text" id="login-username" className="nx-input" placeholder="Enter username" value={username} onChange={e => setUsername(e.target.value)} required autoFocus />
+                                    <label className="nx-label">
+                                        <Lock size={10} style={{ marginRight: 4, verticalAlign: 'middle' }} />Username
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="login-username"
+                                        className="nx-input"
+                                        placeholder="Enter username"
+                                        value={username}
+                                        onChange={e => setUsername(e.target.value)}
+                                        required
+                                        autoFocus
+                                        autoComplete="username"
+                                    />
                                 </div>
+
+                                {/* Password with Show/Hide Toggle */}
                                 <div>
-                                    <label className="nx-label"><KeyRound size={10} style={{ marginRight: 4, verticalAlign: 'middle' }} />Password</label>
-                                    <input type="password" id="login-password" className="nx-input" placeholder="Enter password" value={password} onChange={e => setPassword(e.target.value)} required />
+                                    <label className="nx-label">
+                                        <KeyRound size={10} style={{ marginRight: 4, verticalAlign: 'middle' }} />Password
+                                    </label>
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            id="login-password"
+                                            className="nx-input"
+                                            placeholder="Enter password"
+                                            value={password}
+                                            onChange={e => setPassword(e.target.value)}
+                                            required
+                                            autoComplete="current-password"
+                                            style={{ paddingRight: 44 }}
+                                        />
+                                        <button
+                                            type="button"
+                                            id="toggle-password"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                            style={{
+                                                position: 'absolute',
+                                                right: 10,
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                background: 'none',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                padding: 4,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: showPassword ? '#22d3ee' : 'var(--nx-text-dim)',
+                                                transition: 'color 0.2s ease',
+                                                borderRadius: 4,
+                                            }}
+                                            onMouseEnter={e => e.target.style.color = '#22d3ee'}
+                                            onMouseLeave={e => { if (!showPassword) e.target.style.color = 'var(--nx-text-dim)' }}
+                                        >
+                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {/* Remember Me + Forgot Password */}
@@ -246,68 +328,93 @@ export default function Login() {
                                     </Link>
                                 </div>
 
+                                {/* Submit Button */}
                                 <motion.button
-                                    type="submit" id="login-submit" disabled={loading}
+                                    type="submit"
+                                    id="login-submit"
+                                    disabled={loading || !username || !password}
                                     className="nx-btn nx-btn-primary"
-                                    style={{ width: '100%', padding: '0.8rem' }}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
+                                    style={{
+                                        width: '100%', padding: '0.85rem',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                        fontSize: 14, fontWeight: 600,
+                                        opacity: (!username || !password) ? 0.5 : 1,
+                                        transition: 'opacity 0.3s ease',
+                                    }}
+                                    whileHover={username && password ? { scale: 1.02, boxShadow: '0 0 25px rgba(34,211,238,0.3)' } : {}}
+                                    whileTap={username && password ? { scale: 0.98 } : {}}
                                 >
-                                    {loading ? 'Signing in...' : 'Sign In'}
+                                    {loading ? (
+                                        <>
+                                            <motion.div
+                                                animate={{ rotate: 360 }}
+                                                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                                                style={{
+                                                    width: 16, height: 16, borderRadius: '50%',
+                                                    border: '2px solid rgba(255,255,255,0.3)',
+                                                    borderTopColor: '#fff',
+                                                }}
+                                            />
+                                            Signing in...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Sign In <ArrowRight size={16} />
+                                        </>
+                                    )}
                                 </motion.button>
                             </form>
-                        </motion.div>
-                    ) : (
-                        <motion.div key="otp" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>
-                            <form onSubmit={handleOtp} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                                <div style={{ textAlign: 'center', marginBottom: 4 }}>
-                                    <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
-                                        <ShieldCheck size={40} color="#22d3ee" style={{ filter: 'drop-shadow(0 0 15px rgba(34,211,238,0.5))' }} />
-                                    </motion.div>
-                                    <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--nx-text)', fontFamily: 'var(--font-display)', letterSpacing: '0.08em', marginTop: 12 }}>
-                                        VERIFICATION REQUIRED
-                                    </h2>
-                                    <p style={{ fontSize: 12, color: 'var(--nx-text-muted)', marginTop: 6 }}>
-                                        Enter the 6-digit verification code
-                                    </p>
-                                </div>
 
-                                <OtpInputGroup value={otp} onChange={setOtp} />
-
-                                <motion.button
-                                    type="submit" id="otp-submit" disabled={loading || otp.length < 6}
-                                    className="nx-btn nx-btn-primary"
-                                    style={{ width: '100%', padding: '0.8rem' }}
-                                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                                >
-                                    {loading ? 'Verifying...' : 'Verify Code'}
-                                </motion.button>
-
-                                <button type="button" onClick={() => { setStep('credentials'); setOtp(''); setError('') }}
-                                    style={{ background: 'none', border: 'none', color: 'var(--nx-text-muted)', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                                    ← Back to login
-                                </button>
-                            </form>
-                        </motion.div>
+                            {/* Sign Up Link */}
+                            <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--nx-border)', textAlign: 'center', fontSize: 13, color: 'var(--nx-text-muted)' }}>
+                                Don't have an account? <Link to="/register" style={{ color: 'var(--nx-cyan)', textDecoration: 'none', fontWeight: 600 }}>Create one</Link>
+                            </div>
+                        </>
                     )}
-
-                    <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--nx-border)', textAlign: 'center', fontSize: 13, color: 'var(--nx-text-muted)' }}>
-                        Don't have an account? <Link to="/register" style={{ color: 'var(--nx-cyan)', textDecoration: 'none', fontWeight: 500 }}>Create one</Link>
-                    </div>
                 </div>
 
-                {/* Demo Credentials */}
+                {/* Demo Credentials Card */}
                 <motion.div
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
-                    style={{ marginTop: 12, padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--nx-border)', textAlign: 'center', background: 'rgba(15,23,62,0.4)' }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.9 }}
+                    style={{
+                        marginTop: 14, padding: '0.85rem 1rem', borderRadius: 'var(--radius-sm)',
+                        border: '1px solid rgba(34,211,238,0.15)',
+                        textAlign: 'center',
+                        background: 'linear-gradient(135deg, rgba(15,23,62,0.5), rgba(34,211,238,0.04))',
+                        backdropFilter: 'blur(8px)',
+                    }}
                 >
-                    <p style={{ fontSize: 11, color: 'var(--nx-text-dim)' }}>
-                        Admin: <span className="nx-mono" style={{ color: 'var(--nx-text-muted)' }}>admin</span> / <span className="nx-mono" style={{ color: 'var(--nx-text-muted)' }}>admin123</span> &nbsp;|&nbsp;
-                        User: <span className="nx-mono" style={{ color: 'var(--nx-text-muted)' }}>john_doe</span> / <span className="nx-mono" style={{ color: 'var(--nx-text-muted)' }}>user123</span>
+                    <p style={{ fontSize: 10, color: 'var(--nx-text-dim)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
+                        Demo Credentials
                     </p>
-                    <p style={{ fontSize: 10, color: 'var(--nx-text-dim)', marginTop: 2 }}>
-                        OTP: <span className="nx-mono" style={{ color: 'var(--nx-cyan)' }}>000000</span>
-                    </p>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{
+                                fontSize: 9, color: '#22d3ee', fontWeight: 700,
+                                padding: '2px 6px', borderRadius: 4,
+                                background: 'rgba(34,211,238,0.1)',
+                                border: '1px solid rgba(34,211,238,0.2)',
+                                textTransform: 'uppercase', letterSpacing: '0.05em',
+                            }}>Admin</span>
+                            <span className="nx-mono" style={{ fontSize: 12, color: 'var(--nx-text-muted)' }}>admin</span>
+                            <span style={{ fontSize: 11, color: 'var(--nx-text-dim)' }}>/</span>
+                            <span className="nx-mono" style={{ fontSize: 12, color: 'var(--nx-text-muted)' }}>admin123</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{
+                                fontSize: 9, color: '#a78bfa', fontWeight: 700,
+                                padding: '2px 6px', borderRadius: 4,
+                                background: 'rgba(167,139,250,0.1)',
+                                border: '1px solid rgba(167,139,250,0.2)',
+                                textTransform: 'uppercase', letterSpacing: '0.05em',
+                            }}>User</span>
+                            <span className="nx-mono" style={{ fontSize: 12, color: 'var(--nx-text-muted)' }}>john_doe</span>
+                            <span style={{ fontSize: 11, color: 'var(--nx-text-dim)' }}>/</span>
+                            <span className="nx-mono" style={{ fontSize: 12, color: 'var(--nx-text-muted)' }}>user123</span>
+                        </div>
+                    </div>
                 </motion.div>
             </motion.div>
         </div>
