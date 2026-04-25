@@ -133,29 +133,49 @@ def login(
     user.failed_login_attempts = 0
     db.commit()
 
-    # Generate cryptographically secure OTP
-    otp = _generate_otp()
-
-    # Store OTP with expiry and attempt counter
-    redis.setex(f"otp:{user.username}", OTP_EXPIRY_SECONDS, otp)
-    redis.set(f"otp_attempts:{user.username}", "0", ex=OTP_EXPIRY_SECONDS)
-
+    # ── Simple login: issue tokens directly (no MFA) ──
     log_security_event(
         db,
         user=user,
         username=user.username,
-        event_type=SecurityEventType.mfa_challenge,
+        event_type=SecurityEventType.login_success,
         ip=ip,
         ua=ua,
-        details="OTP generated and sent",
+        details="Login successful (direct)",
     )
 
-    # Return proper 202 response
-    return ORJSONResponse(
-        status_code=status.HTTP_202_ACCEPTED,
-        content={"detail": "MFA required", "mfa": True, "username": user.username},
-        headers={"X-MFA": "required"},
+    now = datetime.now(UTC)
+    session_jti = uuid.uuid4().hex
+
+    access = create_access_token(
+        user.username,
+        extra={"role": user.role, "iat": int(now.timestamp()), "jti": session_jti},
     )
+    refresh = create_refresh_token(
+        user.username,
+        extra={"role": user.role, "iat": int(now.timestamp()), "jti": session_jti},
+    )
+
+    # Persist session token
+    device_name = parse_device_name(ua or "")
+    session_token = SessionToken(
+        user_id=user.id,
+        jti=session_jti,
+        token_type="access",
+        created_at=now,
+        expires_at=now + timedelta(minutes=settings.access_token_expires_minutes),
+        device_name=device_name,
+        ip_address=ip,
+        user_agent=ua,
+        location=None,
+        last_active=now,
+    )
+    db.add(session_token)
+    db.commit()
+
+    redis.sadd("live_users", user.username)
+
+    return Token(access_token=access, refresh_token=refresh)
 
 
 @router.post("/verify-otp", response_model=Token)
