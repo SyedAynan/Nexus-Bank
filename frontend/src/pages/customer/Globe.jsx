@@ -348,7 +348,7 @@ export default function GlobePage() {
             </div>
 
             {/* ── Globe + Sidebar ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
                 {/* Globe — wrapped with Three.js 3D enhancement layer */}
                 <EnhancedGlobeWrapper cities={CITIES} payments={livePayments}>
                 <motion.div className="nx-chart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
