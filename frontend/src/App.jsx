@@ -1,3 +1,39 @@
+/**
+ * File: App.jsx
+ * Module: frontend/src/App.jsx
+ *
+ * Purpose:
+ *     Root application component — defines all routes, lazy-loads page
+ *     components, and implements route guards (RequireAuth, RequireAdmin).
+ *
+ * Developer Journey:
+ *     - v1: All routes in one file, all components eagerly imported.
+ *       Initial bundle was 2.5MB — took 5+ seconds to load on mobile.
+ *     - v2: Added React.lazy() + Suspense for code splitting. Each page
+ *       is loaded on-demand, reducing initial bundle to ~500KB.
+ *     - v3: Added RequireAuth guard — unauthenticated users are redirected
+ *       to /login. RequireAdmin guard — non-admin users see "Access Denied".
+ *     - v4: Separated routes into PublicLayout (navbar + footer) and
+ *       DashboardLayout (sidebar + topbar) for distinct UI experiences.
+ *
+ * Route Structure:
+ *     / (PublicLayout)
+ *     ├── /           → Landing page
+ *     ├── /login      → Login page
+ *     ├── /register   → Registration page
+ *     ├── /forgot-password → Password reset flow
+ *     ├── /about      → About page
+ *     └── /contact    → Contact page
+ *
+ *     /dashboard (DashboardLayout, RequireAuth)
+ *     ├── /dashboard    → Main dashboard
+ *     ├── /accounts     → Account management
+ *     ├── /transfer     → Fund transfers
+ *     ├── /transactions → Transaction history
+ *     ├── /admin/*      → Admin panel (RequireAdmin)
+ *     └── ... (19 more customer pages)
+ */
+
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import { lazy, Suspense } from 'react'
