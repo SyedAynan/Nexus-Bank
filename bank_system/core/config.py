@@ -123,6 +123,10 @@ class Settings(BaseSettings):
     frontend_url: str = Field(default="")
     demo_mode: bool = Field(default=False)
 
+    # PORT — Railway/Render assign a dynamic port via this env var.
+    # The backend must bind to this port. Defaults to 8000 for local development.
+    port: int = Field(default=8000)
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

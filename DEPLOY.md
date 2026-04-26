@@ -1,135 +1,167 @@
-# NEXA — Production Deployment Guide
+# NEXA Deployment Guide — Vercel + Railway
 
-## Quick Deploy (Docker Compose)
+## Architecture
 
-```bash
-# 1. Clone and configure
-git clone <repo-url> && cd nexa
-cp .env.example .env
-# Edit .env: set SECRET_KEY, DATABASE_URL, REDIS_URL
-
-# 2. Build and start
-docker-compose up -d --build
-
-# 3. Run migrations
-docker-compose exec web alembic upgrade head
-
-# 4. Verify
-curl http://localhost:8000/health
 ```
+[Vercel - Frontend]  ──/api proxy──▶  [Railway - Backend]  ──▶  [Cloud PostgreSQL]
+     (React/Vite)                         (FastAPI)                 (Neon/Supabase)
+                                              │
+                                              ▼
+                                     [Redis - Optional]
+                                      (Upstash/FakeRedis)
+```
+
+## Step 1: Set Up Cloud PostgreSQL
+
+Choose one (all have free tiers):
+
+### Option A: Neon (Recommended)
+1. Go to [neon.tech](https://neon.tech) → Sign up
+2. Create a new project → Copy the connection string
+3. Format: `postgresql://user:pass@ep-xxx.region.neon.tech/dbname?sslmode=require`
+4. **Important**: Replace the `postgres://` prefix with `postgresql+psycopg2://` for SQLAlchemy
+
+### Option B: Supabase
+1. Go to [supabase.com](https://supabase.com) → Create project
+2. Go to Settings → Database → Connection string (URI)
+3. Replace `postgres://` with `postgresql+psycopg2://`
+
+### Option C: Railway PostgreSQL
+1. In Railway dashboard → New → Database → PostgreSQL
+2. Copy the `DATABASE_URL` from the PostgreSQL service variables
+3. Replace `postgres://` with `postgresql+psycopg2://`
 
 ---
 
-## Nginx Reverse Proxy
+## Step 2: Deploy Backend on Railway
 
-```nginx
-server {
-    listen 80;
-    server_name nexa.example.com;
-    return 301 https://$server_name$request_uri;
-}
+### 2a. Connect Repository
+1. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub
+2. Select the `Nexus-Bank` repository
+3. Railway will auto-detect the `railway.json` configuration
 
-server {
-    listen 443 ssl http2;
-    server_name nexa.example.com;
+### 2b. Set Environment Variables
+In Railway dashboard → Your service → Variables tab, add:
 
-    ssl_certificate     /etc/ssl/certs/nexa.crt;
-    ssl_certificate_key /etc/ssl/private/nexa.key;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-
-    # Security headers
-    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
-    add_header X-Content-Type-Options nosniff always;
-    add_header X-Frame-Options DENY always;
-
-    # API backend
-    location /api/ {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # WebSocket support
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-
-    # Health check
-    location /health {
-        proxy_pass http://127.0.0.1:8000;
-    }
-
-    # WebSocket
-    location /ws/ {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-
-    # Frontend (serve built React assets)
-    location / {
-        root /var/www/nexa/frontend/dist;
-        try_files $uri $uri/ /index.html;
-    }
-}
 ```
-
----
-
-## SSL with Let's Encrypt
-
-```bash
-sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d nexa.example.com
-sudo certbot renew --dry-run  # test auto-renewal
-```
-
----
-
-## Production .env
-
-```env
-APP_NAME=NEXA — Beyond Fintech
 ENVIRONMENT=production
 DEBUG=false
-
-DATABASE_URL=postgresql+psycopg2://nexa_prod:STRONG_PASSWORD@db:5432/nexa_prod
-REDIS_URL=redis://redis:6379/0
-SECRET_KEY=<generate with: python -c "import secrets; print(secrets.token_urlsafe(64))">
-
-ACCESS_TOKEN_EXPIRES_MINUTES=15
-REFRESH_TOKEN_EXPIRES_MINUTES=1440
+DEMO_MODE=true
+SECRET_KEY=<run: openssl rand -base64 64>
+DATABASE_URL=postgresql+psycopg2://user:pass@host:5432/dbname
+REDIS_URL=
+FRONTEND_URL=https://your-app.vercel.app
+PYTHONPATH=/app
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRES_MINUTES=30
+REFRESH_TOKEN_EXPIRES_MINUTES=10080
+ML_MODEL_DIR=bank_system/ml_models
+EVENT_BUS_MODE=in-process
 ```
 
----
+> **Note**: Leave `REDIS_URL` empty to use the built-in FakeRedis fallback.
+> For production Redis, use [Upstash](https://upstash.com) (free tier available).
 
-## AWS Deployment (EC2 + RDS)
+### 2c. Set Root Directory (if needed)
+If Railway deploys from the wrong directory:
+- Go to Settings → Root Directory → Leave empty (project root)
 
-1. **EC2 Instance**: t3.medium or larger, Ubuntu 22.04
-2. **RDS**: PostgreSQL 15, db.t3.micro (dev) or db.r6g.large (prod)
-3. **ElastiCache**: Redis 7, cache.t3.micro
-4. **Security Groups**: Only allow 80/443 from ALB, 5432 from EC2 SG, 6379 from EC2 SG
-5. **ALB**: Application Load Balancer with SSL termination
-
+### 2d. Verify Deployment
 ```bash
-# On EC2
-sudo apt update && sudo apt install docker.io docker-compose -y
-sudo usermod -aG docker $USER
+curl https://YOUR-RAILWAY-URL.up.railway.app/api/health
+```
+Expected response:
+```json
+{"status": "healthy", "environment": "production", "version": "4.0.0", "services": {"database": "connected", "redis": "fallback (in-memory)"}}
+```
 
-# Deploy
-scp -r . ec2-user@<ip>:/opt/nexa
-ssh ec2-user@<ip> "cd /opt/nexa && docker-compose up -d --build"
+### 2e. Test Login
+```bash
+curl -X POST https://YOUR-RAILWAY-URL.up.railway.app/api/auth/login \
+  -d "username=admin&password=admin123" \
+  -H "Content-Type: application/x-www-form-urlencoded"
+```
+Expected: JSON with `access_token`, `refresh_token`, `user` fields.
+
+---
+
+## Step 3: Deploy Frontend on Vercel
+
+### 3a. Connect Repository
+1. Go to [vercel.com](https://vercel.com) → New Project → Import Git Repository
+2. Select the `Nexus-Bank` repository
+3. **Set the Root Directory to `frontend`** (critical!)
+4. Framework preset: Vite
+5. Build command: `npm run build`
+6. Output directory: `dist`
+
+### 3b. Set Environment Variables
+In Vercel dashboard → Settings → Environment Variables:
+
+```
+VITE_API_URL=/api
+```
+
+### 3c. Update vercel.json
+Replace `YOUR_RAILWAY_URL` in `frontend/vercel.json` with your actual Railway URL:
+
+```json
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://your-actual-railway-url.up.railway.app/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+```
+
+### 3d. Update Railway FRONTEND_URL
+Go back to Railway → Variables → Update:
+```
+FRONTEND_URL=https://your-actual-vercel-url.vercel.app
 ```
 
 ---
 
-## Monitoring
+## Step 4: Verify End-to-End
 
-- **Health**: `GET /health` returns `{"status": "ok"}`
-- **Logs**: `docker-compose logs -f web`
-- **Metrics**: Integrate Prometheus + Grafana via `/metrics` endpoint
-- **Alerts**: Configure CloudWatch or Datadog for error rate > 1%
+1. Open your Vercel URL in a browser
+2. Login with: `admin` / `admin123`
+3. Verify dashboard loads with data
+4. Check browser DevTools → Network tab for any failed requests
+5. Check browser DevTools → Console for any CORS errors
+
+---
+
+## Troubleshooting
+
+### "Invalid credentials" in production
+1. Check Railway logs for "Database seeded successfully"
+2. If not seeded, verify `DEMO_MODE=true` in Railway env vars
+3. Test directly: `curl -X POST https://RAILWAY_URL/api/auth/login -d "username=admin&password=admin123"`
+
+### CORS errors in browser
+1. Check Railway env var `FRONTEND_URL` matches your Vercel URL exactly
+2. Ensure `vercel.json` proxy is configured (this eliminates CORS)
+3. Check Railway logs for "CORS allowed origins:" line
+
+### Railway stuck on "Deploying"
+1. Check Railway logs for startup errors
+2. Verify `DATABASE_URL` is a valid PostgreSQL connection string (not SQLite)
+3. Verify `PYTHONPATH=/app` is set
+4. Check if `startup_checks.py` is blocking startup (look for "FATAL" in logs)
+
+### Database connection refused
+1. Verify the PostgreSQL service is running
+2. Check if `?sslmode=require` is needed (Neon requires it)
+3. Ensure the connection string starts with `postgresql+psycopg2://` (not `postgres://`)
+
+### Frontend shows blank page
+1. Verify Vercel Root Directory is set to `frontend`
+2. Check Vercel build logs for errors
+3. Verify `VITE_API_URL=/api` is set in Vercel env vars
