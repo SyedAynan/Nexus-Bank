@@ -1,0 +1,45 @@
+# ============================================================
+# NEXA — Kubernetes: Namespace + ConfigMap + Secrets
+# Apply first: kubectl apply -f k8s/00-namespace.yaml
+# ============================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nexa-prod
+  labels:
+    app: nexa
+    environment: production
+---
+# ── ConfigMap: Non-sensitive configuration ──
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nexa-config
+  namespace: nexa-prod
+  labels:
+    app: nexa
+data:
+  ENVIRONMENT: "production"
+  DEBUG: "false"
+  DEMO_MODE: "false"
+  WORKERS: "4"
+  REDIS_URL: "redis://nexa-redis:6379/0"
+  DATABASE_URL: "postgresql+psycopg2://nexa:$(POSTGRES_PASSWORD)@nexa-postgres:5432/nexa"
+  EVENT_BUS_MODE: "in-process"
+  ML_MODEL_DIR: "bank_system/ml_models"
+---
+# ── Secret: Sensitive credentials ──
+# In production: use sealed-secrets, Vault, or external-secrets
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nexa-secrets
+  namespace: nexa-prod
+  labels:
+    app: nexa
+type: Opaque
+stringData:
+  SECRET_KEY: "CHANGE-ME-use-openssl-rand-base64-64"
+  POSTGRES_PASSWORD: "nexa_prod_2026"
+  POSTGRES_USER: "nexa"
+  POSTGRES_DB: "nexa"

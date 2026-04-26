@@ -1,0 +1,77 @@
+# ============================================================
+# NEXA — Kubernetes: Redis Deployment
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexa-redis
+  namespace: nexa-prod
+  labels:
+    app: nexa
+    component: cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nexa
+      component: cache
+  template:
+    metadata:
+      labels:
+        app: nexa
+        component: cache
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          command:
+            - redis-server
+            - --appendonly
+            - "yes"
+            - --maxmemory
+            - 256mb
+            - --maxmemory-policy
+            - allkeys-lru
+          ports:
+            - containerPort: 6379
+              name: redis
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+      volumes:
+        - name: redis-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nexa-redis
+  namespace: nexa-prod
+  labels:
+    app: nexa
+    component: cache
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6379
+      targetPort: 6379
+  selector:
+    app: nexa
+    component: cache
