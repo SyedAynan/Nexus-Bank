@@ -109,7 +109,7 @@ export default function AdminLayout() {
             <div className={`nx-sidebar-backdrop ${mobileMenuOpen ? 'open' : ''}`} onClick={closeMobile} />
 
             {/* Sidebar */}
-            <aside className={`nx-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{ borderRightColor: 'rgba(167,139,250,0.1)', position: 'relative', zIndex: 2 }}>
+            <aside className={`nx-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{ borderRightColor: 'rgba(167,139,250,0.1)', zIndex: 2 }}>
                 <div style={{ padding: '0 1.5rem 1.5rem', borderBottom: '1px solid var(--nx-border)' }}>
                     <Link to="/admin" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
                         <motion.div

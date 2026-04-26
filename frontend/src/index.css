@@ -786,6 +786,7 @@ body {
   flex-direction: column;
   padding: 1.5rem 0;
   position: relative;
+  flex-shrink: 0;
 }
 
 .nx-sidebar::after {
@@ -2109,6 +2110,9 @@ body {
     top: 0;
     z-index: 1000;
     width: 260px;
+    height: 100vh;
+    min-height: auto;
+    overflow-y: auto;
     transition: left 0.3s ease;
     box-shadow: 4px 0 24px rgba(0,0,0,0.3);
   }
@@ -2125,8 +2129,9 @@ body {
   .nx-sidebar-backdrop.open { opacity: 1; pointer-events: auto; }
 
   /* Main content — account for mobile toggle */
-  .nx-main-content { padding: 1rem; }
+  .nx-main-content { padding: 1rem; overflow-x: hidden; }
   .nx-topbar { padding: 0.625rem 1rem; padding-left: 56px; }
+  main { width: 100%; max-width: 100vw; overflow-x: hidden; }
 
   /* Grids → single column */
   .nx-grid-2, .nx-grid-3, .nx-grid-4,
