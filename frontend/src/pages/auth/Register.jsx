@@ -1,3 +1,28 @@
+/**
+ * File: Register.jsx
+ * Module: frontend/src/pages/auth/Register.jsx
+ *
+ * Purpose:
+ *     User registration page with form validation, password strength meter,
+ *     social signup options, and Terms & Conditions acceptance.
+ *
+ * Developer Journey:
+ *     - v1: Basic form with 3 fields (username, email, password). No
+ *       validation, no password strength indicator, no social options.
+ *     - v2: Added client-side validation (password match, minimum strength),
+ *       password strength meter with 4 criteria checks, and social signup
+ *       buttons matching the login page design.
+ *     - v3: Added Terms & Conditions checkbox requirement and password
+ *       visibility toggle. On successful registration, user is redirected
+ *       to /login instead of auto-logging in (security best practice).
+ *
+ * Validation Rules:
+ *     - Password must score ≥ 2/4 on strength meter
+ *     - Password and confirm password must match
+ *     - Terms & Conditions must be accepted
+ *     - All fields are required (HTML5 + JavaScript validation)
+ */
+
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../../api'
