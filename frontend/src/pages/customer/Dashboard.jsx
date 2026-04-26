@@ -40,10 +40,11 @@ import { Shield, CreditCard, BarChart3, Users, Database, Zap, TrendingUp, Activi
 import { AreaChart, Area, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts'
 import { getDemoAccounts, getDemoTransactions, getCashFlowData, NEXUS_NETWORK_NODES, NEXUS_NETWORK_LINKS } from '../../data/simulationEngine'
 import { EnhancedChartWrapper, EnhancedNetworkWrapper } from '../../components/enhancements'
+import useDeviceCapability from '../../hooks/useDeviceCapability'
 
 /* ─── Particles Background ─── */
-function ParticlesField() {
-    const particles = Array.from({ length: 30 }, (_, i) => ({
+function ParticlesField({ count = 30 }) {
+    const particles = Array.from({ length: count }, (_, i) => ({
         id: i, size: Math.random() * 3 + 1, x: Math.random() * 100, y: Math.random() * 100,
         delay: Math.random() * 5, duration: Math.random() * 6 + 6,
         color: i % 3 === 0 ? 'rgba(34,211,238,0.6)' : i % 3 === 1 ? 'rgba(167,139,250,0.5)' : 'rgba(59,130,246,0.4)',
@@ -145,6 +146,7 @@ function NexusCoreNetwork() {
 /* ═══════ MAIN DASHBOARD ═══════ */
 export default function Dashboard() {
     const { user } = useAuth()
+    const { isMobile, isSmallMobile, isTablet } = useDeviceCapability()
     const [accounts, setAccounts] = useState([])
     const [transactions, setTransactions] = useState([])
     const [loading, setLoading] = useState(true)
@@ -201,7 +203,7 @@ export default function Dashboard() {
 
     return (
         <div style={{ position: 'relative' }}>
-            <ParticlesField />
+            <ParticlesField count={isMobile ? 12 : 30} />
             <div className="animate-in" style={{ position: 'relative', zIndex: 1 }}>
                 {/* ─── Header ─── */}
                 <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
@@ -256,7 +258,7 @@ export default function Dashboard() {
                 </motion.div>
 
                 {/* ─── KPI Cards ─── */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 24 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${isMobile ? '140px' : '200px'}, 1fr))`, gap: 14, marginBottom: 24 }}>
                     {[
                         { label: 'Total Balance', value: `$${totalBalance.toLocaleString('en', { minimumFractionDigits: 2 })}`, sub: `${accounts.length} accounts`, accent: 'cyan', icon: Database },
                         { label: 'Deposits', value: `+$${totalDeposits.toLocaleString()}`, sub: `${deposits.length} inflows`, accent: 'emerald', icon: TrendingUp },
@@ -280,7 +282,7 @@ export default function Dashboard() {
                 </EnhancedNetworkWrapper>
 
                 {/* ─── Charts Row ─── */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16, marginBottom: 24 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${isMobile ? '100%' : '280px'}, 1fr))`, gap: 16, marginBottom: 24 }}>
                     <EnhancedChartWrapper glowColor="#34d399" intensity="medium">
                     <motion.div className="nx-chart" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.7 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
@@ -341,7 +343,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* ─── Bottom Row ─── */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${isMobile ? '100%' : '280px'}, 1fr))`, gap: 16 }}>
                     {/* Financial Health */}
                     <motion.div className="nx-card-glow" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16, flexWrap: 'wrap' }}>
