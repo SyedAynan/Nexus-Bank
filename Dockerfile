@@ -45,6 +45,9 @@ COPY --from=builder /opt/venv /opt/venv
 # Copy application code
 COPY . .
 
+# Make entrypoint executable
+RUN chmod +x /app/docker-entrypoint.sh
+
 # Set ownership
 RUN chown -R nexusbank:nexusbank /app
 
@@ -52,14 +55,10 @@ RUN chown -R nexusbank:nexusbank /app
 USER nexusbank
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8000/api/health || exit 1
 
 EXPOSE 8000
 
-# Run with multiple workers for production
-CMD ["uvicorn", "bank_system.main:app", \
-    "--host", "0.0.0.0", \
-    "--port", "8000", \
-    "--workers", "4", \
-    "--access-log"]
+# Run via entrypoint (handles migrations + seed + start)
+ENTRYPOINT ["sh", "/app/docker-entrypoint.sh"]
