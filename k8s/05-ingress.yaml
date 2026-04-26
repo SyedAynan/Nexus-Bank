@@ -1,0 +1,93 @@
+# ============================================================
+# NEXA — Kubernetes: Ingress (NGINX Ingress Controller)
+# Prerequisite: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.9.4/deploy/static/provider/cloud/deploy.yaml
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nexa-ingress
+  namespace: nexa-prod
+  labels:
+    app: nexa
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    # WebSocket support
+    nginx.ingress.kubernetes.io/websocket-services: "nexa-backend"
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "50"
+    nginx.ingress.kubernetes.io/limit-connections: "20"
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: SAMEORIGIN";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+    # TLS (uncomment when cert-manager is configured)
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  # TLS (uncomment for HTTPS)
+  # tls:
+  #   - hosts:
+  #       - nexa.yourdomain.com
+  #     secretName: nexa-tls
+  rules:
+    - host: ""  # Matches any host — set your domain here
+      http:
+        paths:
+          # API routes → backend
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: nexa-backend
+                port:
+                  number: 8000
+          # WebSocket → backend
+          - path: /ws
+            pathType: Prefix
+            backend:
+              service:
+                name: nexa-backend
+                port:
+                  number: 8000
+          # Swagger docs → backend
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service:
+                name: nexa-backend
+                port:
+                  number: 8000
+          - path: /redoc
+            pathType: Prefix
+            backend:
+              service:
+                name: nexa-backend
+                port:
+                  number: 8000
+          - path: /openapi.json
+            pathType: Prefix
+            backend:
+              service:
+                name: nexa-backend
+                port:
+                  number: 8000
+          # Health check → backend
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: nexa-backend
+                port:
+                  number: 8000
+          # Everything else → frontend
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nexa-frontend
+                port:
+                  number: 80
