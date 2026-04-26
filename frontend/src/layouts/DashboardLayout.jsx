@@ -5,8 +5,11 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BarChart3, Wallet, CreditCard, ScrollText, TrendingUp, User, Shield, LogOut, Bell, Sun, Moon, ShieldCheck, AlertTriangle, DollarSign, CheckCircle, X, Activity, Globe, Briefcase, Sparkles, Zap, Receipt, Coins, PieChart, Target, Menu } from 'lucide-react'
 import NexusCopilot from '../components/NexusCopilot'
+import MobileBottomNav from '../components/MobileBottomNav'
+import MobileTopBar from '../components/MobileTopBar'
 import { GlobalEffectsLayer } from '../components/enhancements'
 import { getLiveIndices } from '../data/simulationEngine'
+import useDeviceCapability from '../hooks/useDeviceCapability'
 
 /* ─── Demo Notifications ─── */
 const DEMO_NOTIFICATIONS = [
@@ -127,6 +130,7 @@ export default function DashboardLayout() {
     const [wsNotifs, setWsNotifs] = useState([])
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const wsRef = useRef(null)
+    const { isMobile } = useDeviceCapability()
 
     useEffect(() => {
         try {
@@ -172,19 +176,19 @@ export default function DashboardLayout() {
     const closeMobile = () => setMobileMenuOpen(false)
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
+        <div className={`nx-app-shell ${isMobile ? 'nx-app-shell--mobile' : ''}`} style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
             <div className="nx-nebula-bg" />
             <GlobalEffectsLayer />
             <LiveToast notifications={wsNotifs} />
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu Button — only visible when sidebar is present (handled by CSS) */}
             <button className="nx-mobile-toggle" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
                 {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
             {/* Mobile Backdrop */}
             <div className={`nx-sidebar-backdrop ${mobileMenuOpen ? 'open' : ''}`} onClick={closeMobile} />
 
-            {/* Sidebar */}
+            {/* Sidebar — hidden on mobile, replaced by bottom nav */}
             <aside className={`nx-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{ zIndex: 2 }}>
                 {/* Logo */}
                 <div style={{ padding: '0 1.5rem 1.5rem', borderBottom: '1px solid var(--nx-border)' }}>
@@ -271,11 +275,14 @@ export default function DashboardLayout() {
 
             {/* Main Content */}
             <main style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column' }}>
+                {/* Mobile Top Bar — only on mobile */}
+                {isMobile && <MobileTopBar notifications={DEMO_NOTIFICATIONS} />}
+
                 {/* Stock Ticker */}
                 <GlobalTicker />
 
-                {/* Top Bar */}
-                <div className="nx-topbar" style={{
+                {/* Desktop Top Bar — hidden on mobile */}
+                <div className="nx-topbar nx-hide-mobile" style={{
                     display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8,
                     borderBottom: '1px solid var(--nx-border)',
                     background: 'var(--glass-bg)',
@@ -291,6 +298,9 @@ export default function DashboardLayout() {
                     <Outlet />
                 </div>
             </main>
+
+            {/* Mobile Bottom Nav */}
+            {isMobile && <MobileBottomNav />}
 
             <NexusCopilot />
         </div>
