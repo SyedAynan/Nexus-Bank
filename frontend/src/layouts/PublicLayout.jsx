@@ -1,3 +1,29 @@
+/**
+ * File: PublicLayout.jsx
+ * Module: frontend/src/layouts/PublicLayout.jsx
+ *
+ * Purpose:
+ *     Layout wrapper for public (unauthenticated) pages — login, register,
+ *     forgot-password, landing page. Provides the glassmorphism navbar,
+ *     animated background, and footer.
+ *
+ * Developer Journey:
+ *     - v1: No layout system — navbar and footer were copy-pasted into every
+ *       page component. Changing the navbar required editing 5+ files.
+ *     - v2: Created shared layouts. PublicLayout wraps unauthenticated pages,
+ *       DashboardLayout wraps authenticated pages. React Router's <Outlet>
+ *       renders child routes inside the layout.
+ *     - v3: Added dynamic auth check — if the user is already authenticated,
+ *       show "Dashboard" button instead of "Sign In". Initially checked
+ *       localStorage for a token, which was unreliable. Now uses the
+ *       isAuthenticated flag from AuthContext (derived from user state).
+ *
+ * Design:
+ *     Uses glassmorphism (backdrop-filter blur + semi-transparent background)
+ *     for a futuristic look. The nebula background (nx-nebula-bg CSS class)
+ *     provides animated gradient effects behind all public pages.
+ */
+
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { motion } from 'framer-motion'

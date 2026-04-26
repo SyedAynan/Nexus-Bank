@@ -1,11 +1,41 @@
 #!/bin/sh
+# ============================================================
+# File: docker-entrypoint.sh
+#
+# Purpose:
+#     Production startup script for the NEXA backend container.
+#     Runs before the API server starts to ensure all dependencies
+#     are ready and the database is initialized.
+#
+# Developer Journey:
+#     - v1: No entrypoint — uvicorn started immediately. The backend
+#       crashed with "connection refused" because PostgreSQL wasn't
+#       ready yet (Docker starts all services in parallel).
+#     - v2: Added wait-for-postgres loop. But the database had no tables
+#       on first deployment — migrations weren't running.
+#     - v3: Added Alembic migration step + seed data. Now the container
+#       is fully self-initializing on first deployment.
+#
+# Execution Order:
+#     1. Wait for PostgreSQL to accept connections (retry loop)
+#     2. Wait for Redis (with fallback to in-memory if unavailable)
+#     3. Run Alembic migrations (creates/updates tables)
+#     4. Seed demo data if database is empty
+#     5. Start uvicorn with production settings
+#
+# Issue Faced:
+#     "Invalid credentials" in production was caused by empty database —
+#     no admin user existed. Adding the seed step here fixed it permanently.
+# ============================================================
 set -e
 
 echo "═══════════════════════════════════════════════"
 echo "  NEXA — Production Entrypoint"
 echo "═══════════════════════════════════════════════"
 
-# Wait for PostgreSQL
+# ── Step 1: Wait for PostgreSQL ──
+# PostgreSQL takes 5-15 seconds to initialize on first boot.
+# Without this wait, the backend would crash immediately.
 echo "[1/4] Waiting for PostgreSQL..."
 MAX_RETRIES=30
 RETRY_COUNT=0
@@ -26,7 +56,10 @@ print('PostgreSQL is ready')
     sleep 2
 done
 
-# Wait for Redis
+# ── Step 2: Wait for Redis ──
+# Redis is optional — the app falls back to in-memory FakeRedis.
+# We still try to wait for it because real Redis is preferred for
+# OTP storage, rate limiting, and session tracking.
 echo "[2/4] Waiting for Redis..."
 RETRY_COUNT=0
 until python -c "
@@ -44,13 +77,19 @@ print('Redis is ready')
     sleep 2
 done
 
-# Run migrations
+# ── Step 3: Run Database Migrations ──
+# Alembic applies any pending migrations to update the schema.
+# On first deployment, this creates all tables from scratch.
+# On subsequent deployments, it applies only new migrations.
 echo "[3/4] Running database migrations..."
 if [ -f "alembic.ini" ]; then
     alembic upgrade head 2>/dev/null || echo "  Alembic migration skipped (tables created by SQLAlchemy)"
 fi
 
-# Seed data
+# ── Step 4: Seed Demo Data ──
+# Creates admin user, demo accounts, and sample transactions.
+# seed_if_empty() checks if data already exists before inserting.
+# This ensures the admin user exists in production (fixes "Invalid credentials").
 echo "[4/4] Seeding database..."
 python -c "
 from bank_system.seed import seed_if_empty
@@ -65,7 +104,10 @@ echo "  Workers: ${WORKERS:-4}"
 echo "  Port: ${PORT:-8000}"
 echo "═══════════════════════════════════════════════"
 
-# Start uvicorn
+# ── Start uvicorn ──
+# --workers 4: Run 4 worker processes (1 per CPU core is typical)
+# --access-log: Log every HTTP request for monitoring
+# exec: replaces the shell process with uvicorn (proper signal handling)
 exec uvicorn bank_system.main:app \
     --host 0.0.0.0 \
     --port "${PORT:-8000}" \

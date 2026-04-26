@@ -1,3 +1,49 @@
+"""
+File: auth.py
+Module: bank_system.api.routes.auth
+
+Purpose:
+    Authentication and session management API routes. This is the most
+    security-critical file in the entire backend — it handles:
+    - User registration with bcrypt password hashing
+    - Login with username/password + MFA (multi-factor authentication)
+    - OTP generation, storage (Redis), and verification
+    - JWT access/refresh token issuance (httpOnly cookies + JSON body)
+    - Token refresh with rotation (old tokens revoked on refresh)
+    - Logout with cookie clearing and session revocation
+    - Password reset flow (forgot-password → OTP → reset)
+    - Session management (list, revoke individual, revoke all)
+
+Developer Journey:
+    - v1: Simple login endpoint that returned a JWT in the response body.
+      No MFA, no session tracking, no token refresh. Tokens stored in
+      localStorage and sent via Authorization header.
+    - v2: Added MFA flow — login returns 202 if MFA is enabled, frontend
+      shows OTP input, verify-otp endpoint completes authentication.
+      Initially used a Python dict for OTP storage — lost on restart.
+    - v3: Added session tracking with SessionToken model. Each login creates
+      a session record with device info (User-Agent parsing), enabling the
+      "Active Sessions" feature where users can see and revoke sessions.
+    - v4: Security hardening — migrated to httpOnly cookies (XSS protection),
+      added password reset flow with Redis-backed OTP (TTL + rate limiting),
+      added anti-enumeration responses, and session revocation on password reset.
+
+Issue Faced (Critical):
+    "Invalid credentials" error was traced through multiple debugging sessions:
+    1. Frontend sent JSON but backend expected form-data (OAuth2PasswordRequestForm)
+    2. Login queried User.email but frontend sent username field
+    3. bcrypt version mismatch between passlib and bcrypt packages
+    4. In production: admin user didn't exist (database not seeded)
+    Each issue was fixed incrementally, with debug logging added at each step.
+
+Security Decisions:
+    - Constant-time password comparison (via passlib/bcrypt) prevents timing attacks
+    - Account lockout after 5 failed attempts prevents brute-force
+    - Anti-enumeration: forgot-password returns 200 even for non-existent emails
+    - Rate limiting: max 3 password reset requests per 15 minutes per email
+    - Full session revocation on password reset (attacker's stolen tokens invalidated)
+"""
+
 import logging
 import random
 import uuid

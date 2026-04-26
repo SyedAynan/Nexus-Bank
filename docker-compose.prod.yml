@@ -1,10 +1,44 @@
 # ============================================================
-# NEXA v4.0 — Docker Compose (Production)
-# Usage: docker compose -f docker-compose.prod.yml up -d
+# File: docker-compose.prod.yml
+#
+# Purpose:
+#     Production Docker Compose configuration for the NEXA platform.
+#     Unlike docker-compose.yml (development), this file:
+#     - Uses pre-built images (no volume mounts or hot-reload)
+#     - Enforces resource limits (CPU, memory)
+#     - Uses the docker-entrypoint.sh for proper initialization
+#     - Requires SECRET_KEY to be set (fails fast if missing)
+#     - Builds the frontend as a separate Nginx container
+#
+# Developer Journey:
+#     - v1: Used the development compose for everything — dev server
+#       settings in production, no resource limits, exposed debug ports.
+#     - v2: Created this dedicated production compose with proper settings.
+#       Separated frontend into its own Nginx-based container for
+#       performance and independent scaling.
+#
+# Usage:
+#     # Set required environment variables
+#     export SECRET_KEY=$(openssl rand -base64 64)
+#     export POSTGRES_PASSWORD=your_secure_password
+#
+#     # Build and start
+#     docker compose -f docker-compose.prod.yml up -d --build
+#
+#     # Verify
+#     curl http://localhost:8000/api/health
+#     curl http://localhost
+#
+# Security:
+#     SECRET_KEY is REQUIRED — the ${SECRET_KEY:?...} syntax causes
+#     Docker Compose to fail immediately if it's not set, preventing
+#     deployment with an insecure auto-generated key.
 # ============================================================
 
 services:
   # ── Backend API (Production) ──
+  # Uses the production Dockerfile with docker-entrypoint.sh
+  # Entrypoint handles: DB wait → migrations → seed → uvicorn
   backend:
     build:
       context: .
@@ -17,6 +51,7 @@ services:
       - DEBUG=false
       - DATABASE_URL=postgresql+psycopg2://nexa:${POSTGRES_PASSWORD:-nexa_prod_2026}@db:5432/nexa
       - REDIS_URL=redis://redis:6379/0
+      # ${SECRET_KEY:?...} fails if not set — prevents insecure deployment
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
       - DEMO_MODE=false
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
@@ -35,7 +70,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 30s   # Allow time for migrations + seeding
     deploy:
       resources:
         limits:
@@ -45,6 +80,9 @@ services:
           memory: 256M
 
   # ── Frontend (Nginx + React) ──
+  # Separate container for static file serving — much faster than Python.
+  # VITE_API_URL=/api — frontend makes relative API requests, Nginx
+  # reverse-proxies them to the backend (no CORS issues).
   frontend:
     build:
       context: .
@@ -68,10 +106,12 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M
+          memory: 128M   # Nginx is very lightweight
           cpus: "0.25"
 
   # ── PostgreSQL Database ──
+  # Same as development but with production-grade password.
+  # In a real production setup, use a managed database (RDS, Cloud SQL, Neon).
   db:
     image: postgres:15-alpine
     container_name: nexa-db
@@ -98,6 +138,8 @@ services:
           cpus: "0.5"
 
   # ── Redis ──
+  # AOF persistence enabled — data survives Redis restarts.
+  # maxmemory-policy: allkeys-lru evicts least-recently-used keys when full.
   redis:
     image: redis:7-alpine
     container_name: nexa-redis

@@ -1,3 +1,36 @@
+/**
+ * File: ForgotPassword.jsx
+ * Module: frontend/src/pages/auth/ForgotPassword.jsx
+ *
+ * Purpose:
+ *     Complete password reset flow with 3 animated steps:
+ *     Step 1: Email/username input → POST /auth/forgot-password (generates OTP)
+ *     Step 2: OTP verification → 6-digit code input with auto-focus
+ *     Step 3: New password → POST /auth/reset-password (updates + revokes sessions)
+ *
+ * Developer Journey:
+ *     - v1: No password reset — users had to contact admin to reset passwords.
+ *       This was a blocker for self-service and a support burden.
+ *     - v2: Created this UI with 3 animated steps using Framer Motion.
+ *       Initially used static mock data — OTP was always "123456".
+ *     - v3: Wired to real API endpoints. The backend generates a random 6-digit
+ *       OTP, stores it in Redis with 15-min TTL, and (in production) sends it
+ *       via email. Added password strength meter with real-time feedback.
+ *
+ * Security Features:
+ *     - Anti-enumeration: Backend returns success even if email doesn't exist
+ *     - Rate limiting: Max 3 OTP requests per email per 15 minutes
+ *     - OTP expiry: 15 minutes (stored in Redis with TTL)
+ *     - Session revocation: All existing sessions are revoked on password reset
+ *     - Password strength: Client-side validation (length, uppercase, number, special)
+ *
+ * UX Features:
+ *     - Auto-focus OTP input fields with paste support
+ *     - Password visibility toggle
+ *     - Animated step transitions with Framer Motion
+ *     - Gradient progress indicator
+ */
+
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
