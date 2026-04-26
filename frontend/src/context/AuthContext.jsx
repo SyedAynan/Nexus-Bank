@@ -1,3 +1,41 @@
+/**
+ * File: AuthContext.jsx
+ * Module: frontend/src/context/AuthContext.jsx
+ *
+ * Purpose:
+ *     React Context provider for authentication state management.
+ *     Provides login, logout, MFA verification, and user state to all
+ *     components in the application via the useAuth() hook.
+ *
+ * Developer Journey:
+ *     - v1: Auth state lived in individual components — every page had its
+ *       own login check, token storage, and redirect logic. Lots of duplication.
+ *     - v2: Centralized into AuthContext — single source of truth for auth state.
+ *       Used atob() to decode the JWT payload and extract user info (username, role).
+ *     - v3: Removed insecure atob() JWT decoding. The JWT payload is base64-encoded
+ *       but NOT encrypted — decoding it client-side is a security anti-pattern because:
+ *       (a) The payload could be tampered with if the token is from localStorage
+ *       (b) We should trust the server, not client-side parsing
+ *       Now the backend includes user data (username, role) in the login response body.
+ *     - v4: Added httpOnly cookie support. The browser sends cookies automatically,
+ *       so we no longer need to manually attach tokens. localStorage is kept only
+ *       as a fallback for environments without cookie support.
+ *
+ * Auth Flow:
+ *     1. User submits credentials → login() sends POST /auth/login
+ *     2. If MFA enabled → server returns 202, frontend shows OTP input
+ *     3. User enters OTP → verifyOtp() sends POST /auth/verify-otp
+ *     4. Server sets httpOnly cookies + returns user data in response body
+ *     5. AuthContext stores user info in state + localStorage (for persistence)
+ *     6. All child components can access auth state via useAuth() hook
+ *
+ * Issue Faced:
+ *     Login returned 200 but the dashboard showed "Not authenticated" because
+ *     the token was stored but the user state wasn't set. The atob() decode
+ *     was failing silently on some JWT formats. Fixed by having the server
+ *     return the user object directly instead of relying on client-side decode.
+ */
+
 import { createContext, useContext, useState } from 'react'
 import api from '../api'
 

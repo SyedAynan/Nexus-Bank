@@ -1,3 +1,37 @@
+"""
+File: redis_client.py
+Module: bank_system.core.redis_client
+
+Purpose:
+    Redis client factory with automatic fallback to an in-memory implementation.
+    Provides a single get_redis() function that returns either a real Redis client
+    or a FakeRedis instance that mimics the Redis API in memory.
+
+Developer Journey:
+    - v1: No Redis — OTPs stored in a Python dict, rate limiting done with a
+      simple counter. Data was lost on every restart, and there was no rate
+      limiting in production.
+    - v2: Added Redis for OTP storage and rate limiting. But the app crashed
+      on developer machines without Redis installed.
+    - v3: Created FakeRedis fallback — the app works without Redis for local
+      development, but logs a warning. This was critical for onboarding new
+      developers who don't have Docker installed.
+    - v4: Added TTL-based expiration to FakeRedis to match Redis behavior
+      for OTP expiration. Added sorted set operations for the sliding window
+      rate limiter. Added pipeline support for atomic rate limit checks.
+
+Design Decision:
+    FakeRedis is NOT suitable for production — it's single-process, has no
+    persistence, and loses all data on restart. In production, REDIS_URL
+    must point to a real Redis instance (Docker service or managed Redis
+    like Upstash/ElastiCache).
+
+Production Note:
+    In Kubernetes, Redis is deployed as a separate pod (see k8s/02-redis.yaml).
+    The backend connects via the service name 'nexa-redis:6379' which
+    Kubernetes CoreDNS resolves to the pod's ClusterIP.
+"""
+
 import logging
 import time
 
