@@ -189,6 +189,10 @@ register_exception_handlers(app)
 # ── Security Middleware Stack (order matters: last added = first executed) ──
 
 # CORS — restrict to known origins (never use '*' in production)
+# Production Deployment Note:
+#   With Vercel proxy rewrites (vercel.json), frontend requests appear same-origin
+#   so CORS is not strictly needed. However, we configure it as defense-in-depth
+#   for direct API access (Swagger, mobile apps, Postman) and fallback scenarios.
 ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React dev server
     "http://localhost:5173",  # Vite dev server
@@ -204,6 +208,16 @@ if _frontend_url:
     if _frontend_url.startswith("https://") and not _frontend_url.startswith("https://www."):
         ALLOWED_ORIGINS.append(_frontend_url.replace("https://", "https://www."))
 
+# Railway self-origin — allows health checks and internal API calls
+_railway_url = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip()
+if _railway_url:
+    ALLOWED_ORIGINS.append(f"https://{_railway_url}")
+
+# Render self-origin
+_render_url = os.environ.get("RENDER_EXTERNAL_URL", "").strip()
+if _render_url:
+    ALLOWED_ORIGINS.append(_render_url)
+
 if settings.environment == "development":
     ALLOWED_ORIGINS.extend(
         [
@@ -213,6 +227,9 @@ if settings.environment == "development":
             "http://127.0.0.1:3000",
         ]
     )
+
+# Log allowed origins at startup for deployment debugging
+logging.info(f"CORS allowed origins: {ALLOWED_ORIGINS}")
 
 app.add_middleware(
     CORSMiddleware,
