@@ -2,7 +2,7 @@ import { Outlet, NavLink, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LayoutDashboard, Users, ArrowLeftRight, Shield, FileCheck, ScrollText, Settings, ArrowLeft, Bell, Sun, Moon, ShieldCheck, AlertTriangle, Activity, CheckCircle, Database, Gauge, BarChart3, Flag, Globe, HardDrive, Map, Code2 } from 'lucide-react'
+import { LayoutDashboard, Users, ArrowLeftRight, Shield, FileCheck, ScrollText, Settings, ArrowLeft, Bell, Sun, Moon, ShieldCheck, AlertTriangle, Activity, CheckCircle, Database, Gauge, BarChart3, Flag, Globe, HardDrive, Map, Code2, Menu, X } from 'lucide-react'
 
 /* ─── Demo Notifications ─── */
 const ADMIN_NOTIFICATIONS = [
@@ -70,6 +70,8 @@ function ThemeToggle() {
 
 export default function AdminLayout() {
     const { user } = useAuth()
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+    const closeMobile = () => setMobileMenuOpen(false)
 
     const sections = [
         { label: 'Overview', to: '/admin', icon: LayoutDashboard },
@@ -99,8 +101,15 @@ export default function AdminLayout() {
         <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
             <div className="nx-nebula-bg" />
 
+            {/* Mobile Menu Button */}
+            <button className="nx-mobile-toggle" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+            {/* Mobile Backdrop */}
+            <div className={`nx-sidebar-backdrop ${mobileMenuOpen ? 'open' : ''}`} onClick={closeMobile} />
+
             {/* Sidebar */}
-            <aside className="nx-sidebar" style={{ borderRightColor: 'rgba(167,139,250,0.1)', position: 'relative', zIndex: 2 }}>
+            <aside className={`nx-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{ borderRightColor: 'rgba(167,139,250,0.1)', position: 'relative', zIndex: 2 }}>
                 <div style={{ padding: '0 1.5rem 1.5rem', borderBottom: '1px solid var(--nx-border)' }}>
                     <Link to="/admin" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
                         <motion.div
@@ -125,7 +134,7 @@ export default function AdminLayout() {
                 <div className="nx-sidebar-section">Console</div>
                 <nav>
                     {sections.map(s => (
-                        <NavLink key={s.to} to={s.to} end={s.to === '/admin'} className={({ isActive }) => `nx-sidebar-link ${isActive ? 'active' : ''}`}>
+                        <NavLink key={s.to} to={s.to} className={({ isActive }) => `nx-sidebar-link ${isActive ? 'active' : ''}`} onClick={closeMobile}>
                             <s.icon size={16} /> {s.label}
                         </NavLink>
                     ))}
@@ -158,9 +167,8 @@ export default function AdminLayout() {
 
             <main style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column' }}>
                 {/* Top Bar */}
-                <div style={{
+                <div className="nx-topbar" style={{
                     display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8,
-                    padding: '0.75rem 2rem',
                     borderBottom: '1px solid var(--nx-border)',
                     background: 'rgba(10, 15, 46, 0.3)',
                     backdropFilter: 'blur(8px)',
@@ -168,7 +176,7 @@ export default function AdminLayout() {
                     <ThemeToggle />
                     <NotificationCenter />
                 </div>
-                <div style={{ flex: 1, padding: '1.5rem 2rem' }}>
+                <div className="nx-main-content" style={{ flex: 1 }}>
                     <Outlet />
                 </div>
             </main>

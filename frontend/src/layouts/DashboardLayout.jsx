@@ -275,9 +275,8 @@ export default function DashboardLayout() {
                 <GlobalTicker />
 
                 {/* Top Bar */}
-                <div style={{
+                <div className="nx-topbar" style={{
                     display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8,
-                    padding: '0.75rem 2rem',
                     borderBottom: '1px solid var(--nx-border)',
                     background: 'var(--glass-bg)',
                     backdropFilter: 'blur(8px)',
@@ -288,7 +287,7 @@ export default function DashboardLayout() {
                     <ThemeToggle />
                     <NotificationCenter />
                 </div>
-                <div style={{ flex: 1, padding: '1.5rem 2rem' }}>
+                <div className="nx-main-content" style={{ flex: 1 }}>
                     <Outlet />
                 </div>
             </main>

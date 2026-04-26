@@ -1604,29 +1604,7 @@ body {
   animation: success-ring 1.5s ease-out 0.3s both;
 }
 
-/* ═══════ RESPONSIVE ═══════ */
-
-@media (max-width: 768px) {
-  .nx-sidebar {
-    width: 220px;
-  }
-
-  .nx-core-node {
-    width: 80px;
-    height: 80px;
-  }
-
-  .nx-otp-input {
-    width: 40px;
-    height: 48px;
-    font-size: 1.125rem;
-  }
-
-  .nx-social-btn {
-    font-size: 0.75rem;
-    padding: 0.625rem 0.75rem;
-  }
-}
+/* (Responsive rules consolidated at end of file) */
 
 /* ═══════════════════════════════════════════════════
    NEXUS UPGRADE — New Component Styles
@@ -2014,7 +1992,11 @@ body {
   animation: gradient-shift 4s ease infinite;
 }
 
-/* ═══════ RESPONSIVE — NEXUS ADDITIONS ═══════ */
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE DESIGN SYSTEM — NEXA
+   Desktop-first: base styles → ≤1280 → ≤1024 → ≤768 → ≤640 → ≤480
+   Large screens: ≥1536 → ≥1920
+   ═══════════════════════════════════════════════════════════ */
 
 /* ── Global Stock Ticker ── */
 .nx-global-ticker {
@@ -2084,19 +2066,43 @@ body {
   color: var(--nx-text);
 }
 
-/* ── Tablet (≤ 1024px) ── */
+/* ── Responsive Utility Classes ── */
+.nx-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.nx-table-scroll .nx-table { min-width: 600px; }
+.nx-hide-mobile { display: initial; }
+.nx-show-mobile { display: none; }
+.nx-responsive-grid { display: grid; gap: 1rem; }
+.nx-responsive-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+.nx-responsive-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.nx-responsive-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.nx-main-content { padding: 1.5rem 2rem; }
+.nx-topbar { padding: 0.75rem 2rem; }
+
+/* ── Container — prevents ultra-wide stretching ── */
+.nx-max-container { max-width: 1800px; margin: 0 auto; width: 100%; }
+
+/* ═══════ LAPTOP (≤ 1280px) ═══════ */
+@media (max-width: 1280px) {
+  .nx-responsive-grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .nx-main-content { padding: 1.25rem 1.5rem; }
+  .nx-topbar { padding: 0.75rem 1.5rem; }
+}
+
+/* ═══════ TABLET (≤ 1024px) ═══════ */
 @media (max-width: 1024px) {
   .nx-sidebar { width: 220px; }
   .nx-kpi { padding: 1rem 1.25rem; }
-  .nx-card, .nx-card-static, .nx-card-glow, .nx-chart {
-    padding: 1.25rem;
-  }
+  .nx-card, .nx-card-static, .nx-card-glow, .nx-chart { padding: 1.25rem; }
+  .nx-ai-summary { padding: 1.25rem; }
+  .nx-responsive-grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .nx-main-content { padding: 1rem 1.25rem; }
+  .nx-topbar { padding: 0.625rem 1.25rem; }
 }
 
-/* ── Mobile (≤ 768px) ── */
+/* ═══════ MOBILE (≤ 768px) ═══════ */
 @media (max-width: 768px) {
   .nx-mobile-toggle { display: flex; }
-  
+
   .nx-sidebar {
     position: fixed;
     left: -280px;
@@ -2116,30 +2122,125 @@ body {
     pointer-events: none;
     transition: opacity 0.3s;
   }
-  .nx-sidebar-backdrop.open {
-    opacity: 1;
-    pointer-events: auto;
+  .nx-sidebar-backdrop.open { opacity: 1; pointer-events: auto; }
+
+  /* Main content — account for mobile toggle */
+  .nx-main-content { padding: 1rem; }
+  .nx-topbar { padding: 0.625rem 1rem; padding-left: 56px; }
+
+  /* Grids → single column */
+  .nx-grid-2, .nx-grid-3, .nx-grid-4,
+  .nx-responsive-grid-2, .nx-responsive-grid-3, .nx-responsive-grid-4 {
+    grid-template-columns: 1fr;
   }
 
-  .nx-copilot-panel {
-    width: calc(100vw - 32px);
-    right: 16px;
-    bottom: 80px;
-    max-height: 70vh;
-  }
+  /* Cards & charts */
+  .nx-card, .nx-card-static, .nx-card-glow, .nx-chart { padding: 1rem; }
+  .nx-kpi { padding: 0.875rem 1rem; }
+  .nx-ai-summary { padding: 1rem; }
+
+  /* Copilot */
+  .nx-copilot-panel { width: calc(100vw - 32px); right: 16px; bottom: 80px; max-height: 70vh; }
   .nx-copilot-fab { width: 48px; height: 48px; bottom: 20px; right: 20px; }
-  
+
+  /* Network */
   .nx-core-node { width: 80px; height: 80px; }
   .nx-network-container { height: 240px; }
+
+  /* Notifications */
   .nx-notif-dropdown { width: calc(100vw - 32px); right: -60px; }
+
+  /* Auth */
   .nx-otp-input { width: 40px; height: 48px; font-size: 1.125rem; }
   .nx-social-btn { font-size: 0.75rem; padding: 0.625rem 0.75rem; }
+
+  /* Table horizontal scroll */
+  .nx-table-scroll .nx-table { min-width: 500px; }
+
+  /* Tabs scroll horizontally */
+  .nx-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .nx-tab { white-space: nowrap; flex-shrink: 0; }
+
+  /* Utility */
+  .nx-hide-mobile { display: none !important; }
+  .nx-show-mobile { display: initial !important; }
 }
 
-/* ── Small Mobile (≤ 480px) ── */
+/* ═══════ SMALL MOBILE (≤ 640px) ═══════ */
+@media (max-width: 640px) {
+  .nx-main-content { padding: 0.75rem; }
+  .nx-topbar { padding: 0.5rem 0.75rem; padding-left: 52px; }
+  .nx-network-container { height: 200px; }
+  .nx-globe-container { aspect-ratio: 4/3; }
+  .nx-ticker-strip { padding: 6px 0; }
+  .nx-ticker-strip .nx-ticker-item { font-size: 10px; }
+
+  /* Notification dropdown fills screen */
+  .nx-notif-dropdown { width: calc(100vw - 16px); right: -100px; max-height: 360px; }
+
+  /* Chart axis labels smaller */
+  .recharts-cartesian-axis-tick-value { font-size: 9px !important; }
+}
+
+/* ═══════ EXTRA SMALL MOBILE (≤ 480px) ═══════ */
 @media (max-width: 480px) {
-  .nx-kpi { padding: 0.875rem 1rem; }
-  .nx-card, .nx-card-static, .nx-chart { padding: 1rem; }
+  .nx-kpi { padding: 0.75rem; }
+  .nx-card, .nx-card-static, .nx-chart { padding: 0.75rem; }
   .nx-copilot-panel { width: calc(100vw - 16px); right: 8px; }
+  .nx-btn { padding: 0.5rem 1rem; font-size: 0.75rem; }
+
+  /* Hide complex visuals on tiny screens */
+  .nx-network-container { display: none; }
+  .nx-global-ticker { display: none; }
+  .nx-particles { display: none; }
+
+  /* Simplify auth */
+  .nx-otp-input { width: 36px; height: 44px; font-size: 1rem; }
+  .nx-otp-group { gap: 0.375rem; }
+}
+
+/* ═══════ LARGE DISPLAY (≥ 1536px) ═══════ */
+@media (min-width: 1536px) {
+  body { font-size: 1.0625rem; }
+  .nx-sidebar { width: 280px; }
+  .nx-sidebar-link { font-size: 0.875rem; padding: 0.75rem 1.75rem; }
+  .nx-sidebar-section { font-size: 0.6875rem; padding: 1.75rem 1.75rem 0.625rem; }
+  .nx-kpi { padding: 1.5rem 1.75rem; }
+  .nx-card, .nx-card-static, .nx-card-glow, .nx-chart { padding: 1.75rem; }
+  .nx-main-content { padding: 2rem 2.5rem; }
+  .nx-topbar { padding: 1rem 2.5rem; }
+  .nx-network-container { height: 400px; }
+  .nx-globe-container { aspect-ratio: 16/9; }
+  .nx-btn { padding: 0.75rem 1.5rem; font-size: 0.875rem; }
+  .nx-input { padding: 0.8125rem 1.125rem; font-size: 0.9375rem; }
+}
+
+/* ═══════ TV / ULTRA-WIDE (≥ 1920px) ═══════ */
+@media (min-width: 1920px) {
+  body { font-size: 1.125rem; }
+  .nx-sidebar { width: 300px; }
+  .nx-sidebar-link { font-size: 0.9375rem; }
+  .nx-main-content { padding: 2.5rem 3rem; }
+  .nx-topbar { padding: 1.25rem 3rem; }
+  .nx-kpi { padding: 1.75rem 2rem; }
+  .nx-card, .nx-card-static, .nx-card-glow, .nx-chart { padding: 2rem; }
+  .nx-network-container { height: 480px; }
+}
+
+/* ═══════ PREFERS REDUCED MOTION ═══════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .nx-particles { display: none; }
+  .nx-global-ticker .nx-ticker-track { animation: none; }
+  .nx-ticker-track { animation: none; }
+  .nx-copilot-fab::before { animation: none; }
+  .nx-card:hover { transform: none; }
+  .nx-kpi:hover { transform: none; }
+  .nx-market-card:hover { transform: none; }
+  .nx-module-node:hover { transform: none; }
 }
 
