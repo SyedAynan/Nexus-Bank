@@ -22,6 +22,8 @@ services:
         generateValue: true
       - key: DATABASE_URL
         sync: false  # Must be set manually — use Render PostgreSQL addon, Neon, or Supabase
+      - key: REDIS_URL
+        sync: false  # Must be set manually — use Render Redis addon or Upstash
       - key: FRONTEND_URL
         value: https://your-nexus-bank.vercel.app
       - key: PYTHONPATH

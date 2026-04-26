@@ -197,8 +197,10 @@ def list_all_transactions(
     q = db.query(Transaction)
 
     if current_user.role == UserRole.user:
-        user_account_ids = [a.id for a in db.query(Account.id).filter(Account.owner_id == current_user.id).all()]
-        q = q.filter(Transaction.account_id.in_(user_account_ids))
+        # Single JOIN query instead of N+1 (fetch account IDs + filter)
+        q = q.join(Account, Transaction.account_id == Account.id).filter(
+            Account.owner_id == current_user.id
+        )
 
     txs = q.order_by(Transaction.created_at.desc()).offset(offset).limit(min(limit, 500)).all()
     return txs

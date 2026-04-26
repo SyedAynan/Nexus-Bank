@@ -446,6 +446,7 @@ async def refresh_token(
             "access_token": new_access,
             "refresh_token": new_refresh,
             "token_type": "bearer",
+            "user": {"username": user.username, "role": user.role},
         }
     )
     set_auth_cookies(response, new_access, new_refresh)
@@ -497,20 +498,23 @@ def logout(
 
 @router.get("/sessions", response_model=list[SessionRead])
 def list_sessions(
+    request: Request,
     current_user: Annotated[User, Depends(get_current_active_user)],
-    token: Annotated[str, Depends(oauth2_scheme)],
+    token: Annotated[str | None, Depends(oauth2_scheme)],
     db: Annotated[Session, Depends(get_db)],
 ):
     """List all active (non-revoked, non-expired) sessions for the current user."""
     now = datetime.now(UTC)
 
-    # Get current session JTI
+    # Get current session JTI from cookie or header
+    resolved_token = request.cookies.get("access_token") or token
     current_jti = None
-    try:
-        payload = decode_token(token)
-        current_jti = payload.get("jti")
-    except ValueError:
-        pass
+    if resolved_token:
+        try:
+            payload = decode_token(resolved_token)
+            current_jti = payload.get("jti")
+        except ValueError:
+            pass
 
     sessions = (
         db.query(SessionToken)
@@ -535,8 +539,9 @@ def list_sessions(
 @router.delete("/sessions/{session_id}")
 def revoke_session(
     session_id: int,
+    request: Request,
     current_user: Annotated[User, Depends(get_current_active_user)],
-    token: Annotated[str, Depends(oauth2_scheme)],
+    token: Annotated[str | None, Depends(oauth2_scheme)],
     db: Annotated[Session, Depends(get_db)],
 ):
     """Revoke a specific session. Cannot revoke your own current session."""
@@ -545,7 +550,7 @@ def revoke_session(
         .filter(
             SessionToken.id == session_id,
             SessionToken.user_id == current_user.id,
-            SessionToken.revoked.is_(False),  # Fixed: SQLAlchemy proper comparison
+            SessionToken.revoked.is_(False),
         )
         .first()
     )
@@ -554,15 +559,17 @@ def revoke_session(
         raise HTTPException(status_code=404, detail="Session not found")
 
     # Prevent revoking current session (use /logout instead)
-    try:
-        payload = decode_token(token)
-        if payload.get("jti") == session.jti:
-            raise HTTPException(
-                status_code=400,
-                detail="Cannot revoke current session. Use /logout instead.",
-            )
-    except ValueError:
-        pass
+    resolved_token = request.cookies.get("access_token") or token
+    if resolved_token:
+        try:
+            payload = decode_token(resolved_token)
+            if payload.get("jti") == session.jti:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Cannot revoke current session. Use /logout instead.",
+                )
+        except ValueError:
+            pass
 
     session.revoked = True
     db.commit()
@@ -571,19 +578,22 @@ def revoke_session(
 
 @router.delete("/sessions")
 def revoke_all_sessions(
+    request: Request,
     current_user: Annotated[User, Depends(get_current_active_user)],
-    token: Annotated[str, Depends(oauth2_scheme)],
+    token: Annotated[str | None, Depends(oauth2_scheme)],
     db: Annotated[Session, Depends(get_db)],
 ):
     """Revoke all sessions except the current one."""
     now = datetime.now(UTC)
 
+    resolved_token = request.cookies.get("access_token") or token
     current_jti = None
-    try:
-        payload = decode_token(token)
-        current_jti = payload.get("jti")
-    except ValueError:
-        pass
+    if resolved_token:
+        try:
+            payload = decode_token(resolved_token)
+            current_jti = payload.get("jti")
+        except ValueError:
+            pass
 
     sessions = (
         db.query(SessionToken)
