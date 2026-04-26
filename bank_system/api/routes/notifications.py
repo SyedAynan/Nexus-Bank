@@ -1,3 +1,27 @@
+"""
+File: notifications.py
+Module: bank_system.api.routes.notifications
+
+Purpose:
+    In-app notification system API routes. Supports:
+    - User: list, view, mark-read (own notifications only)
+    - Admin: create notifications (single user or broadcast to all)
+    - Admin: delete notifications
+
+Developer Journey:
+    - v1: No notification system — users had no way to receive alerts
+      about fraud detections, successful transfers, or system announcements.
+    - v2: Created notification model and CRUD routes. Users can view and
+      mark-read their own notifications. Admins can create and delete.
+    - v3: Added broadcast feature — admins can send announcements to all
+      active users by setting user_id=null in the create request.
+
+Security:
+    - Users can only view/mark-read their OWN notifications (owner check)
+    - Only admins can create or delete notifications (role_required)
+    - Unread count endpoint enables the notification bell badge in the navbar
+"""
+
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query

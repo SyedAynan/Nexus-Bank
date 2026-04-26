@@ -1,6 +1,26 @@
 """
-NEXA Services API — Unified routes for OAuth, WebAuthn, Email, BillPay, MultiCurrency, Feature Flags
-All endpoints now require authentication (BUG-015 fix).
+File: services.py
+Module: bank_system.api.routes.services
+
+Purpose:
+    Unified API routes for auxiliary NEXA services:
+    - OAuth (Google, GitHub SSO configuration)
+    - WebAuthn (passkey/biometric authentication registration)
+    - Email (SMTP verification and service status)
+    - BillPay (bill categories, payees, scheduled payments)
+    - MultiCurrency (exchange rates, currency conversion)
+    - Feature Flags (dynamic feature toggling per environment)
+
+Developer Journey:
+    - v1: Each service had its own router file — 6 separate files with
+      duplicate boilerplate (auth dependency, error handling). Hard to
+      navigate and maintain.
+    - v2: Consolidated into this single unified services router. Each
+      service is grouped with clear comment sections. Reduced total
+      boilerplate by ~60% while maintaining separation of concerns.
+    - v3 (BUG-015 fix): All endpoints now require authentication.
+      Previously, some service endpoints were accidentally public,
+      allowing unauthenticated access to feature flags and email config.
 """
 
 from typing import Annotated, Any

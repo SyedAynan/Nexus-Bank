@@ -1,3 +1,24 @@
+"""
+File: intelligence.py
+Module: bank_system.api.routes.intelligence
+
+Purpose:
+    AI/ML-powered intelligence routes for financial health scoring,
+    portfolio insights, and AML (Anti-Money Laundering) network analysis.
+    These endpoints provide the "smart" features that differentiate NEXA
+    from traditional banking platforms.
+
+Developer Journey:
+    - v1: No intelligence layer — the app was just basic CRUD (deposits,
+      withdrawals, transfers). No insights, no risk analysis.
+    - v2: Created three ML engine integrations:
+      * FinancialHealthEngine — scores user's financial health (0-100)
+      * PortfolioEngine — analyzes account allocation and diversification
+      * AMLEngine — builds transaction graph, detects suspicious patterns
+    - v3: Added RBAC — financial-health and portfolio are user-accessible,
+      but AML network view requires admin/analyst role.
+"""
+
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
