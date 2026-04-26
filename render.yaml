@@ -14,7 +14,7 @@
 #     - v3: Migrated to PostgreSQL (DATABASE_URL set manually to Render
 #       PostgreSQL addon or external provider like Neon/Supabase).
 #       Added REDIS_URL for OTP storage and rate limiting.
-#     - v4: Removed Railway config. Render is now the sole deployment
+#     - v4: Consolidated to Render as the sole deployment platform.
 #       platform. Added gunicorn for production stability.
 #
 # Issue Faced:
