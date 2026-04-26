@@ -1,15 +1,39 @@
 """
-Redis-Backed DSA Persistence Layer (v4.0)
-==========================================
-Provides persistent, distributed versions of the core NEXA data structures
-using Redis as the backing store. Each class mirrors the interface of the
-in-memory DSA but survives restarts and supports horizontal scaling.
+File: redis_dsa.py
+Module: bank_system.core.redis_dsa
 
-Structures:
-  - RedisHashTable   — Account cache via HSET/HGET
-  - RedisUndoStack   — Per-account undo via LPUSH/LPOP (capped at 50)
-  - RedisQueue       — FIFO transaction queue via Redis List
-  - RedisPriorityQueue — Loan priority queue via Sorted Set
+Purpose:
+    Redis-backed implementations of core data structures used in NEXA's
+    DSA Showcase feature. Each class mirrors a standard CS data structure
+    but uses Redis for persistence and distribution.
+
+Developer Journey:
+    - v1: All data structures were in-memory Python objects — lost on every
+      server restart. The DSA showcase was purely educational with no
+      real persistence.
+    - v2: Created this module with Redis-backed versions. Now data structures
+      persist across restarts and work across multiple server instances.
+      This is critical for the Kubernetes deployment where multiple backend
+      pods need to share state.
+
+Data Structures Implemented:
+    - RedisHashTable: O(1) account lookup via HSET/HGET. Uses Redis strings
+      with JSON serialization. Includes secondary email index for reverse lookup.
+    - RedisUndoStack: Per-account undo history via LPUSH/LPOP (stack = list
+      with push/pop on the same end). Capped at 50 entries with LTRIM.
+    - RedisQueue: FIFO transaction queue via RPUSH/LPOP (queue = list with
+      push on right, pop on left). Used for batch transaction processing.
+    - RedisPriorityQueue: Loan priority queue via ZADD/ZPOPMIN (sorted set).
+      Priority formula: (100 - credit_score/10) + (amount/100000) - urgency.
+      Lower score = higher priority (processed first). Supports lazy deletion
+      for cancelled loans.
+
+Redis Data Structure Mapping:
+    CS Concept       → Redis Command    → Time Complexity
+    Hash Table       → SET/GET          → O(1)
+    Stack (push/pop) → LPUSH/LPOP       → O(1)
+    Queue (FIFO)     → RPUSH/LPOP       → O(1)
+    Priority Queue   → ZADD/ZPOPMIN     → O(log n)
 """
 
 import json

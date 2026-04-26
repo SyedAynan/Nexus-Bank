@@ -1,9 +1,31 @@
 """
-IP Whitelist Middleware for Admin Routes
-=========================================
-Restricts /api/admin/* endpoints to whitelisted IP addresses.
-In development mode with an empty whitelist, all IPs are allowed.
-Caches the whitelist for 60 seconds to reduce DB queries.
+File: ip_whitelist.py
+Module: bank_system.middleware.ip_whitelist
+
+Purpose:
+    Restricts admin API endpoints (/api/admin/*) to a whitelist of approved
+    IP addresses stored in the database. Provides an additional layer of
+    access control beyond RBAC (role-based) authentication.
+
+Developer Journey:
+    - v1: Admin routes were protected only by role checks — any user with
+      admin role could access them from any location. This was a risk
+      because stolen admin credentials could be used from anywhere.
+    - v2: Added IP whitelist middleware. Admin requests are checked against
+      a database table of approved IPs. Unapproved IPs get 403 Forbidden.
+    - v3: Added 60-second in-memory cache to avoid querying the database
+      on every admin request. Cache is invalidated on whitelist CRUD operations.
+
+Design Decisions:
+    - Dev bypass: In development mode with an empty whitelist, ALL IPs are
+      allowed. This prevents developers from locking themselves out.
+    - Production strict: In production with an empty whitelist, ALL admin
+      access is BLOCKED. This is a fail-secure default.
+    - Self-exemption: The /ip-whitelist management endpoints themselves
+      are exempt from the whitelist check — otherwise admins couldn't add
+      their own IP (chicken-and-egg problem).
+    - Localhost normalization: ::1 and 0.0.0.0 are normalized to 127.0.0.1
+      for consistent matching.
 """
 
 import logging

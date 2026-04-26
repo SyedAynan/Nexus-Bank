@@ -1,8 +1,30 @@
 """
-NEXA Startup Validation
-========================
-Validates critical environment configuration before the app starts.
-Fails fast on missing or insecure secrets in production.
+File: startup_checks.py
+Module: bank_system.core.startup_checks
+
+Purpose:
+    Pre-flight validation that runs before the FastAPI app starts serving
+    traffic. Detects misconfiguration (insecure secrets, debug mode in prod)
+    and fails fast with clear error messages instead of subtle runtime bugs.
+
+Developer Journey:
+    - v1: No startup validation — the app started happily with SECRET_KEY="secret"
+      in production. Tokens were trivially forgeable. Discovered this only
+      after a security review.
+    - v2: Added this module to check for known insecure defaults and
+      environment mismatches. In production, the app now refuses to start
+      if SECRET_KEY is a known default or if DEBUG=true.
+
+Design Decision:
+    Errors (fatal) vs Warnings (informational):
+    - ERRORS cause sys.exit(1) — app refuses to start. Used for security-critical
+      issues that would compromise the system if ignored.
+    - WARNINGS are logged but don't block startup. Used for non-ideal but
+      non-critical configurations (e.g., localhost DB URL in staging).
+
+    This "fail-fast" approach is critical for production deployments because
+    it's much better to fail at deployment time than to run with a security
+    vulnerability that goes unnoticed.
 """
 
 import logging

@@ -1,16 +1,40 @@
 """
-Event Bus Foundation (v4.0)
-============================
-In-process publish/subscribe event bus as a stepping stone to Apache Kafka.
+File: event_bus.py
+Module: bank_system.core.event_bus
 
-Provides decoupled communication between services:
-  - Banking → publishes txn.created, txn.failed
-  - Fraud   → subscribes to txn.created, publishes fraud.scored
-  - AML     → subscribes to txn.created, publishes aml.flagged
-  - Notif   → subscribes to fraud.scored, aml.flagged
+Purpose:
+    In-process publish/subscribe event bus for decoupled inter-service
+    communication. Enables the banking, fraud detection, AML, and notification
+    systems to communicate without direct dependencies.
 
-When Kafka is integrated, this module can be swapped out with
-minimal changes to publishers and subscribers.
+Developer Journey:
+    - v1: Services called each other directly — banking.py imported fraud.py
+      and called fraud_engine.score() inline. This created tight coupling
+      and made it impossible to add new consumers without modifying producers.
+    - v2: Created this event bus with publish/subscribe pattern. Now banking
+      publishes "txn.created" events, and any number of subscribers (fraud,
+      AML, notifications) can react independently.
+    - v3: Added metrics tracking (publish count, latency), dead letter queue
+      for failed events, and event replay capability for debugging.
+
+Architecture:
+    Currently runs in-process (EVENT_BUS_MODE=in-process):
+    - All subscribers execute synchronously in the same process
+    - No network overhead, no serialization — fast for monolith
+    - Designed as a stepping stone to Apache Kafka
+
+    When Kafka is integrated (EVENT_BUS_MODE=kafka):
+    - Publishers send events to Kafka topics
+    - Subscribers are Kafka consumers in separate processes/pods
+    - Enables horizontal scaling and cross-service communication
+    - This module's publish/subscribe API stays the same — only the
+      transport layer changes (Strategy Pattern)
+
+Event Flow:
+    Banking → publishes txn.created, txn.failed
+    Fraud   → subscribes to txn.created, publishes fraud.scored
+    AML     → subscribes to txn.created, publishes aml.flagged
+    Notif   → subscribes to fraud.scored, aml.flagged
 """
 
 import asyncio

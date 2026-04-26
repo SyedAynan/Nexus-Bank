@@ -1,7 +1,27 @@
 """
-NEXA Centralized Exception Handling
-====================================
-Custom exception classes and global handlers for consistent API error responses.
+File: exceptions.py
+Module: bank_system.core.exceptions
+
+Purpose:
+    Centralized exception hierarchy and global error handlers for consistent
+    API error responses. All custom exceptions inherit from AppException,
+    ensuring every error returns the same JSON structure.
+
+Developer Journey:
+    - v1: Used FastAPI's default HTTPException everywhere — inconsistent error
+      formats made frontend error handling fragile. Some errors returned
+      {"detail": "..."}, others returned plain strings.
+    - v2: Created AppException base class with structured {success, error, error_code}
+      response format. All routes now raise typed exceptions (NotFoundError,
+      ForbiddenError, etc.) instead of raw HTTPException.
+    - v3: Added register_exception_handlers() to install a global handler on the
+      FastAPI app, ensuring even uncaught AppExceptions produce clean JSON.
+
+Design Decision:
+    Each exception class (NotFoundError, ForbiddenError, etc.) has a sensible default
+    message but allows customization. This means routes can be concise:
+        raise NotFoundError("Account")  → 404: "Account not found"
+    Instead of repeating the full HTTPException boilerplate every time.
 """
 
 from fastapi import FastAPI, Request

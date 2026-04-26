@@ -1,7 +1,31 @@
 """
-NEXA Simulation Engine — Non-blocking background transaction generator.
-BUG-010 fix: DB operations now run via asyncio.to_thread() to avoid
-blocking the event loop and freezing WebSocket/API responses.
+File: engine.py
+Module: bank_system.simulation.engine
+
+Purpose:
+    Background transaction simulation engine that generates realistic
+    banking activity for demonstration and testing. Creates random deposits,
+    withdrawals, and EMI deductions at configurable intervals, scores them
+    through the fraud detection engine, and broadcasts updates via WebSocket.
+
+Developer Journey:
+    - v1: Inline loop in main.py — generated transactions synchronously,
+      blocking the entire API during simulation ticks. Every 5 seconds,
+      the entire server froze for 100-200ms while the DB operation ran.
+    - v2: Moved to an asyncio background task. But SQLAlchemy operations
+      are synchronous (blocking I/O), so they still blocked the event loop.
+      This caused WebSocket disconnects and API timeouts (BUG-010).
+    - v3 (BUG-010 fix): Wrapped synchronous DB operations in asyncio.to_thread()
+      to offload them to a thread pool. The event loop stays responsive
+      for WebSocket broadcasts and API requests while DB work runs in a thread.
+    - v4 (BUG-023 fix): Added balance check before EMI deductions to prevent
+      negative balances. Previously, EMIs were deducted even if the account
+      had insufficient funds.
+
+Error Recovery:
+    Uses exponential backoff (15s, 30s, 60s, 120s max) on consecutive errors.
+    This prevents the simulation from hammering a failing database with rapid
+    retries while still recovering automatically when the issue resolves.
 """
 
 import asyncio
