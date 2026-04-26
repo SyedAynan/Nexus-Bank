@@ -1,8 +1,31 @@
 """
-Structured Request Logging Middleware
-=====================================
-Logs every request with timing, status code, and request ID
-in structured JSON format for observability.
+File: request_logger.py
+Module: bank_system.middleware.request_logger
+
+Purpose:
+    Structured request logging middleware that records every HTTP request
+    with timing, client info, auth context, and a unique request ID.
+    Essential for debugging, monitoring, and audit compliance.
+
+Developer Journey:
+    - v1: Used print() for debugging — no structured format, no timing,
+      no way to trace a request through logs.
+    - v2: Added Python logging with basic format. Still hard to search
+      and filter logs programmatically.
+    - v3: Structured logging with extra fields — method, path, status,
+      duration_ms, client_ip, user_auth. These structured fields can be
+      parsed by log aggregators (ELK Stack, Datadog, CloudWatch) for
+      dashboards and alerting.
+
+Key Features:
+    - X-Request-ID header: Unique ID per request for distributed tracing.
+      If a user reports an issue, the request ID links directly to the
+      relevant log entry.
+    - Duration tracking: Measures request processing time (perf_counter
+      for sub-millisecond accuracy) to identify slow endpoints.
+    - Auth context: Extracts username from JWT (when present) to associate
+      requests with users without exposing sensitive data.
+    - Client IP: Respects X-Forwarded-For for reverse proxy setups.
 """
 
 import logging

@@ -1,12 +1,38 @@
 """
-Redis-backed Sliding Window Rate Limiter
-=========================================
-Implements per-IP and per-user rate limiting using Redis sorted sets.
+File: rate_limiter.py
+Module: bank_system.middleware.rate_limiter
 
-Limits:
-    - Unauthenticated: 20 req/min
-    - Authenticated: 100 req/min
+Purpose:
+    Redis-backed sliding window rate limiter middleware. Limits API request
+    rates per IP and per user to prevent brute-force attacks, DDoS, and
+    abusive API usage.
+
+Developer Journey:
+    - v1: No rate limiting — the API was completely unprotected. A single
+      attacker could send thousands of login attempts per second.
+    - v2: Simple in-memory counter per IP — worked for single-process
+      but lost counts on restart and didn't work across multiple workers.
+    - v3: Migrated to Redis sorted sets for distributed rate limiting.
+      The sliding window algorithm provides smooth rate enforcement
+      (unlike fixed windows which allow burst at window boundaries).
+
+Algorithm: Sliding Window (Redis Sorted Sets)
+    1. Key: "ratelimit:{identifier}" where identifier is IP or user_id
+    2. Each request adds a member with timestamp as both value and score
+    3. Before counting, remove all members older than the window (1 minute)
+    4. Count remaining members — if count > limit, reject with 429
+    5. Redis ZREMRANGEBYSCORE + ZCARD are O(log N) — very fast
+
+Rate Limits:
+    - Unauthenticated: 20 req/min per IP (prevents anonymous abuse)
+    - Authenticated: 100 req/min per user (higher limit for real users)
     - Login endpoint: 5 req/min per IP (brute-force protection)
+    - Password reset: 3 req/15min per email (anti-enumeration)
+
+Production Note:
+    In Kubernetes, the Ingress also has rate limiting (50 rps) as defense
+    in depth. This middleware provides application-level granularity that
+    the Ingress can't (per-user vs per-IP, endpoint-specific limits).
 """
 
 import time

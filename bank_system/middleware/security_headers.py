@@ -1,8 +1,35 @@
 """
-Security Headers Middleware
-===========================
-Adds OWASP-recommended security headers to every response.
-Implements enterprise-grade CSP with nonce support for React/Vite compatibility.
+File: security_headers.py
+Module: bank_system.middleware.security_headers
+
+Purpose:
+    Adds OWASP-recommended HTTP security headers to every API response.
+    These headers instruct browsers to enforce security policies that
+    mitigate common web attacks (XSS, clickjacking, MIME sniffing).
+
+Developer Journey:
+    - v1: No security headers — browsers used default (permissive) policies.
+      Any injected script could execute freely, iframes could embed the app
+      for clickjacking attacks, and responses could be MIME-sniffed.
+    - v2: Added basic headers (X-Frame-Options, X-Content-Type-Options).
+    - v3: Added Content-Security-Policy (CSP) with per-request nonce
+      generation for React/Vite compatibility. CSP is the most powerful
+      XSS protection because it controls which scripts can execute.
+
+Headers Applied:
+    - X-Frame-Options: SAMEORIGIN — prevents clickjacking via iframes
+    - X-Content-Type-Options: nosniff — prevents MIME-type sniffing attacks
+    - X-XSS-Protection: 1; mode=block — enables browser XSS filter
+    - Strict-Transport-Security (HSTS) — forces HTTPS for 1 year
+    - Content-Security-Policy — controls which resources can be loaded
+    - Referrer-Policy — limits referrer info sent to external sites
+    - Permissions-Policy — restricts browser feature access (camera, mic)
+
+CSP Nonce System:
+    React/Vite injects inline scripts for HMR and module loading. A blanket
+    'unsafe-inline' CSP would defeat the purpose of CSP entirely. Instead,
+    we generate a unique nonce per request and whitelist scripts with that
+    nonce. The nonce is cryptographically random and changes on every request.
 """
 
 from fastapi import Request, Response
