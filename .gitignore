@@ -33,9 +33,9 @@ frontend/dist/
 # ── Environment & Secrets ──
 .env
 .env.local
-.env.production
 .env.*
 !.env.example
+!.env.production
 
 # ── Databases ──
 *.db
