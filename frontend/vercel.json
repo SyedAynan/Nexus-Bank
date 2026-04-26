@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://nexa-api.onrender.com/api/:path*"
+      "destination": "https://nexus-server-kvyh.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
