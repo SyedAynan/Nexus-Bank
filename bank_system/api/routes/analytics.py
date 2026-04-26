@@ -1,3 +1,20 @@
+"""
+File: analytics.py
+Module: bank_system.api.routes.analytics
+
+Purpose:
+    Analytics API routes for the dashboard KPI cards and cashflow forecasting.
+    Aggregates data from accounts, transactions, fraud alerts, and loans
+    to provide real-time financial insights.
+
+Developer Journey:
+    - v1: Dashboard showed hardcoded sample data — no real analytics.
+    - v2: Created KPI endpoint that queries the database for live aggregates:
+      total balance, 24h transaction count, open fraud alerts, active loans.
+    - v3: Added forecasting engine integration for cashflow projections
+      using time-series analysis on historical transaction data.
+"""
+
 from datetime import datetime, timedelta
 from typing import Annotated
 

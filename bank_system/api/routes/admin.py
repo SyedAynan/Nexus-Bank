@@ -1,3 +1,27 @@
+"""
+File: admin.py
+Module: bank_system.api.routes.admin
+
+Purpose:
+    Admin-only API routes for user management, fraud alerts, live user
+    tracking, and security event audit logs. All endpoints require the
+    admin role via role_required(UserRole.admin) dependency.
+
+Developer Journey:
+    - v1: No admin panel — had to use raw SQL to manage users, view fraud
+      alerts, or check login failures. No visibility into system state.
+    - v2: Created admin API endpoints with RBAC enforcement. Admins can
+      list users, lock/unlock accounts, change roles, and view security events.
+    - v3: Added live_users endpoint using Redis SMEMBERS to show currently
+      active users, and security_events endpoint for audit compliance.
+
+Security:
+    - All endpoints use role_required(UserRole.admin) — 403 for non-admins
+    - IP whitelist middleware provides additional network-level protection
+    - User updates (role changes, unlock) are logged in security_events
+    - The unlock operation also resets failed_login_attempts to 0
+"""
+
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
