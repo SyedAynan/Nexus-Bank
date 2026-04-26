@@ -1,8 +1,8 @@
 # ============================================================
 # NEXA — CI/CD Pipeline (GitHub Actions)
 # ============================================================
-# Runs on: push to main/develop, all PRs
-# Steps: lint → format → type-check → test → frontend build → Docker
+# Stages: quality → test (PostgreSQL) → frontend build → Docker → deploy
+# Production: builds + pushes images, optionally deploys to K8s
 
 name: NEXA CI/CD
 
@@ -16,7 +16,6 @@ env:
   PYTHON_VERSION: "3.11"
   NODE_VERSION: "20"
   REGISTRY: ghcr.io
-  # Force lowercase for GHCR compatibility
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
@@ -49,20 +48,26 @@ jobs:
         run: mypy bank_system/ --ignore-missing-imports --no-strict-optional
         continue-on-error: true
 
-  # ── Backend Tests ──
+  # ── Backend Tests (PostgreSQL) ──
   test:
     runs-on: ubuntu-latest
     needs: quality
 
-    env:
-      DATABASE_URL: sqlite:///./test_ci.db
-      REDIS_URL: redis://localhost:6379/0
-      SECRET_KEY: test-secret-key-not-for-production
-      ENVIRONMENT: testing
-      DEMO_MODE: "true"
-      PYTHONPATH: ${{ github.workspace }}
-
     services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: nexa_test
+          POSTGRES_USER: nexa
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nexa -d nexa_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
       redis:
         image: redis:7-alpine
         ports:
@@ -72,6 +77,14 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+psycopg2://nexa:test_password@localhost:5432/nexa_test
+      REDIS_URL: redis://localhost:6379/0
+      SECRET_KEY: ci-test-secret-key-not-for-production
+      ENVIRONMENT: testing
+      DEMO_MODE: "true"
+      PYTHONPATH: ${{ github.workspace }}
 
     steps:
       - uses: actions/checkout@v4
@@ -121,7 +134,7 @@ jobs:
         run: npm run build
         working-directory: frontend
         env:
-          VITE_API_URL: https://your-nexa-backend.onrender.com/api
+          VITE_API_URL: /api
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -129,7 +142,7 @@ jobs:
           name: frontend-dist
           path: frontend/dist
 
-  # ── Docker Build ──
+  # ── Docker Build & Push ──
   docker:
     runs-on: ubuntu-latest
     needs: [test, frontend]
@@ -137,6 +150,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+
     steps:
       - uses: actions/checkout@v4
 
@@ -154,13 +168,87 @@ jobs:
         id: image
         run: echo "name=$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
-      - name: Build and push
+      # Build backend image
+      - name: Build & push backend
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./Dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:latest
             ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Build frontend image
+      - name: Build & push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.frontend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}-frontend:latest
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}-frontend:${{ github.sha }}
+          build-args: |
+            VITE_API_URL=/api
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ── Deploy to Kubernetes (optional) ──
+  deploy:
+    runs-on: ubuntu-latest
+    needs: docker
+    if: github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lowercase image name
+        id: image
+        run: echo "name=$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+        if: ${{ secrets.KUBECONFIG != '' }}
+
+      - name: Update image tags in manifests
+        run: |
+          TAG="${{ github.sha }}"
+          BACKEND_IMAGE="${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${TAG}"
+          FRONTEND_IMAGE="${{ env.REGISTRY }}/${{ steps.image.outputs.name }}-frontend:${TAG}"
+
+          sed -i "s|ghcr.io/syedaynan/nexus-bank:latest|${BACKEND_IMAGE}|g" k8s/03-backend.yaml
+          sed -i "s|ghcr.io/syedaynan/nexus-bank-frontend:latest|${FRONTEND_IMAGE}|g" k8s/04-frontend.yaml
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/00-namespace.yaml
+          kubectl apply -f k8s/01-postgres.yaml
+          kubectl apply -f k8s/02-redis.yaml
+          kubectl apply -f k8s/03-backend.yaml
+          kubectl apply -f k8s/04-frontend.yaml
+          kubectl apply -f k8s/05-ingress.yaml
+        if: ${{ secrets.KUBECONFIG != '' }}
+
+      - name: Verify rollout
+        run: |
+          kubectl -n nexa-prod rollout status deployment/nexa-backend --timeout=300s
+          kubectl -n nexa-prod rollout status deployment/nexa-frontend --timeout=120s
+        if: ${{ secrets.KUBECONFIG != '' }}
+
+      - name: Health check
+        run: |
+          sleep 10
+          kubectl -n nexa-prod get pods
+          kubectl -n nexa-prod get services
+        if: ${{ secrets.KUBECONFIG != '' }}
