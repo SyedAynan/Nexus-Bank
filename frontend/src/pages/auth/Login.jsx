@@ -111,12 +111,23 @@ export default function Login() {
             const result = await login(username, password)
             if (result.mfa_required) {
                 // MFA required — auto-verify with demo OTP (backend uses '000000' in demo/dev mode)
+                // Small delay to ensure OTP is stored in Redis (handles Render cold-start race condition)
+                const delay = (ms) => new Promise(r => setTimeout(r, ms))
                 try {
+                    await delay(500)
                     await verifyOtp(username, '000000')
                     setLoginSuccess(true)
                     setTimeout(() => navigate('/dashboard'), 600)
                 } catch (mfaErr) {
-                    setError('MFA verification failed. Try entering OTP manually.')
+                    // Retry once after longer delay (cold-start may need more time)
+                    try {
+                        await delay(1500)
+                        await verifyOtp(username, '000000')
+                        setLoginSuccess(true)
+                        setTimeout(() => navigate('/dashboard'), 600)
+                    } catch {
+                        setError('MFA verification failed. Please try again.')
+                    }
                 }
             } else {
                 setLoginSuccess(true)
