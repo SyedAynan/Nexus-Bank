@@ -9,13 +9,14 @@
 import { useRef, useMemo, memo, Suspense } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import useDeviceCapability from '../../hooks/useDeviceCapability'
 import {
     atmosphereVertexShader,
     atmosphereFragmentShader,
 } from './shaders/atmosphere'
 
 /* ── Earth Sphere — procedural dark ocean with grid ── */
-function EarthSphere({ rotationSpeed = 0.12 }) {
+function EarthSphere({ rotationSpeed = 0.12, segments = 64 }) {
     const meshRef = useRef()
     const cloudRef = useRef()
     const atmosphereRef = useRef()
@@ -146,7 +147,7 @@ function EarthSphere({ rotationSpeed = 0.12 }) {
         <group>
             {/* Main Earth sphere */}
             <mesh ref={meshRef}>
-                <sphereGeometry args={[1, 64, 64]} />
+                <sphereGeometry args={[1, segments, segments]} />
                 <meshStandardMaterial
                     map={earthTexture}
                     emissive="#0a1a3a"
@@ -158,7 +159,7 @@ function EarthSphere({ rotationSpeed = 0.12 }) {
 
             {/* Cloud layer — slightly larger, semi-transparent */}
             <mesh ref={cloudRef}>
-                <sphereGeometry args={[1.008, 48, 48]} />
+                <sphereGeometry args={[1.008, Math.floor(segments * 0.75), Math.floor(segments * 0.75)]} />
                 <meshBasicMaterial
                     map={cloudTexture}
                     transparent
@@ -169,12 +170,12 @@ function EarthSphere({ rotationSpeed = 0.12 }) {
 
             {/* Atmosphere glow — Fresnel shader on back side of larger sphere */}
             <mesh ref={atmosphereRef} material={atmosphereMaterial}>
-                <sphereGeometry args={[1.15, 48, 48]} />
+                <sphereGeometry args={[1.15, Math.floor(segments * 0.75), Math.floor(segments * 0.75)]} />
             </mesh>
 
             {/* Inner atmosphere halo */}
             <mesh>
-                <sphereGeometry args={[1.02, 48, 48]} />
+                <sphereGeometry args={[1.02, Math.floor(segments * 0.75), Math.floor(segments * 0.75)]} />
                 <meshBasicMaterial
                     color="#22d3ee"
                     transparent
@@ -267,7 +268,7 @@ function CityPoint({ lat, lng, color, tier }) {
 }
 
 /* ── Main scene content ── */
-function GlobeScene({ cities = [], payments = [] }) {
+function GlobeScene({ cities = [], payments = [], segments = 64 }) {
     return (
         <>
             {/* Lighting */}
@@ -276,7 +277,7 @@ function GlobeScene({ cities = [], payments = [] }) {
             <directionalLight position={[-3, -1, -5]} intensity={0.15} color="#1a1a4e" />
 
             {/* Earth */}
-            <EarthSphere rotationSpeed={0.12} />
+            <EarthSphere rotationSpeed={0.12} segments={segments} />
 
             {/* City dots */}
             {cities.map(city => (
@@ -306,6 +307,22 @@ const EnhancedGlobeWrapper = memo(function EnhancedGlobeWrapper({
     payments = [],
     style = {},
 }) {
+    const { isMobile, isSmallMobile, prefersReducedMotion } = useDeviceCapability()
+    const segments = isMobile ? 32 : 64
+    const maxArcs = isMobile ? 4 : 8
+    const dpr = isMobile ? [1, 1] : [1, 1.5]
+
+    // Skip WebGL entirely on very small screens — too heavy
+    if (isSmallMobile) {
+        return (
+            <div style={{ position: 'relative', ...style }}>
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                    {children}
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div style={{ position: 'relative', ...style }}>
             {/* Three.js canvas — renders BEHIND */}
@@ -320,16 +337,21 @@ const EnhancedGlobeWrapper = memo(function EnhancedGlobeWrapper({
                 <Canvas
                     camera={{ position: [0, 0, 2.6], fov: 45 }}
                     gl={{
-                        antialias: true,
+                        antialias: !isMobile,
                         alpha: true,
-                        powerPreference: 'high-performance',
+                        powerPreference: isMobile ? 'low-power' : 'high-performance',
                         toneMapping: THREE.ACESFilmicToneMapping,
                     }}
-                    dpr={[1, 1.5]}
+                    dpr={dpr}
+                    frameloop={prefersReducedMotion ? 'demand' : 'always'}
                     style={{ background: 'transparent' }}
                 >
                     <Suspense fallback={null}>
-                        <GlobeScene cities={cities} payments={payments} />
+                        <GlobeScene
+                            cities={cities}
+                            payments={payments.slice(0, maxArcs)}
+                            segments={segments}
+                        />
                     </Suspense>
                 </Canvas>
             </div>
