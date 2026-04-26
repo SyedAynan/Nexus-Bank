@@ -1,8 +1,27 @@
 """
-DSA Admin Routes — Admin-Only DSA Visualization Panel
-=====================================================
-These endpoints expose DSA internal state and performance metrics
-EXCLUSIVELY to admin users. Customers MUST NOT access these.
+File: dsa_admin.py
+Module: bank_system.api.routes.dsa_admin
+
+Purpose:
+    Admin-only API routes for the Data Structures & Algorithms (DSA) showcase.
+    Exposes visualization, benchmarking, and performance metrics for all DSA
+    implementations used in NEXA — a unique feature demonstrating CS fundamentals
+    applied to real fintech problems.
+
+Developer Journey:
+    - v1: DSA was purely internal — no way to visualize the Trie, benchmark
+      sorting algorithms, or inspect memory usage of data structures.
+    - v2: Created this admin panel with endpoints for:
+      * /overview — summary of all 9 data structures with time/space complexity
+      * /trie/visualize — interactive Trie tree visualization
+      * /trie/search — prefix-based autocomplete search
+      * /sorting/benchmark — runs 4 sorting algorithms on real transaction data
+      * /performance — memory estimates and data structure statistics
+
+DSA Implementations:
+    Linked List, Stack, Queue, BST, Hash Table, Graph, Priority Queue (Heap),
+    Trie, and 4 sorting algorithms (Merge, Quick, Heap, Counting Sort).
+    Each is applied to a real banking use case, not just academic examples.
 """
 
 import sys
