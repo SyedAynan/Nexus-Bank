@@ -100,7 +100,7 @@ export default function Login() {
     const [loading, setLoading] = useState(false)
     const [rememberMe, setRememberMe] = useState(false)
     const [loginSuccess, setLoginSuccess] = useState(false)
-    const { login } = useAuth()
+    const { login, verifyOtp } = useAuth()
     const navigate = useNavigate()
 
     const handleLogin = async (e) => {
@@ -110,8 +110,14 @@ export default function Login() {
         try {
             const result = await login(username, password)
             if (result.mfa_required) {
-                // Fallback: if MFA somehow still triggers, go to dashboard anyway
-                navigate('/dashboard')
+                // MFA required — auto-verify with demo OTP (backend uses '000000' in demo/dev mode)
+                try {
+                    await verifyOtp(username, '000000')
+                    setLoginSuccess(true)
+                    setTimeout(() => navigate('/dashboard'), 600)
+                } catch (mfaErr) {
+                    setError('MFA verification failed. Try entering OTP manually.')
+                }
             } else {
                 setLoginSuccess(true)
                 setTimeout(() => navigate('/dashboard'), 600)

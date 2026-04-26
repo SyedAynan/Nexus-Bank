@@ -80,6 +80,7 @@ def seed_if_empty() -> None:
                 email=email,
                 hashed_password=hash_password(password),
                 role=role,
+                mfa_enabled=False,  # Disable MFA for demo users — allows immediate login
                 created_at=datetime.utcnow() - timedelta(days=random.randint(30, 365)),
             )
             db.add(user)
