@@ -1,3 +1,36 @@
+/**
+ * File: Login.jsx
+ * Module: frontend/src/pages/auth/Login.jsx
+ *
+ * Purpose:
+ *     Complete login page with credential form, social auth buttons (Google,
+ *     Apple, Microsoft), passkey/biometric option, MFA handling, and demo
+ *     credential display.
+ *
+ * Developer Journey:
+ *     - v1: Basic form with username/password → POST /auth/login. No social
+ *       auth, no MFA, no password visibility toggle, no error animations.
+ *     - v2: Added social auth buttons (Google, Apple, Microsoft) with
+ *       animated placeholders. These connect to real OAuth in production
+ *       but show informational messages in demo mode.
+ *     - v3: Added MFA handling — if the backend returns 202 (MFA required),
+ *       the frontend navigates to the OTP verification step.
+ *     - v4: Visual polish — particle background, glassmorphism card, animated
+ *       error alerts, security badges, success state with check animation.
+ *
+ * Auth Flow:
+ *     1. User enters credentials → handleLogin() calls login() from AuthContext
+ *     2. AuthContext sends POST /auth/login (form-encoded, not JSON)
+ *     3. If 200: direct login → store tokens → navigate to /dashboard
+ *     4. If 202: MFA required → navigate to OTP input
+ *     5. If 401: show "Invalid credentials" error
+ *
+ * Issue Faced:
+ *     Login sent JSON {"username": "...", "password": "..."} but the backend
+ *     expected x-www-form-urlencoded (OAuth2PasswordRequestForm). The fix was
+ *     using URLSearchParams in AuthContext instead of a plain object.
+ */
+
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
