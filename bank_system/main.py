@@ -208,12 +208,8 @@ if _frontend_url:
     if _frontend_url.startswith("https://") and not _frontend_url.startswith("https://www."):
         ALLOWED_ORIGINS.append(_frontend_url.replace("https://", "https://www."))
 
-# Railway self-origin — allows health checks and internal API calls
-_railway_url = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip()
-if _railway_url:
-    ALLOWED_ORIGINS.append(f"https://{_railway_url}")
-
-# Render self-origin
+# Render self-origin — Render auto-injects RENDER_EXTERNAL_URL
+# This allows the Swagger docs UI and direct API calls from the Render domain
 _render_url = os.environ.get("RENDER_EXTERNAL_URL", "").strip()
 if _render_url:
     ALLOWED_ORIGINS.append(_render_url)

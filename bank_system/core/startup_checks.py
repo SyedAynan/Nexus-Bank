@@ -47,25 +47,24 @@ INSECURE_SECRETS = {
     "",
 }
 
-# Detect Railway/Render platform — these have ephemeral filesystems
-_IS_RAILWAY = bool(os.environ.get("RAILWAY_ENVIRONMENT"))
+# Detect Render platform — ephemeral filesystem (SQLite = data loss)
 _IS_RENDER = bool(os.environ.get("RENDER"))
 
 
 def validate_environment() -> None:
     """Run critical checks before the application starts serving traffic.
 
-    Railway/Render specific:
-        - SQLite is FATAL on these platforms (ephemeral filesystem = data loss)
-        - Auto-generated SECRET_KEY is acceptable if the platform persists env vars
+    Render specific:
+        - SQLite is FATAL on Render (ephemeral filesystem = data loss)
+        - Auto-generated SECRET_KEY is acceptable (Render persists env vars)
         - DEMO_MODE is logged but not blocked (allows seeding on first deploy)
     """
     settings = get_settings()
     errors: list[str] = []
     warnings: list[str] = []
 
-    is_paas = _IS_RAILWAY or _IS_RENDER
-    platform_name = "Railway" if _IS_RAILWAY else "Render" if _IS_RENDER else "unknown"
+    is_paas = _IS_RENDER
+    platform_name = "Render" if _IS_RENDER else "unknown"
 
     if is_paas:
         logger.info(f"🚀 Detected PaaS platform: {platform_name}")
