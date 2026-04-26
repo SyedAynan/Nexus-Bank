@@ -68,8 +68,16 @@ def get_oauth_providers(
 
 class OAuthAuthRequest(BaseModel):
     provider: str
-    redirect_uri: str = "http://localhost:5173/auth/callback"
+    redirect_uri: str = ""
     state: str | None = None
+
+    def get_redirect_uri(self) -> str:
+        """Return redirect URI, falling back to FRONTEND_URL env var."""
+        if self.redirect_uri:
+            return self.redirect_uri
+        import os
+        frontend = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+        return f"{frontend}/auth/callback"
 
 
 @router.post("/oauth/authorize")
@@ -86,7 +94,15 @@ def oauth_authorize(
 class OAuthExchangeRequest(BaseModel):
     provider: str
     code: str
-    redirect_uri: str = "http://localhost:5173/auth/callback"
+    redirect_uri: str = ""
+
+    def get_redirect_uri(self) -> str:
+        """Return redirect URI, falling back to FRONTEND_URL env var."""
+        if self.redirect_uri:
+            return self.redirect_uri
+        import os
+        frontend = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+        return f"{frontend}/auth/callback"
 
 
 @router.post("/oauth/exchange")
