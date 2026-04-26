@@ -1,3 +1,39 @@
+"""
+File: db_models.py
+Module: bank_system.models.db_models
+
+Purpose:
+    SQLAlchemy ORM models defining the complete database schema for NEXA.
+    These models map directly to PostgreSQL tables and define all relationships,
+    constraints, and data types for the banking platform.
+
+    Current schema: 17 tables covering users, accounts, transactions, loans,
+    fraud detection, AML compliance, KYC verification, event sourcing,
+    and scheduled payments.
+
+Developer Journey:
+    - v1: Started with just 3 tables (User, Account, Transaction) — enough for
+      basic deposit/withdrawal functionality.
+    - v2: Added SessionToken for JWT session management after learning that
+      stateless JWTs can't be revoked without server-side tracking.
+    - v3: Added FraudAlert, SecurityEvent, and Loan models to support the
+      AI fraud detection engine and loan scoring system.
+    - v4: Major architecture upgrade — added LedgerEntry (double-entry accounting),
+      TransactionEvent (event sourcing), KYCVerification, FraudPrediction
+      (ML audit trail), and ScheduledPayment models.
+
+Database Design Decisions:
+    - Numeric(19, 4) for monetary amounts: supports values up to 999 trillion
+      with 4 decimal places. Using Numeric (not Float) prevents floating-point
+      rounding errors that are unacceptable in financial systems.
+    - StrEnum for status fields: provides type safety in Python while storing
+      human-readable strings in the database (vs integer enums).
+    - UTC timestamps everywhere: all created_at fields use UTC to avoid timezone
+      confusion. Display layer handles local timezone conversion.
+    - Indexed foreign keys: ForeignKey columns that are frequently queried
+      (account_id, user_id) are explicitly indexed for JOIN performance.
+"""
+
 from datetime import UTC, datetime
 from enum import StrEnum
 
@@ -20,13 +56,41 @@ from sqlalchemy.orm import relationship
 from bank_system.core.db import Base
 
 
+# ══════════════════════════════════════════════════════════════════════════
+# Core Models (v1-v2) — User Authentication & Banking
+# ══════════════════════════════════════════════════════════════════════════
+
+
 class UserRole(StrEnum):
+    """Role-based access control (RBAC) roles.
+
+    - admin: Full system access, user management, audit logs
+    - analyst: Read-only access to analytics, fraud alerts, reports
+    - user: Standard customer — can view own accounts, make transfers
+
+    Learning Note:
+        Initially used string literals ("admin", "user") throughout the code.
+        Migrated to StrEnum for type safety — IDE catches typos like "admn"
+        at development time rather than runtime.
+    """
     admin = "admin"
     analyst = "analyst"
     user = "user"
 
 
 class User(Base):
+    """Core user model for authentication and identity.
+
+    Security features:
+        - hashed_password: bcrypt hash, never plain text
+        - mfa_enabled: defaults True for all users (defense in depth)
+        - is_locked: auto-locked after 5 failed login attempts
+        - failed_login_attempts: tracked per user, reset on successful login
+
+    Issue Faced:
+        Early login bug: query used `User.email` but frontend sent `username`.
+        Fixed by querying `User.username` and adding email as fallback.
+    """
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -44,6 +108,23 @@ class User(Base):
 
 
 class SessionToken(Base):
+    """Server-side JWT session tracking for token revocation.
+
+    Why this exists:
+        JWTs are stateless by design — once issued, they can't be revoked.
+        But we need to revoke tokens on logout, password change, or security
+        events. This table stores the JTI (JWT ID) of each active token,
+        allowing us to check if a token has been revoked.
+
+    Device tracking fields (device_name, ip_address, user_agent) enable the
+    "Active Sessions" UI where users can see all logged-in devices and
+    remotely revoke sessions they don't recognize.
+
+    Developer Journey:
+        Initially had no session tracking — logout just deleted the token
+        from localStorage. This meant stolen tokens remained valid until
+        expiration. Added this table to enable server-side revocation.
+    """
     __tablename__ = "session_tokens"
 
     id = Column(Integer, primary_key=True)
@@ -63,6 +144,19 @@ class SessionToken(Base):
 
 
 class Account(Base):
+    """Bank account model supporting multiple account types.
+
+    Balance is stored as Numeric(19, 4) — NOT Float — because floating-point
+    arithmetic can produce rounding errors (e.g., 0.1 + 0.2 ≠ 0.3 in IEEE 754).
+    In financial systems, even a 0.01 discrepancy is unacceptable.
+
+    Status values: active (normal), frozen (fraud hold), closed (permanent).
+
+    Production Improvement:
+        v4 added LedgerEntry model for double-entry accounting. Instead of
+        directly mutating `balance`, we now record debit/credit entries and
+        compute balance from the ledger. This provides a complete audit trail.
+    """
     __tablename__ = "accounts"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -92,6 +186,21 @@ class TransactionType(StrEnum):
 
 
 class Transaction(Base):
+    """Individual financial transaction record.
+
+    Every deposit, withdrawal, transfer, interest payment, and EMI creates
+    a Transaction record. The fraud_score field (0.0-1.0) is populated by
+    the ML fraud detection engine in real-time.
+
+    Performance Note:
+        created_at is indexed for efficient date-range queries in analytics.
+        account_id is indexed for the common "list my transactions" query.
+
+    Query Optimization (v4):
+        Transaction listing initially used an N+1 query pattern (1 query for
+        account IDs, then 1 query for transactions). Refactored to a single
+        JOIN query for 2x performance improvement.
+    """
     __tablename__ = "transactions"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -186,6 +295,15 @@ class SecurityEventType(StrEnum):
 
 
 class SecurityEvent(Base):
+    """Audit log for security-relevant events.
+
+    Records every login attempt (success/failure), MFA challenge, account
+    lockout, and password reset. Required for financial compliance (SOX,
+    PCI-DSS) and forensic investigation of security incidents.
+
+    The username field is stored separately from user_id because failed
+    login attempts may reference usernames that don't exist in the system.
+    """
     __tablename__ = "security_events"
 
     id = Column(Integer, primary_key=True)

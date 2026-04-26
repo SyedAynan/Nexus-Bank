@@ -1,10 +1,41 @@
 # ============================================================
-# NEXA v4.0 — Beyond Fintech | Docker Compose (Development)
-# Architecture: Monolith + Event Bus + ML Fraud + Redis DSA
+# File: docker-compose.yml
+#
+# Purpose:
+#     Development environment orchestration for the NEXA platform.
+#     Starts all services locally with hot-reload for rapid development.
+#
+# Developer Journey:
+#     - v1: Ran everything manually — separate terminals for backend, frontend,
+#       PostgreSQL, Redis. Painful to set up on new machines.
+#     - v2: Created this compose file — one command starts everything:
+#       `docker compose up`
+#     - v3: Added health checks and dependency ordering so the backend
+#       waits for PostgreSQL and Redis to be ready before starting.
+#     - v4: Added Neo4j for AML graph analysis, Redis Commander for
+#       debugging (behind --profile debug flag), and proper volume mounts.
+#
+# Usage:
+#     docker compose up              # Start core services
+#     docker compose --profile debug up  # Include Redis Commander UI
+#     docker compose down -v         # Stop and remove volumes (clean reset)
+#
+# Networking:
+#     All services share the 'nexa-net' bridge network. Services reference
+#     each other by container name (e.g., the backend connects to PostgreSQL
+#     at 'db:5432', not 'localhost:5432'). This is how Docker DNS works —
+#     container names become hostnames within the network.
+#
+# Issue Faced:
+#     Backend crashed on startup because PostgreSQL wasn't ready yet.
+#     Fixed by adding healthchecks and depends_on with condition: service_healthy.
+#     Without this, Docker starts services in parallel but doesn't wait for readiness.
 # ============================================================
 
 services:
   # ── Backend API ──
+  # Mounts the entire project directory as a volume for hot-reload.
+  # Changes to Python files are detected by uvicorn --reload automatically.
   web:
     build:
       context: .
@@ -13,8 +44,11 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - .env
+      - .env   # Load environment variables from .env file
     environment:
+      # These override .env values — Docker service names instead of localhost
+      # This is critical: inside Docker, 'db' resolves to the PostgreSQL container,
+      # while 'localhost' would try to connect to the backend container itself.
       - DATABASE_URL=postgresql+psycopg2://nexa:nexa@db:5432/nexa
       - REDIS_URL=redis://redis:6379/0
       - NEO4J_URI=bolt://neo4j:7687
@@ -25,8 +59,11 @@ services:
     command: >
       uvicorn bank_system.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
+      # Mount source code for hot-reload (changes reflect instantly)
       - .:/app
     depends_on:
+      # Wait for dependencies to be healthy before starting
+      # Without this, the backend would crash trying to connect to a DB that isn't ready
       db:
         condition: service_healthy
       redis:
@@ -42,6 +79,11 @@ services:
       start_period: 15s
 
   # ── PostgreSQL Database ──
+  # Production-grade relational database. Chosen over SQLite because:
+  # 1. Supports concurrent writes (SQLite locks the entire DB on write)
+  # 2. Supports SELECT FOR UPDATE (row-level locking for transfers)
+  # 3. Full ACID compliance with proper isolation levels
+  # 4. Required for production deployment (Render, AWS RDS, etc.)
   db:
     image: postgres:15-alpine
     container_name: nexa-db
@@ -49,15 +91,17 @@ services:
     environment:
       POSTGRES_DB: nexa
       POSTGRES_USER: nexa
-      POSTGRES_PASSWORD: nexa
+      POSTGRES_PASSWORD: nexa  # Dev only — use secrets in production!
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "5432:5432"
+      - "5432:5432"   # Exposed for direct DB access during development
     volumes:
+      # Named volume persists data across container restarts
       - postgres_data:/var/lib/postgresql/data
     networks:
       - nexa-net
     healthcheck:
+      # pg_isready checks if PostgreSQL is accepting connections
       test: [ "CMD-SHELL", "pg_isready -U nexa -d nexa" ]
       interval: 10s
       timeout: 5s
@@ -65,6 +109,9 @@ services:
       start_period: 10s
 
   # ── Redis Cache + DSA Persistence ──
+  # Used for: OTP storage (TTL), rate limiting (sorted sets), session tracking,
+  # live user count, and DSA data structure demonstrations.
+  # appendonly=yes enables AOF persistence — data survives Redis restarts.
   redis:
     image: redis:7-alpine
     container_name: nexa-redis
@@ -83,13 +130,17 @@ services:
       retries: 5
 
   # ── Neo4j Graph Database (AML / Compliance) ──
+  # Graph database for Anti-Money Laundering analysis.
+  # Stores account relationships as nodes/edges to detect circular fund flows,
+  # shell company networks, and suspicious transaction patterns using
+  # graph algorithms (PageRank, community detection).
   neo4j:
     image: neo4j:5-community
     container_name: nexa-neo4j
     restart: unless-stopped
     ports:
-      - "7474:7474"   # Browser UI
-      - "7687:7687"   # Bolt protocol
+      - "7474:7474"   # Browser UI for graph visualization
+      - "7687:7687"   # Bolt protocol for programmatic access
     environment:
       NEO4J_AUTH: neo4j/nexa_graph_2026
       NEO4J_PLUGINS: '["graph-data-science"]'
@@ -107,6 +158,9 @@ services:
       start_period: 30s
 
   # ── Redis Commander (Dev debugging UI) ──
+  # Web-based Redis GUI for inspecting keys, OTPs, rate limit data.
+  # Only starts with: docker compose --profile debug up
+  # This prevents it from running in production accidentally.
   redis-commander:
     image: rediscommander/redis-commander:latest
     container_name: nexa-redis-commander
@@ -122,21 +176,27 @@ services:
       - debug   # Only starts with: docker compose --profile debug up
 
   # ── React Frontend (Development) ──
+  # Runs Vite dev server with hot module replacement (HMR).
+  # In production, use Dockerfile.frontend with Nginx instead.
   frontend:
     image: node:20-alpine
     container_name: nexa-frontend
     working_dir: /app
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
     ports:
-      - "5173:5173"
+      - "5173:5173"   # Vite dev server port
     volumes:
       - ./frontend:/app
+      # Separate volume for node_modules prevents host OS conflicts
+      # (Linux containers can't use Windows node_modules and vice versa)
       - frontend_node_modules:/app/node_modules
     depends_on:
       - web
     networks:
       - nexa-net
 
+# ── Named Volumes ──
+# Persist data across container restarts. Delete with: docker compose down -v
 volumes:
   postgres_data:
     driver: local
@@ -147,7 +207,9 @@ volumes:
   frontend_node_modules:
     driver: local
 
+# ── Network ──
+# Bridge network provides DNS resolution between containers.
+# Containers reference each other by service name (e.g., 'db', 'redis').
 networks:
   nexa-net:
     driver: bridge
-

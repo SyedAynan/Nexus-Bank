@@ -1,6 +1,27 @@
 # ============================================================
-# NEXA — Kubernetes: Namespace + ConfigMap + Secrets
-# Apply first: kubectl apply -f k8s/00-namespace.yaml
+# File: 00-namespace.yaml
+#
+# Purpose:
+#     Creates the Kubernetes namespace, ConfigMap, and Secrets for NEXA.
+#     This is the FIRST file to apply — all other manifests reference
+#     these resources.
+#
+# Developer Journey:
+#     - v1: Deployed everything in the 'default' namespace — messy, hard
+#       to manage, no isolation from other workloads.
+#     - v2: Created dedicated 'nexa-prod' namespace for proper isolation.
+#       Namespaces provide: resource quotas, network policies, RBAC scoping.
+#
+# Apply: kubectl apply -f k8s/00-namespace.yaml
+#
+# Security Note:
+#     The Secrets below use stringData (plain text in YAML) for readability.
+#     In production, use one of:
+#     - Sealed Secrets (encrypted in Git)
+#     - HashiCorp Vault (external secret store)
+#     - AWS Secrets Manager / GCP Secret Manager
+#     - external-secrets operator
+#     NEVER commit real credentials to version control!
 # ============================================================
 apiVersion: v1
 kind: Namespace
@@ -10,7 +31,11 @@ metadata:
     app: nexa
     environment: production
 ---
-# ── ConfigMap: Non-sensitive configuration ──
+# ── ConfigMap: Non-sensitive application configuration ──
+# ConfigMaps store configuration that doesn't need encryption.
+# Pods reference these values via envFrom or individual valueFrom references.
+# Changing a ConfigMap does NOT automatically restart pods — you need to
+# trigger a rolling restart or use a hash annotation for auto-rollout.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -23,13 +48,18 @@ data:
   DEBUG: "false"
   DEMO_MODE: "false"
   WORKERS: "4"
+  # Service names in Kubernetes resolve via CoreDNS.
+  # 'nexa-redis' resolves to the Redis ClusterIP service within the namespace.
   REDIS_URL: "redis://nexa-redis:6379/0"
+  # $(POSTGRES_PASSWORD) is resolved at pod creation time from the Secret
   DATABASE_URL: "postgresql+psycopg2://nexa:$(POSTGRES_PASSWORD)@nexa-postgres:5432/nexa"
   EVENT_BUS_MODE: "in-process"
   ML_MODEL_DIR: "bank_system/ml_models"
 ---
 # ── Secret: Sensitive credentials ──
-# In production: use sealed-secrets, Vault, or external-secrets
+# Secrets are base64-encoded in etcd but NOT encrypted by default.
+# Enable etcd encryption at rest for production clusters.
+# stringData accepts plain text and Kubernetes encodes it automatically.
 apiVersion: v1
 kind: Secret
 metadata:
@@ -39,6 +69,7 @@ metadata:
     app: nexa
 type: Opaque
 stringData:
+  # CHANGE THIS before deploying! Generate with: openssl rand -base64 64
   SECRET_KEY: "CHANGE-ME-use-openssl-rand-base64-64"
   POSTGRES_PASSWORD: "nexa_prod_2026"
   POSTGRES_USER: "nexa"

@@ -1,3 +1,42 @@
+"""
+File: main.py
+Module: bank_system.main
+
+Purpose:
+    FastAPI application entry point — the single file that wires together
+    the entire NEXA platform. Creates the app instance, registers all middleware,
+    mounts static files, and includes all API routers.
+
+Developer Journey:
+    - v1: Single file with 3 routes (login, deposit, withdraw) and no middleware.
+      Everything was in one file — routes, models, auth logic. ~200 lines.
+    - v2: Extracted routes into separate modules (auth, banking, analytics).
+      Added CORS middleware to allow frontend requests.
+    - v3: Added security middleware stack (rate limiting, security headers,
+      request logging), WebSocket support for real-time dashboard, and
+      structured logging.
+    - v4: Production hardening — enhanced health check with DB/Redis status,
+      environment validation at startup, and proper lifespan management.
+
+Architecture:
+    The app follows a layered architecture:
+    Request → Middleware Stack → Router → Handler → Service → Database
+
+    Middleware execution order (last added = first executed):
+    1. RequestLoggerMiddleware — logs request/response metadata
+    2. GZipMiddleware — compresses responses > 500 bytes
+    3. RateLimiterMiddleware — Redis-backed sliding window rate limiting
+    4. SecurityHeadersMiddleware — HSTS, CSP, X-Frame-Options headers
+    5. CORSMiddleware — Cross-Origin Resource Sharing for frontend
+
+Startup Lifecycle (lifespan):
+    1. validate_environment() — fail fast on missing config
+    2. Base.metadata.create_all() — create DB tables if missing
+    3. get_redis() — establish Redis connection (or fallback)
+    4. seed_if_empty() — populate demo data if DB is empty
+    5. simulation_loop() — start background transaction simulation
+"""
+
 import logging
 import os
 from contextlib import asynccontextmanager

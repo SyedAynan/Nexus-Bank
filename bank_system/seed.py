@@ -1,11 +1,39 @@
 """
-NEXA — Beyond Fintech | Demo Seed Data
-================================
-Creates realistic demo data for showcasing the application:
-- 5 users (admin, analyst, 3 customers)
-- 10 bank accounts across users
-- 50+ transactions with realistic patterns
-- Fraud alerts, security events, loans
+File: seed.py
+Module: bank_system.seed
+
+Purpose:
+    Database seeder that creates demo data for development, testing, and
+    demonstration purposes. Generates realistic users, accounts, transactions,
+    fraud alerts, and security events.
+
+Developer Journey:
+    - v1: No seeder — had to manually create users via SQL or the register
+      endpoint. This made debugging painful because the database was always
+      empty after restarts (SQLite in-memory).
+    - v2: Created basic seeder with 1 admin user and 1 account.
+    - v3: Expanded to 5 users, 10 accounts, 50+ transactions with realistic
+      patterns. Added fraud alerts and security events for demo purposes.
+
+Issue Faced (Critical):
+    "Invalid credentials" in production was caused by missing seed data.
+    The admin user didn't exist in the production database because the
+    seeder wasn't running during deployment. Fixed by:
+    1. Adding seed_if_empty() to the FastAPI lifespan (runs on startup)
+    2. Adding a seed step in docker-entrypoint.sh
+    3. Adding seed to the CI/CD pipeline
+
+Security Note:
+    Demo passwords ("admin123", "user123") are ONLY for development/demo.
+    In production, DEMO_MODE should be false and real users should register
+    through the secure registration endpoint with strong passwords.
+
+How it works:
+    - seed_if_empty() checks if the DB already has users (count > 1)
+    - If empty, creates 5 users with bcrypt-hashed passwords
+    - Creates 10 bank accounts with realistic balances
+    - Generates 50+ transactions with varied types and amounts
+    - Adds fraud alerts and security events for the analytics dashboard
 """
 
 import random

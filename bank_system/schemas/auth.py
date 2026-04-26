@@ -1,3 +1,29 @@
+"""
+File: auth.py
+Module: bank_system.schemas.auth
+
+Purpose:
+    Pydantic models (schemas) for authentication request/response validation.
+    These define the exact shape of data entering and leaving auth endpoints,
+    providing automatic validation, serialization, and OpenAPI documentation.
+
+Developer Journey:
+    - v1: No validation — routes accepted raw dicts. Type errors caused
+      500 Internal Server Errors instead of helpful 422 Validation Errors.
+    - v2: Added Pydantic models for type-safe request/response handling.
+      Pydantic validates types, required fields, and constraints automatically.
+    - v3: Added SessionRead for session management UI, MFAChallenge for
+      the multi-factor authentication flow.
+    - v4: Added ForgotPasswordRequest and ResetPasswordRequest for the
+      password reset flow with Redis-backed OTP verification.
+
+Design Decision:
+    UserCreate intentionally excludes `role` field — all new users are assigned
+    UserRole.user by default. Only admins can promote users via a separate
+    PATCH endpoint. This prevents privilege escalation attacks where an
+    attacker could register with role="admin".
+"""
+
 from datetime import datetime
 
 from pydantic import BaseModel, EmailStr
