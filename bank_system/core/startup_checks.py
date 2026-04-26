@@ -14,7 +14,7 @@ Developer Journey:
     - v2: Added this module to check for known insecure defaults and
       environment mismatches. In production, the app now refuses to start
       if SECRET_KEY is a known default or if DEBUG=true.
-    - v3: Loosened checks for Railway/Render PaaS deployments — SECRET_KEY
+    - v3: Loosened checks for Render PaaS deployment — SECRET_KEY
       auto-generation is acceptable (platform persists env vars), but SQLite
       on ephemeral filesystems is now detected as fatal.
 
@@ -88,7 +88,7 @@ def validate_environment() -> None:
                 f"DATABASE_URL is SQLite ({db_url}) but the filesystem is ephemeral on {platform_name}. "
                 "All data will be LOST on every deploy. "
                 "Set DATABASE_URL to a PostgreSQL connection string "
-                "(Neon, Supabase, Railway PostgreSQL, or Render PostgreSQL)."
+                "(Neon, Supabase, or Render PostgreSQL)."
             )
     elif "localhost" in db_url and settings.environment == "production":
         warnings.append("DATABASE_URL points to localhost in production mode.")
