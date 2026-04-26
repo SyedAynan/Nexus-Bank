@@ -202,15 +202,39 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     "/api/health",
     tags=["system"],
     summary="Health Check",
-    description="Returns service health and environment info.",
+    description="Returns service health with DB and Redis connectivity status.",
 )
 @app.get("/health", tags=["system"], include_in_schema=False)
-def healthcheck() -> dict[str, str]:
-    return {
+def healthcheck() -> dict:
+    health = {
         "status": "healthy",
         "environment": settings.environment,
-        "version": "3.0.0",
+        "version": "4.0.0",
+        "services": {},
     }
+
+    # Check PostgreSQL
+    try:
+        from bank_system.core.db import SessionLocal
+        from sqlalchemy import text
+
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db.close()
+        health["services"]["database"] = "connected"
+    except Exception as e:
+        health["services"]["database"] = f"error: {type(e).__name__}"
+        health["status"] = "degraded"
+
+    # Check Redis
+    try:
+        r = get_redis()
+        r.ping()
+        health["services"]["redis"] = "connected"
+    except Exception:
+        health["services"]["redis"] = "fallback (in-memory)"
+
+    return health
 
 
 @app.websocket("/ws/dashboard")
