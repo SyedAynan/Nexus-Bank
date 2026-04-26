@@ -142,7 +142,7 @@ export default function Accounts() {
                     </div>
 
                     {/* Account Cards */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
                         {accounts.map((acc, i) => (
                             <motion.div key={acc.id} className="nx-card-glow" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
                                 style={{ position: 'relative', overflow: 'hidden' }}>

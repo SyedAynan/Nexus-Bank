@@ -370,7 +370,7 @@ export default function ProjectDescription() {
 
             {/* ─── DSA ENGINE ─── */}
             <SectionHeader icon={Binary} title="DSA ENGINE — 9 STRUCTURES" subtitle="The core banking engine is powered by 9 classical Data Structures & Algorithms, each mapped to a real-world banking operation." color="#34d399" />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 14, marginBottom: 48 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14, marginBottom: 48 }}>
                 {DSA_STRUCTURES.map((dsa, i) => {
                     const I = dsa.icon
                     return (
@@ -403,7 +403,7 @@ export default function ProjectDescription() {
 
             {/* ─── AI ENGINES ─── */}
             <SectionHeader icon={Brain} title="AI & INTELLIGENCE SUITE" subtitle="8 purpose-built engines providing fraud detection, compliance monitoring, risk analysis, and financial intelligence." color="#a78bfa" />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 14, marginBottom: 48 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14, marginBottom: 48 }}>
                 {AI_ENGINES.map((eng, i) => {
                     const I = eng.icon
                     return (
@@ -458,7 +458,7 @@ export default function ProjectDescription() {
 
             {/* ─── SECURITY ─── */}
             <SectionHeader icon={Shield} title="SECURITY & COMPLIANCE" subtitle="6 layers of defense protecting user data, preventing fraud, and ensuring regulatory compliance." color="#fb7185" />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 14, marginBottom: 48 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14, marginBottom: 48 }}>
                 {SECURITY_LAYERS.map((sec, i) => {
                     const I = sec.icon
                     return (

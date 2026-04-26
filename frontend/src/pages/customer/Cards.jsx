@@ -219,7 +219,7 @@ export default function Cards() {
                 ))}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
                 {/* Left: Card + Controls */}
                 <div>
                     {/* Card Selector Tabs */}

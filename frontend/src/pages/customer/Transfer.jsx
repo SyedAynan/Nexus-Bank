@@ -80,7 +80,7 @@ export default function Transfer() {
                 })}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
                 {/* Left: Payment Form */}
                 <div>
                     {msg && <div className={`nx-alert ${msg.type === 'success' ? 'nx-alert-success' : 'nx-alert-error'}`} style={{ marginBottom: 16 }}>{msg.type === 'success' ? '✓' : '⚠'} {msg.text}</div>}
