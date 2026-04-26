@@ -1,5 +1,25 @@
 # ============================================================
-# NEXA — Kubernetes: Frontend Deployment
+# File: 04-frontend.yaml
+#
+# Purpose:
+#     Frontend (React + Nginx) Deployment for Kubernetes production.
+#     Serves the pre-built React SPA via Nginx with:
+#     - Static file serving (HTML, JS, CSS, images)
+#     - SPA fallback routing (all paths → index.html)
+#     - API reverse proxy (/api → backend service)
+#
+# Developer Journey:
+#     - v1: Frontend served by Vite dev server — slow, unoptimized,
+#       showed debug warnings in console.
+#     - v2: Built with Vite and served by FastAPI's StaticFiles mount.
+#       This worked but the Python backend was inefficient at serving
+#       static files compared to Nginx.
+#     - v3: Separate Nginx container — 10-100x faster for static files,
+#       independent scaling, and proper cache headers for assets.
+#
+# Why 2 replicas:
+#     Frontend is stateless (just static files), so 2 replicas provide
+#     high availability with minimal resource cost (~32Mi memory each).
 # ============================================================
 apiVersion: apps/v1
 kind: Deployment
@@ -10,12 +30,13 @@ metadata:
     app: nexa
     component: frontend
 spec:
-  replicas: 2
+  replicas: 2   # Stateless — 2 replicas for HA with minimal cost
   selector:
     matchLabels:
       app: nexa
       component: frontend
   strategy:
+    # Zero-downtime: new pod starts before old pod stops
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 0
@@ -28,23 +49,27 @@ spec:
     spec:
       containers:
         - name: frontend
+          # Built by Dockerfile.frontend — multi-stage Node → Nginx
           image: ghcr.io/syedaynan/nexus-bank-frontend:latest
           ports:
             - containerPort: 80
               name: http
           resources:
+            # Nginx serving static files needs minimal resources
             requests:
               memory: "32Mi"
               cpu: "50m"
             limits:
               memory: "128Mi"
               cpu: "250m"
+          # Readiness: Is Nginx serving the page?
           readinessProbe:
             httpGet:
               path: /
               port: 80
             initialDelaySeconds: 5
             periodSeconds: 10
+          # Liveness: Is the Nginx process alive?
           livenessProbe:
             httpGet:
               path: /
@@ -52,6 +77,7 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 30
 ---
+# ClusterIP Service: Internal endpoint for the Ingress to route to
 apiVersion: v1
 kind: Service
 metadata:

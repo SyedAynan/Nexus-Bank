@@ -1,5 +1,31 @@
 # ============================================================
-# NEXA — Kubernetes: PostgreSQL StatefulSet + PVC
+# File: 01-postgres.yaml
+#
+# Purpose:
+#     PostgreSQL database deployment for Kubernetes production.
+#     Uses a StatefulSet (not Deployment) because databases need:
+#     - Stable network identity (predictable hostname)
+#     - Persistent storage that survives pod restarts
+#     - Ordered startup/shutdown (important for replication)
+#
+# Developer Journey:
+#     - v1: Used SQLite (file-based) — no separate database service needed.
+#       This worked for prototyping but couldn't handle concurrent writes.
+#     - v2: Migrated to PostgreSQL in Docker Compose for local development.
+#     - v3: Created this Kubernetes StatefulSet for production deployment.
+#       StatefulSet ensures the database pod always gets the same PVC,
+#       even if it's rescheduled to a different node.
+#
+# Storage:
+#     10Gi PersistentVolumeClaim with ReadWriteOnce access mode.
+#     The storage class "standard" works for most cloud providers
+#     (GKE, EKS, AKS). For production, consider using SSD-backed
+#     storage classes (e.g., "premium-rw" on GKE).
+#
+# Issue Faced:
+#     Data loss occurred when using a Deployment instead of StatefulSet.
+#     Deployments create new pods with new volumes on restart, losing all data.
+#     StatefulSet preserves the PVC binding across pod lifecycle events.
 # ============================================================
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -11,10 +37,10 @@ metadata:
     component: database
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteOnce   # Only one pod can mount this volume (single-instance DB)
   resources:
     requests:
-      storage: 10Gi
+      storage: 10Gi   # Sufficient for development; increase for production data
   storageClassName: standard
 ---
 apiVersion: apps/v1
@@ -26,8 +52,8 @@ metadata:
     app: nexa
     component: database
 spec:
-  serviceName: nexa-postgres
-  replicas: 1
+  serviceName: nexa-postgres   # Required by StatefulSet — creates stable DNS names
+  replicas: 1                  # Single instance; use Patroni/Citus for HA
   selector:
     matchLabels:
       app: nexa
@@ -45,6 +71,8 @@ spec:
             - containerPort: 5432
               name: postgres
           env:
+            # Credentials loaded from Kubernetes Secret (not hardcoded)
+            # This is more secure than environment variables in the manifest
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
@@ -60,6 +88,8 @@ spec:
                 secretKeyRef:
                   name: nexa-secrets
                   key: POSTGRES_PASSWORD
+            # Store data in a subdirectory to avoid permission issues
+            # with the PVC mount point
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
           volumeMounts:
@@ -67,11 +97,13 @@ spec:
               mountPath: /var/lib/postgresql/data
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "250m"
+              memory: "256Mi"   # Minimum guaranteed memory
+              cpu: "250m"       # 25% of one CPU core
             limits:
-              memory: "512Mi"
-              cpu: "500m"
+              memory: "512Mi"   # Maximum allowed memory
+              cpu: "500m"       # 50% of one CPU core
+          # Readiness probe: Is the database ready to accept connections?
+          # Kubernetes won't route traffic until this passes
           readinessProbe:
             exec:
               command:
@@ -83,6 +115,8 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5
+          # Liveness probe: Is the database process still alive?
+          # Kubernetes restarts the pod if this fails repeatedly
           livenessProbe:
             exec:
               command:
@@ -99,6 +133,9 @@ spec:
           persistentVolumeClaim:
             claimName: postgres-pvc
 ---
+# ClusterIP Service: Internal-only DNS endpoint for the database
+# Other pods connect to 'nexa-postgres:5432' — this resolves via CoreDNS
+# to the pod's IP address. NOT exposed externally (no LoadBalancer/NodePort).
 apiVersion: v1
 kind: Service
 metadata:
@@ -108,7 +145,7 @@ metadata:
     app: nexa
     component: database
 spec:
-  type: ClusterIP
+  type: ClusterIP   # Internal only — database should never be publicly accessible
   ports:
     - port: 5432
       targetPort: 5432

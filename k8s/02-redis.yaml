@@ -1,5 +1,28 @@
 # ============================================================
-# NEXA — Kubernetes: Redis Deployment
+# File: 02-redis.yaml
+#
+# Purpose:
+#     Redis deployment for Kubernetes production.
+#     Uses a Deployment (not StatefulSet) because Redis data is ephemeral
+#     and can be rebuilt from the application state.
+#
+# What Redis is used for in NEXA:
+#     1. OTP storage — forgot-password OTPs with 15-min TTL
+#     2. Rate limiting — sliding window counters per IP/user
+#     3. Session tracking — active user count, online status
+#     4. DSA demonstrations — showcases Redis data structures
+#
+# Developer Journey:
+#     - v1: No Redis — OTPs stored in Python dict (lost on restart),
+#       no rate limiting (vulnerable to brute-force attacks).
+#     - v2: Added Redis with FakeRedis fallback for environments
+#       where Redis isn't available (local dev without Docker).
+#     - v3: Kubernetes deployment with proper resource limits and probes.
+#
+# Why Deployment (not StatefulSet):
+#     Redis data in NEXA is ephemeral — OTPs expire, rate limit windows
+#     reset, and session counts rebuild automatically. If Redis loses data,
+#     users just need to re-authenticate. No PVC needed.
 # ============================================================
 apiVersion: apps/v1
 kind: Deployment
@@ -10,7 +33,7 @@ metadata:
     app: nexa
     component: cache
 spec:
-  replicas: 1
+  replicas: 1   # Single instance; use Redis Sentinel for HA
   selector:
     matchLabels:
       app: nexa
@@ -26,11 +49,11 @@ spec:
           image: redis:7-alpine
           command:
             - redis-server
-            - --appendonly
+            - --appendonly        # Enable AOF persistence for crash recovery
             - "yes"
-            - --maxmemory
+            - --maxmemory         # Cap memory usage to prevent OOM kills
             - 256mb
-            - --maxmemory-policy
+            - --maxmemory-policy  # Evict least-recently-used keys when full
             - allkeys-lru
           ports:
             - containerPort: 6379
@@ -42,11 +65,13 @@ spec:
             limits:
               memory: "256Mi"
               cpu: "250m"
+          # Readiness: Can Redis respond to commands?
           readinessProbe:
             exec:
               command: ["redis-cli", "ping"]
             initialDelaySeconds: 5
             periodSeconds: 10
+          # Liveness: Is the Redis process still alive?
           livenessProbe:
             exec:
               command: ["redis-cli", "ping"]
@@ -56,9 +81,14 @@ spec:
             - name: redis-data
               mountPath: /data
       volumes:
+        # emptyDir: data persists across container restarts within the same pod,
+        # but is lost if the pod is deleted/rescheduled. This is acceptable
+        # for NEXA's use case (ephemeral cache data).
         - name: redis-data
           emptyDir: {}
 ---
+# ClusterIP Service: Internal-only DNS endpoint
+# Backend pods connect to 'nexa-redis:6379' via CoreDNS resolution
 apiVersion: v1
 kind: Service
 metadata:
@@ -68,7 +98,7 @@ metadata:
     app: nexa
     component: cache
 spec:
-  type: ClusterIP
+  type: ClusterIP   # Internal only — Redis should never be publicly accessible
   ports:
     - port: 6379
       targetPort: 6379

@@ -1,6 +1,33 @@
 # ============================================================
-# NEXA — Kubernetes: Ingress (NGINX Ingress Controller)
-# Prerequisite: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.9.4/deploy/static/provider/cloud/deploy.yaml
+# File: 05-ingress.yaml
+#
+# Purpose:
+#     NGINX Ingress Controller configuration for routing external
+#     traffic to the correct internal service.
+#
+# How Ingress works:
+#     External traffic → LoadBalancer → Ingress Controller → Services
+#
+#     The Ingress controller acts as a reverse proxy/load balancer:
+#     - /api/* requests → routed to nexa-backend:8000
+#     - /ws/* WebSocket → routed to nexa-backend:8000 (with upgrade)
+#     - /docs, /redoc → routed to nexa-backend:8000 (Swagger UI)
+#     - /* (everything else) → routed to nexa-frontend:80
+#
+# Developer Journey:
+#     - v1: Direct NodePort services — each service exposed on a random
+#       high port. Users had to remember port numbers.
+#     - v2: Ingress with path-based routing — single entry point (port 80/443),
+#       intelligent routing based on URL path.
+#
+# Prerequisite:
+#     Install the NGINX Ingress Controller first:
+#     kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.9.4/deploy/static/provider/cloud/deploy.yaml
+#
+# TLS/HTTPS:
+#     Uncomment the tls section and install cert-manager for automatic
+#     Let's Encrypt certificate provisioning:
+#     kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.0/cert-manager.yaml
 # ============================================================
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -10,34 +37,38 @@ metadata:
   labels:
     app: nexa
   annotations:
+    # Maximum request body size (for file uploads, etc.)
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    # Timeout settings for long-running API requests
     nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
-    # WebSocket support
+    # WebSocket support — tells the Ingress to use HTTP/1.1 upgrade for /ws paths
     nginx.ingress.kubernetes.io/websocket-services: "nexa-backend"
-    # Rate limiting
+    # Rate limiting at the Ingress level (defense in depth)
+    # The backend also has its own rate limiter — this is an additional layer
     nginx.ingress.kubernetes.io/limit-rps: "50"
     nginx.ingress.kubernetes.io/limit-connections: "20"
-    # Security headers
+    # Security headers added by the Ingress (in addition to backend headers)
     nginx.ingress.kubernetes.io/configuration-snippet: |
       more_set_headers "X-Frame-Options: SAMEORIGIN";
       more_set_headers "X-Content-Type-Options: nosniff";
       more_set_headers "X-XSS-Protection: 1; mode=block";
-    # TLS (uncomment when cert-manager is configured)
+    # TLS — uncomment when cert-manager is configured:
     # cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   ingressClassName: nginx
-  # TLS (uncomment for HTTPS)
+  # TLS — uncomment for HTTPS (requires cert-manager):
   # tls:
   #   - hosts:
   #       - nexa.yourdomain.com
   #     secretName: nexa-tls
   rules:
-    - host: ""  # Matches any host — set your domain here
+    - host: ""  # Matches any host — set your domain here in production
       http:
         paths:
-          # API routes → backend
+          # ── API routes → Backend FastAPI service ──
+          # All /api/* requests are proxied to the backend
           - path: /api
             pathType: Prefix
             backend:
@@ -45,7 +76,8 @@ spec:
                 name: nexa-backend
                 port:
                   number: 8000
-          # WebSocket → backend
+          # ── WebSocket → Backend ──
+          # Real-time dashboard updates via WebSocket
           - path: /ws
             pathType: Prefix
             backend:
@@ -53,7 +85,8 @@ spec:
                 name: nexa-backend
                 port:
                   number: 8000
-          # Swagger docs → backend
+          # ── Swagger/OpenAPI docs → Backend ──
+          # API documentation served by FastAPI
           - path: /docs
             pathType: Prefix
             backend:
@@ -75,7 +108,7 @@ spec:
                 name: nexa-backend
                 port:
                   number: 8000
-          # Health check → backend
+          # ── Health check → Backend ──
           - path: /health
             pathType: Prefix
             backend:
@@ -83,7 +116,8 @@ spec:
                 name: nexa-backend
                 port:
                   number: 8000
-          # Everything else → frontend
+          # ── Everything else → Frontend React app ──
+          # This MUST be last — it's the catch-all for SPA routing
           - path: /
             pathType: Prefix
             backend:
