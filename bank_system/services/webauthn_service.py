@@ -24,7 +24,8 @@ except ImportError:
 
 RP_ID = os.getenv("WEBAUTHN_RP_ID", "localhost")
 RP_NAME = os.getenv("WEBAUTHN_RP_NAME", "NEXA Banking")
-ORIGIN = os.getenv("WEBAUTHN_ORIGIN", "http://localhost:5173")
+# Use WEBAUTHN_ORIGIN if set, otherwise fall back to FRONTEND_URL, then localhost
+ORIGIN = os.getenv("WEBAUTHN_ORIGIN", os.getenv("FRONTEND_URL", "http://localhost:5173"))
 
 
 class WebAuthnService:
