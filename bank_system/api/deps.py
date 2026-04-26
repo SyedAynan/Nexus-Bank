@@ -14,7 +14,7 @@ from bank_system.models.db_models import (
     UserRole,
 )
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 
 def get_ip_ua(request: Request) -> tuple[str | None, str | None]:
@@ -23,12 +23,36 @@ def get_ip_ua(request: Request) -> tuple[str | None, str | None]:
     return ip, ua
 
 
+def _extract_token(request: Request, header_token: str | None) -> str:
+    """Extract JWT token from httpOnly cookie first, then Authorization header.
+
+    Priority: cookie > header (cookie is more secure, header is for Swagger/API clients)
+    """
+    # 1. Try httpOnly cookie
+    cookie_token = request.cookies.get("access_token")
+    if cookie_token:
+        return cookie_token
+
+    # 2. Fall back to Authorization header (Swagger UI, external API clients)
+    if header_token:
+        return header_token
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Not authenticated",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
 def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
+    request: Request,
+    token: Annotated[str | None, Depends(oauth2_scheme)],
     db: Annotated[Session, Depends(get_db)],
 ) -> User:
+    resolved_token = _extract_token(request, token)
+
     try:
-        payload = decode_token(token)
+        payload = decode_token(resolved_token)
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

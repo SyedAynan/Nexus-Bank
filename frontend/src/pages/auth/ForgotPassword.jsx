@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Mail, ShieldCheck, Lock, KeyRound, CheckCircle, ArrowLeft, Check, Eye, EyeOff } from 'lucide-react'
+import api from '../../api'
 
 /* ─── Password Strength ─── */
 function getPasswordStrength(pw) {
@@ -88,37 +89,48 @@ export default function ForgotPassword() {
         return () => clearInterval(timer)
     }, [step, navigate])
 
-    const handleEmailSubmit = (e) => {
+    const handleEmailSubmit = async (e) => {
         e.preventDefault(); setError(''); setLoading(true)
-        // Simulated — accepts any email and moves to OTP step
-        setTimeout(() => {
-            setLoading(false)
+        try {
+            await api.post('/auth/forgot-password', { email })
             setStep('otp')
-        }, 1000)
-    }
-
-    const handleOtpSubmit = (e) => {
-        e.preventDefault(); setError(''); setLoading(true)
-        // Simulated — accepts 000000
-        setTimeout(() => {
+        } catch (err) {
+            setError(err.response?.data?.detail || 'Failed to send reset code')
+        } finally {
             setLoading(false)
-            if (otp === '000000') {
-                setStep('reset')
-            } else {
-                setError('Invalid verification code. Use 000000 for demo.')
-            }
-        }, 800)
+        }
     }
 
-    const handleResetSubmit = (e) => {
+    const handleOtpSubmit = async (e) => {
+        e.preventDefault(); setError(''); setLoading(true)
+        // OTP is verified during reset-password call, so just move to reset step
+        // We validate OTP format client-side first
+        if (otp.length === 6) {
+            setLoading(false)
+            setStep('reset')
+        } else {
+            setLoading(false)
+            setError('Please enter a valid 6-digit code')
+        }
+    }
+
+    const handleResetSubmit = async (e) => {
         e.preventDefault(); setError('')
         if (password !== confirm) return setError('Passwords do not match')
         if (strength.score < 2) return setError('Password is too weak')
         setLoading(true)
-        setTimeout(() => {
-            setLoading(false)
+        try {
+            await api.post('/auth/reset-password', {
+                email,
+                otp,
+                new_password: password,
+            })
             setStep('success')
-        }, 1000)
+        } catch (err) {
+            setError(err.response?.data?.detail || 'Failed to reset password')
+        } finally {
+            setLoading(false)
+        }
     }
 
     const stepConfig = {

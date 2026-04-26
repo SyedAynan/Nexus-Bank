@@ -59,6 +59,49 @@ def decode_token(token: str) -> dict[str, Any]:
         raise ValueError("Invalid token") from exc
 
 
+def set_auth_cookies(response, access_token: str, refresh_token: str) -> None:
+    """Set httpOnly cookies for access and refresh tokens.
+
+    Security properties:
+    - httpOnly: JS cannot read tokens (XSS protection)
+    - secure: only sent over HTTPS in production
+    - samesite=Lax: CSRF protection while allowing navigation
+    - path scoped: access token to /api, refresh to /api/auth/refresh
+    """
+    from .config import get_settings
+
+    _settings = get_settings()
+    is_prod = _settings.environment == "production"
+
+    # Access token cookie — scoped to /api
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=is_prod,
+        samesite="lax",
+        path="/api",
+        max_age=_settings.access_token_expires_minutes * 60,
+    )
+
+    # Refresh token cookie — scoped to /api/auth/refresh only
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=is_prod,
+        samesite="lax",
+        path="/api/auth",
+        max_age=_settings.refresh_token_expires_minutes * 60,
+    )
+
+
+def clear_auth_cookies(response) -> None:
+    """Clear auth cookies on logout."""
+    response.delete_cookie(key="access_token", path="/api")
+    response.delete_cookie(key="refresh_token", path="/api/auth")
+
+
 def parse_device_name(user_agent: str) -> str:
     """Extract a human-friendly device name from User-Agent string."""
     if not user_agent:

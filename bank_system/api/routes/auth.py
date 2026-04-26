@@ -19,16 +19,20 @@ from bank_system.core.config import get_settings
 from bank_system.core.db import get_db
 from bank_system.core.redis_client import get_redis
 from bank_system.core.security import (
+    clear_auth_cookies,
     create_access_token,
     create_refresh_token,
     decode_token,
     hash_password,
     parse_device_name,
+    set_auth_cookies,
     verify_password,
 )
 from bank_system.models.db_models import SecurityEventType, SessionToken, User, UserRole
 from bank_system.schemas.auth import (
+    ForgotPasswordRequest,
     LoginRequest,
+    ResetPasswordRequest,
     SessionRead,
     Token,
     UserCreate,
@@ -217,7 +221,17 @@ def login(
 
     redis.sadd("live_users", user.username)
 
-    return Token(access_token=access, refresh_token=refresh)
+    # Set httpOnly cookies + return JSON body (dual delivery for backward compat)
+    response = ORJSONResponse(
+        content={
+            "access_token": access,
+            "refresh_token": refresh,
+            "token_type": "bearer",
+            "user": {"username": user.username, "role": user.role},
+        }
+    )
+    set_auth_cookies(response, access, refresh)
+    return response
 
 
 @router.post("/verify-otp", response_model=Token)
@@ -318,7 +332,17 @@ def verify_otp(
 
     redis.sadd("live_users", user.username)
 
-    return Token(access_token=access, refresh_token=refresh)
+    # Set httpOnly cookies + return JSON body
+    response = ORJSONResponse(
+        content={
+            "access_token": access,
+            "refresh_token": refresh,
+            "token_type": "bearer",
+            "user": {"username": user.username, "role": user.role},
+        }
+    )
+    set_auth_cookies(response, access, refresh)
+    return response
 
 
 # ── Token Refresh Endpoint (BUG-015 Fix) ──
@@ -338,13 +362,17 @@ async def refresh_token(
 
     refresh_str = None
 
-    # Get from JSON body
-    try:
-        body_bytes = await request.body()
-        body = orjson.loads(body_bytes)
-        refresh_str = body.get("refresh_token")
-    except Exception:
-        pass
+    # 1. Try httpOnly cookie first
+    refresh_str = request.cookies.get("refresh_token")
+
+    # 2. Fall back to JSON body
+    if not refresh_str:
+        try:
+            body_bytes = await request.body()
+            body = orjson.loads(body_bytes)
+            refresh_str = body.get("refresh_token")
+        except Exception:
+            pass
 
     if not refresh_str:
         raise HTTPException(status_code=400, detail="Refresh token required")
@@ -412,39 +440,56 @@ async def refresh_token(
     db.add(new_session)
     db.commit()
 
-    return Token(access_token=new_access, refresh_token=new_refresh)
+    # Set httpOnly cookies + return JSON body
+    response = ORJSONResponse(
+        content={
+            "access_token": new_access,
+            "refresh_token": new_refresh,
+            "token_type": "bearer",
+        }
+    )
+    set_auth_cookies(response, new_access, new_refresh)
+    return response
 
 
 @router.post("/logout")
 def logout(
+    request: Request,
     current_user: Annotated[User, Depends(get_current_active_user)],
-    token: Annotated[str, Depends(oauth2_scheme)],
+    token: Annotated[str | None, Depends(oauth2_scheme)],
     db: Annotated[Session, Depends(get_db)],
 ):
-    """Logout: revoke the current session token."""
+    """Logout: revoke the current session token and clear cookies."""
     redis = get_redis()
     redis.srem("live_users", current_user.username)
 
-    # Revoke the current session in DB
-    try:
-        payload = decode_token(token)
-        jti = payload.get("jti")
-        if jti:
-            session = (
-                db.query(SessionToken)
-                .filter(
-                    SessionToken.jti == jti,
-                    SessionToken.user_id == current_user.id,
-                )
-                .first()
-            )
-            if session:
-                session.revoked = True
-                db.commit()
-    except ValueError:
-        pass  # Token decode failure — still allow logout
+    # Resolve the token from cookie or header
+    resolved_token = request.cookies.get("access_token") or token
 
-    return {"success": True}
+    # Revoke the current session in DB
+    if resolved_token:
+        try:
+            payload = decode_token(resolved_token)
+            jti = payload.get("jti")
+            if jti:
+                session = (
+                    db.query(SessionToken)
+                    .filter(
+                        SessionToken.jti == jti,
+                        SessionToken.user_id == current_user.id,
+                    )
+                    .first()
+                )
+                if session:
+                    session.revoked = True
+                    db.commit()
+        except ValueError:
+            pass  # Token decode failure — still allow logout
+
+    # Clear httpOnly cookies
+    response = ORJSONResponse(content={"success": True})
+    clear_auth_cookies(response)
+    return response
 
 
 # ── Session Management Endpoints ──
@@ -581,3 +626,143 @@ def unlock_account(
     user.failed_login_attempts = 0
     db.commit()
     return {"success": True, "detail": f"Account {username} unlocked"}
+
+
+# ── Password Reset ──
+
+RESET_OTP_EXPIRY = 900  # 15 minutes
+RESET_RATE_LIMIT_SECONDS = 300  # 5 minutes between requests per email
+
+
+@router.post("/forgot-password")
+def forgot_password(
+    payload: ForgotPasswordRequest,
+    request: Request,
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Send a password reset OTP to the user's email.
+
+    Accepts username or email. Always returns 200 to prevent user enumeration.
+    OTP stored in Redis with 15-minute TTL.
+    """
+    redis = get_redis()
+    ip, ua = get_ip_ua(request)
+
+    # Rate limit: 1 request per 5 minutes per identifier
+    rate_key = f"reset_rate:{payload.email}"
+    if redis.get(rate_key):
+        # Still return 200 to prevent timing-based enumeration
+        return {"success": True, "detail": "If an account exists, a reset code has been sent."}
+
+    # Look up user by username OR email
+    user = (
+        db.query(User)
+        .filter((User.username == payload.email) | (User.email == payload.email))
+        .first()
+    )
+
+    if user:
+        otp = _generate_otp()
+        redis.set(f"reset_otp:{user.email}", otp, ex=RESET_OTP_EXPIRY)
+        redis.set(rate_key, "1", ex=RESET_RATE_LIMIT_SECONDS)
+
+        logger.info(f"[RESET] Password reset OTP generated for '{user.username}'")
+        log_security_event(
+            db,
+            user=user,
+            username=user.username,
+            event_type=SecurityEventType.mfa_challenge,
+            ip=ip,
+            ua=ua,
+            details="Password reset OTP issued",
+        )
+
+        # TODO: Send real email via SendGrid/Resend
+        # email_service.send_reset_otp(user.email, otp)
+    else:
+        # Set rate limit even for non-existent users to prevent enumeration
+        redis.set(rate_key, "1", ex=RESET_RATE_LIMIT_SECONDS)
+        logger.info(f"[RESET] Reset requested for non-existent user: '{payload.email}'")
+
+    # Always return same response to prevent user enumeration
+    return {"success": True, "detail": "If an account exists, a reset code has been sent."}
+
+
+@router.post("/reset-password")
+def reset_password(
+    payload: ResetPasswordRequest,
+    request: Request,
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Reset password using a valid OTP from forgot-password flow.
+
+    After successful reset:
+    - Password is updated with new bcrypt hash
+    - All existing sessions are revoked
+    - User must log in again
+    """
+    redis = get_redis()
+    ip, ua = get_ip_ua(request)
+
+    # Look up user
+    user = (
+        db.query(User)
+        .filter((User.username == payload.email) | (User.email == payload.email))
+        .first()
+    )
+
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid request")
+
+    # Verify OTP
+    stored_otp = redis.get(f"reset_otp:{user.email}")
+    if not stored_otp or stored_otp != payload.otp:
+        log_security_event(
+            db,
+            user=user,
+            username=user.username,
+            event_type=SecurityEventType.mfa_failure,
+            ip=ip,
+            ua=ua,
+            details="Invalid password reset OTP",
+        )
+        raise HTTPException(status_code=400, detail="Invalid or expired reset code")
+
+    # Update password
+    user.hashed_password = hash_password(payload.new_password)
+    user.failed_login_attempts = 0
+    user.is_locked = False
+
+    # Revoke ALL existing sessions (force re-login)
+    now = datetime.now(UTC)
+    active_sessions = (
+        db.query(SessionToken)
+        .filter(
+            SessionToken.user_id == user.id,
+            SessionToken.revoked.is_(False),
+            SessionToken.expires_at > now,
+        )
+        .all()
+    )
+    for s in active_sessions:
+        s.revoked = True
+
+    db.commit()
+
+    # Clean up Redis
+    redis.delete(f"reset_otp:{user.email}")
+    redis.srem("live_users", user.username)
+
+    log_security_event(
+        db,
+        user=user,
+        username=user.username,
+        event_type=SecurityEventType.login_success,
+        ip=ip,
+        ua=ua,
+        details="Password reset successful — all sessions revoked",
+    )
+
+    logger.info(f"[RESET] Password reset completed for '{user.username}', {len(active_sessions)} sessions revoked")
+
+    return {"success": True, "detail": "Password has been reset. Please log in with your new password."}

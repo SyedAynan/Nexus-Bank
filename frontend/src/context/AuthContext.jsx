@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState } from 'react'
 import api from '../api'
 
 const AuthContext = createContext(null)
@@ -30,35 +30,43 @@ export function AuthProvider({ children }) {
             return { mfa_required: true }
         }
 
-        // Direct login (if MFA not enabled)
-        const { access_token, refresh_token } = res.data
+        // Direct login — server sets httpOnly cookies AND returns user data in body
+        const { access_token, refresh_token, user: userData } = res.data
+
+        // Store tokens in localStorage as fallback for non-cookie environments
         if (access_token) {
             localStorage.setItem('access_token', access_token)
-            if (refresh_token) {
-                localStorage.setItem('refresh_token', refresh_token)
-            }
-            const payload = JSON.parse(atob(access_token.split('.')[1]))
-            const userData = { username: payload.sub, role: payload.role }
-            localStorage.setItem('user', JSON.stringify(userData))
-            setUser(userData)
         }
+        if (refresh_token) {
+            localStorage.setItem('refresh_token', refresh_token)
+        }
+
+        // Use server-provided user data instead of insecure client-side JWT decode
+        const userInfo = userData || { username, role: 'user' }
+        localStorage.setItem('user', JSON.stringify(userInfo))
+        setUser(userInfo)
+
         return { mfa_required: false }
     }
 
     const verifyOtp = async (username, otp) => {
         const res = await api.post('/auth/verify-otp', { username, password: pendingPassword, otp })
-        const { access_token, refresh_token } = res.data
-        localStorage.setItem('access_token', access_token)
+        const { access_token, refresh_token, user: userData } = res.data
+
+        // Store tokens in localStorage as fallback
+        if (access_token) {
+            localStorage.setItem('access_token', access_token)
+        }
         if (refresh_token) {
             localStorage.setItem('refresh_token', refresh_token)
         }
 
-        const payload = JSON.parse(atob(access_token.split('.')[1]))
-        const userData = { username: payload.sub, role: payload.role }
-        localStorage.setItem('user', JSON.stringify(userData))
-        setUser(userData)
+        // Use server-provided user data
+        const userInfo = userData || { username, role: 'user' }
+        localStorage.setItem('user', JSON.stringify(userInfo))
+        setUser(userInfo)
         setPendingPassword('')
-        return userData
+        return userInfo
     }
 
     const logout = async () => {
@@ -67,6 +75,7 @@ export function AuthProvider({ children }) {
         } catch (e) {
             // Ignore logout API errors — still clear local state
         }
+        // Clear localStorage fallback (cookies cleared by server response)
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
         localStorage.removeItem('user')
@@ -75,14 +84,12 @@ export function AuthProvider({ children }) {
 
     const isAdmin = user?.role === 'admin'
     const isAuthenticated = !!user
-    const token = localStorage.getItem('access_token')
 
     return (
-        <AuthContext.Provider value={{ user, token, login, verifyOtp, logout, isAdmin, isAuthenticated, loading }}>
+        <AuthContext.Provider value={{ user, login, verifyOtp, logout, isAdmin, isAuthenticated, loading }}>
             {children}
         </AuthContext.Provider>
     )
 }
 
 export const useAuth = () => useContext(AuthContext)
-

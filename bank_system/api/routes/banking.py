@@ -366,6 +366,10 @@ def user_transfer(
     if not payload.counterparty_account_id:
         raise HTTPException(status_code=400, detail="Counterparty account ID required for transfers")
 
+    # Prevent self-transfers
+    if payload.account_id == payload.counterparty_account_id:
+        raise HTTPException(status_code=400, detail="Cannot transfer to the same account")
+
     # Lock both accounts in consistent order to prevent deadlocks
     # Always lock lower ID first
     id_a = min(payload.account_id, payload.counterparty_account_id)

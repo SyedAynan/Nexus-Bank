@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { Zap } from 'lucide-react'
 
 export default function PublicLayout() {
-    const { token } = useAuth()
+    const { isAuthenticated } = useAuth()
     const { pathname } = useLocation()
 
     return (
@@ -46,7 +46,7 @@ export default function PublicLayout() {
                                 textShadow: pathname === link.to ? '0 0 10px rgba(34,211,238,0.4)' : 'none',
                             }}>{link.label}</Link>
                         ))}
-                        {token ? (
+                        {isAuthenticated ? (
                             <Link to="/dashboard" className="nx-btn nx-btn-primary" style={{ padding: '0.5rem 1rem' }}>
                                 <Zap size={14} /> Dashboard
                             </Link>

@@ -60,3 +60,13 @@ class SessionRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str  # accepts email or username
+
+
+class ResetPasswordRequest(BaseModel):
+    email: str  # email or username used in forgot-password
+    otp: str
+    new_password: str
