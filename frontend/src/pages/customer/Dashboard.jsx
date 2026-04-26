@@ -1,3 +1,36 @@
+/**
+ * File: Dashboard.jsx
+ * Module: frontend/src/pages/customer/Dashboard.jsx
+ *
+ * Purpose:
+ *     Main customer dashboard — the first screen users see after login.
+ *     Displays KPI cards, cash flow chart, portfolio pie chart, financial
+ *     health scores, recent transactions, and an animated network visualization.
+ *
+ * Developer Journey:
+ *     - v1: Static dashboard with hardcoded sample data. No API calls,
+ *       no real-time updates, no charts.
+ *     - v2: Wired to real API endpoints (/banking/accounts, /banking/transactions).
+ *       Falls back to demo data if the API returns empty results (getDemoAccounts,
+ *       getDemoTransactions from simulationEngine).
+ *     - v3: Added Recharts visualizations (AreaChart for cash flow, PieChart
+ *       for portfolio mix) with auto-refresh every 15 seconds.
+ *     - v4: Added NexusCoreNetwork visualization — animated SVG network map
+ *       showing data flow between system components (Auth, Banking, ML, etc.).
+ *       Wrapped with EnhancedChartWrapper for glassmorphism and glow effects.
+ *
+ * Data Flow:
+ *     1. On mount: fetch /banking/accounts + /banking/transactions in parallel
+ *     2. If API returns data → display real data
+ *     3. If API returns empty → display demo data from simulationEngine
+ *     4. Cash flow chart auto-refreshes every 15 seconds
+ *     5. Clock updates every second (live timestamp in header)
+ *
+ * Performance:
+ *     Uses Promise.all for parallel API calls instead of sequential fetches.
+ *     Skeleton loading states prevent layout shift during data loading.
+ */
+
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
