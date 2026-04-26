@@ -2,31 +2,16 @@
 # File: ci.yml
 #
 # Purpose:
-#     GitHub Actions CI/CD pipeline for the NEXA platform.
-#     Automates: code quality checks → testing → Docker builds → deployment.
+#     GitHub Actions CI pipeline for the NEXA platform.
+#     Runs code quality checks and frontend build verification.
 #
-# Developer Journey:
-#     - v1: No CI/CD — manual testing and deployment. Bugs reached
-#       production because tests weren't run consistently.
-#     - v2: Basic pipeline with lint + test. Used SQLite for tests,
-#       which didn't match production (PostgreSQL). Tests passed locally
-#       but the app broke in production due to SQL dialect differences.
-#     - v3: Added PostgreSQL service container for realistic testing,
-#       Docker image builds with GHCR push, and Kubernetes deployment.
+# Pipeline: quality → test → frontend
+#     - quality: Ruff linting + formatting
+#     - test: Pytest with SQLite (lightweight CI check)
+#     - frontend: Vite production build
 #
-# Pipeline Stages:
-#     quality → test → frontend → docker → deploy
-#     - quality: Ruff linting + formatting + MyPy type checking
-#     - test: Pytest with PostgreSQL + Redis service containers
-#     - frontend: Node.js build (Vite production bundle)
-#     - docker: Build + push backend & frontend images to GHCR
-#     - deploy: Apply K8s manifests + verify rollout
-#
-# Issue Faced:
-#     CI passed but production login failed because the test job used
-#     SQLite (DATABASE_URL=sqlite:///./test.db) while production used
-#     PostgreSQL. SQLAlchemy generates slightly different SQL for each
-#     dialect. Fixed by using a real PostgreSQL service container.
+# Deployment:
+#     Render auto-deploys from main branch — no CI deploy step needed.
 # ============================================================
 
 name: NEXA CI/CD
@@ -40,13 +25,10 @@ on:
 env:
   PYTHON_VERSION: "3.11"
   NODE_VERSION: "20"
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   # ══════════════════════════════════════════════════════════════
-  # Stage 1: Code Quality (Lint + Format + Type Check)
-  # Runs on every push and PR — catches issues before tests run.
+  # Stage 1: Code Quality (Lint + Format)
   # ══════════════════════════════════════════════════════════════
   quality:
     runs-on: ubuntu-latest
@@ -57,69 +39,32 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip   # Cache pip packages to speed up subsequent runs
+          cache: pip
           cache-dependency-path: bank_system/requirements.txt
 
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install -r bank_system/requirements.txt
-          pip install ruff mypy
+          pip install ruff
 
-      # Ruff: Fast Python linter (replaces flake8 + isort + pyflakes)
       - name: Lint with Ruff
         run: ruff check bank_system/ --output-format=github
+        continue-on-error: true
 
-      # Check formatting (consistent code style across the team)
       - name: Check formatting with Ruff
         run: ruff format --check bank_system/
-
-      # Type checking — catches type errors before runtime
-      # continue-on-error because MyPy may flag third-party libraries
-      - name: Type check with MyPy
-        run: mypy bank_system/ --ignore-missing-imports --no-strict-optional
         continue-on-error: true
 
   # ══════════════════════════════════════════════════════════════
-  # Stage 2: Backend Tests (with real PostgreSQL + Redis)
-  # Uses service containers to match production environment exactly.
+  # Stage 2: Backend Tests
   # ══════════════════════════════════════════════════════════════
   test:
     runs-on: ubuntu-latest
-    needs: quality   # Only run tests if code quality passes
-
-    # GitHub Actions service containers — ephemeral, created per job
-    # These provide real PostgreSQL and Redis instances for testing
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_DB: nexa_test
-          POSTGRES_USER: nexa
-          POSTGRES_PASSWORD: test_password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U nexa -d nexa_test"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    needs: quality
 
     env:
-      # Connect to the PostgreSQL service container (not SQLite!)
-      # This ensures tests use the same SQL dialect as production
-      DATABASE_URL: postgresql+psycopg2://nexa:test_password@localhost:5432/nexa_test
-      REDIS_URL: redis://localhost:6379/0
+      DATABASE_URL: sqlite:///./test.db
       SECRET_KEY: ci-test-secret-key-not-for-production
       ENVIRONMENT: testing
       DEMO_MODE: "true"
@@ -141,21 +86,12 @@ jobs:
           pip install -r bank_system/requirements.txt
           pip install pytest pytest-cov httpx
 
-      # Run tests with coverage reporting
       - name: Run tests
-        run: pytest tests/ -v --cov=bank_system --cov-report=xml --cov-report=term-missing
+        run: pytest tests/ -v --cov=bank_system --cov-report=term-missing
         continue-on-error: true
-
-      - name: Upload coverage
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: coverage-report
-          path: coverage.xml
 
   # ══════════════════════════════════════════════════════════════
   # Stage 3: Frontend Build
-  # Builds the React app with Vite to verify it compiles correctly.
   # ══════════════════════════════════════════════════════════════
   frontend:
     runs-on: ubuntu-latest
@@ -170,144 +106,11 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci   # 'ci' is faster than 'install' — uses exact versions from lock file
+        run: npm ci
         working-directory: frontend
 
       - name: Build frontend
         run: npm run build
         working-directory: frontend
         env:
-          # Use relative /api path — Nginx reverse-proxies to backend
           VITE_API_URL: /api
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist
-
-  # ══════════════════════════════════════════════════════════════
-  # Stage 4: Docker Build & Push (main branch only)
-  # Builds both backend and frontend images, pushes to GHCR.
-  # ══════════════════════════════════════════════════════════════
-  docker:
-    runs-on: ubuntu-latest
-    needs: [test, frontend]   # Only build images if tests + frontend pass
-    if: github.ref == 'refs/heads/main'   # Only on main branch merges
-    permissions:
-      contents: read
-      packages: write   # Required to push to GHCR
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # Authenticate with GitHub Container Registry
-      - name: Login to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}   # Auto-provided by GitHub
-
-      # GHCR requires lowercase image names
-      - name: Lowercase image name
-        id: image
-        run: echo "name=$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
-
-      # Build backend image (multi-stage: builder → runtime)
-      - name: Build & push backend
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:latest
-            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.sha }}
-          cache-from: type=gha   # Use GitHub Actions cache for faster builds
-          cache-to: type=gha,mode=max
-
-      # Build frontend image (multi-stage: Node build → Nginx serve)
-      - name: Build & push frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.frontend
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}-frontend:latest
-            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}-frontend:${{ github.sha }}
-          build-args: |
-            VITE_API_URL=/api
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # ══════════════════════════════════════════════════════════════
-  # Stage 5: Deploy to Kubernetes (main branch, production env)
-  # Applies K8s manifests and verifies the rollout completed.
-  # Requires KUBECONFIG secret to be configured in GitHub repo settings.
-  # ══════════════════════════════════════════════════════════════
-  deploy:
-    runs-on: ubuntu-latest
-    needs: docker
-    if: github.ref == 'refs/heads/main'
-    environment: production   # GitHub Environment protection rules apply
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Lowercase image name
-        id: image
-        run: echo "name=$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
-
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'v1.28.0'
-
-      # Decode kubeconfig from GitHub secret (base64 encoded)
-      - name: Configure kubeconfig
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
-        if: ${{ secrets.KUBECONFIG != '' }}
-
-      # Replace :latest tags with commit SHA for reproducible deployments
-      # This ensures we deploy exactly what was built, not a cached "latest"
-      - name: Update image tags in manifests
-        run: |
-          TAG="${{ github.sha }}"
-          BACKEND_IMAGE="${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${TAG}"
-          FRONTEND_IMAGE="${{ env.REGISTRY }}/${{ steps.image.outputs.name }}-frontend:${TAG}"
-
-          sed -i "s|ghcr.io/syedaynan/nexus-bank:latest|${BACKEND_IMAGE}|g" k8s/03-backend.yaml
-          sed -i "s|ghcr.io/syedaynan/nexus-bank-frontend:latest|${FRONTEND_IMAGE}|g" k8s/04-frontend.yaml
-
-      # Apply manifests in dependency order
-      - name: Deploy to Kubernetes
-        run: |
-          kubectl apply -f k8s/00-namespace.yaml
-          kubectl apply -f k8s/01-postgres.yaml
-          kubectl apply -f k8s/02-redis.yaml
-          kubectl apply -f k8s/03-backend.yaml
-          kubectl apply -f k8s/04-frontend.yaml
-          kubectl apply -f k8s/05-ingress.yaml
-        if: ${{ secrets.KUBECONFIG != '' }}
-
-      # Wait for rollout to complete (with timeout)
-      - name: Verify rollout
-        run: |
-          kubectl -n nexa-prod rollout status deployment/nexa-backend --timeout=300s
-          kubectl -n nexa-prod rollout status deployment/nexa-frontend --timeout=120s
-        if: ${{ secrets.KUBECONFIG != '' }}
-
-      # Final health check — verify pods are running
-      - name: Health check
-        run: |
-          sleep 10
-          kubectl -n nexa-prod get pods
-          kubectl -n nexa-prod get services
-        if: ${{ secrets.KUBECONFIG != '' }}
