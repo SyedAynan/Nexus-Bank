@@ -185,7 +185,7 @@ export default function DashboardLayout() {
             <div className={`nx-sidebar-backdrop ${mobileMenuOpen ? 'open' : ''}`} onClick={closeMobile} />
 
             {/* Sidebar */}
-            <aside className={`nx-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{ position: 'relative', zIndex: 2 }}>
+            <aside className={`nx-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{ zIndex: 2 }}>
                 {/* Logo */}
                 <div style={{ padding: '0 1.5rem 1.5rem', borderBottom: '1px solid var(--nx-border)' }}>
                     <Link to="/dashboard" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }} onClick={closeMobile}>
