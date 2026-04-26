@@ -10,8 +10,9 @@ export function AuthProvider({ children }) {
     })
     const [loading, setLoading] = useState(false)
 
-    // Store password for MFA verify step
+    // Store password and username for MFA verify step
     const [pendingPassword, setPendingPassword] = useState('')
+    const [pendingUsername, setPendingUsername] = useState('')
 
     const login = async (username, password) => {
         const formData = new URLSearchParams()
@@ -20,7 +21,7 @@ export function AuthProvider({ children }) {
 
         const res = await api.post('/auth/login', formData, {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            validateStatus: (status) => status >= 200 && status < 300,
+            validateStatus: (status) => (status >= 200 && status < 300) || status === 202,
         })
 
         // 202 = MFA required, 200 = direct login (no MFA)

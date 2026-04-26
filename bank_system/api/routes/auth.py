@@ -86,7 +86,12 @@ def login(
 
     logger.info(f"[LOGIN] Attempt for username='{form_data.username}' from ip={ip}")
 
-    user = db.query(User).filter(User.username == form_data.username).first()
+    # Look up user by username OR email (supports both login methods)
+    user = (
+        db.query(User)
+        .filter((User.username == form_data.username) | (User.email == form_data.username))
+        .first()
+    )
 
     if not user:
         logger.warning(f"[LOGIN] User NOT FOUND: '{form_data.username}'")
@@ -99,14 +104,22 @@ def login(
             ua=ua,
             details="Unknown username",
         )
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
+        # In dev mode, provide more specific error for debugging
+        detail = "User not found" if settings.debug else "Incorrect username or password"
+        raise HTTPException(status_code=400, detail=detail)
 
+    logger.info(f"[LOGIN] User FOUND: username='{user.username}', id={user.id}, locked={user.is_locked}")
 
     if user.is_locked:
+        logger.warning(f"[LOGIN] Account LOCKED: '{user.username}'")
         raise HTTPException(status_code=403, detail="Account locked — contact support")
 
-    if not verify_password(form_data.password, user.hashed_password):
+    password_match = verify_password(form_data.password, user.hashed_password)
+    logger.info(f"[LOGIN] Password match result for '{user.username}': {password_match}")
+
+    if not password_match:
         user.failed_login_attempts += 1
+        logger.warning(f"[LOGIN] Password MISMATCH for '{user.username}' (attempt {user.failed_login_attempts}/5)")
 
         if user.failed_login_attempts >= 5:
             user.is_locked = True
@@ -131,13 +144,38 @@ def login(
             )
 
         db.commit()
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
+        # In dev mode, provide more specific error for debugging
+        detail = "Wrong password" if settings.debug else "Incorrect username or password"
+        raise HTTPException(status_code=400, detail=detail)
 
     # Reset failed attempts on successful password verification
     user.failed_login_attempts = 0
     db.commit()
 
-    # ── Simple login: issue tokens directly (no MFA) ──
+    logger.info(f"[LOGIN] Password verified for '{user.username}', mfa_enabled={user.mfa_enabled}")
+
+    # ── MFA Check: if user has MFA enabled, issue challenge ──
+    if user.mfa_enabled:
+        otp = _generate_otp()
+        redis.set(f"otp:{user.username}", otp, ex=OTP_EXPIRY_SECONDS)
+        logger.info(f"[LOGIN] MFA challenge issued for '{user.username}'")
+
+        log_security_event(
+            db,
+            user=user,
+            username=user.username,
+            event_type=SecurityEventType.mfa_challenge,
+            ip=ip,
+            ua=ua,
+            details="MFA OTP challenge issued",
+        )
+
+        return ORJSONResponse(
+            status_code=202,
+            content={"mfa": True, "mfa_required": True, "delivery_channel": "otp_simulated"},
+        )
+
+    # ── No MFA: issue tokens directly ──
     log_security_event(
         db,
         user=user,
@@ -145,7 +183,7 @@ def login(
         event_type=SecurityEventType.login_success,
         ip=ip,
         ua=ua,
-        details="Login successful (direct)",
+        details="Login successful (direct, no MFA)",
     )
 
     now = datetime.now(UTC)
