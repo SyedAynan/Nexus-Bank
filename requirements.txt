@@ -1,0 +1,3 @@
+# Root requirements.txt — tells Render to use pip (not Poetry)
+# This file simply includes the actual requirements from bank_system/
+-r bank_system/requirements.txt
