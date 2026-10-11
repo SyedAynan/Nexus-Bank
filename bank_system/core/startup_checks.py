@@ -98,8 +98,7 @@ def validate_environment() -> None:
         # Downgrade to warning on PaaS (common misconfiguration, not security-critical on its own)
         if is_paas:
             warnings.append(
-                "DEBUG=true in production mode on " + platform_name + ". "
-                "Set DEBUG=false in environment variables."
+                "DEBUG=true in production mode on " + platform_name + ". Set DEBUG=false in environment variables."
             )
         else:
             errors.append("DEBUG=true in production mode. Set DEBUG=false.")
@@ -123,4 +122,3 @@ def validate_environment() -> None:
         sys.exit(1)
 
     logger.info("✅ Environment validation passed.")
-

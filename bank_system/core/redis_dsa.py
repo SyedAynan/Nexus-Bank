@@ -38,7 +38,6 @@ Redis Data Structure Mapping:
 
 import json
 import logging
-import time
 
 logger = logging.getLogger("nexa.redis_dsa")
 
@@ -234,7 +233,7 @@ class RedisPriorityQueue:
         result = self.r.zrange(self.KEY, 0, limit - 1, withscores=True)
         cancelled = self._get_cancelled()
         loans = []
-        for loan_json, score in (result or []):
+        for loan_json, score in result or []:
             loan = json.loads(loan_json)
             if loan.get("loan_id") not in cancelled:
                 loan["priority_score"] = score
@@ -245,6 +244,7 @@ class RedisPriorityQueue:
 # ---------------------------------------------------------------------------
 # Factory
 # ---------------------------------------------------------------------------
+
 
 def create_redis_dsa(redis_client) -> dict:
     """

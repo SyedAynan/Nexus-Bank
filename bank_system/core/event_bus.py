@@ -41,9 +41,10 @@ import asyncio
 import logging
 import time
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import datetime
 from enum import StrEnum
-from typing import Any, Callable
+from typing import Any
 
 logger = logging.getLogger("nexa.events")
 
@@ -52,8 +53,10 @@ logger = logging.getLogger("nexa.events")
 # Event Types
 # ---------------------------------------------------------------------------
 
+
 class EventType(StrEnum):
     """All event types in the NEXA platform."""
+
     # Banking events
     TXN_CREATED = "txn.created"
     TXN_FAILED = "txn.failed"
@@ -86,12 +89,17 @@ class EventType(StrEnum):
 # Event Model
 # ---------------------------------------------------------------------------
 
+
 class Event:
     """Immutable event object with metadata."""
 
     __slots__ = (
-        "event_type", "data", "timestamp", "event_id",
-        "source", "correlation_id",
+        "event_type",
+        "data",
+        "timestamp",
+        "event_id",
+        "source",
+        "correlation_id",
     )
 
     _counter = 0
@@ -247,7 +255,7 @@ class EventBus:
     def _record_history(self, event: Event):
         self._history.append(event.to_dict())
         if len(self._history) > self._history_size:
-            self._history = self._history[-self._history_size:]
+            self._history = self._history[-self._history_size :]
 
     def _record_error(self, event: Event, handler_name: str, error: Exception):
         error_entry = {
@@ -260,9 +268,7 @@ class EventBus:
         self._handler_errors.append(error_entry)
         if len(self._handler_errors) > 200:
             self._handler_errors = self._handler_errors[-200:]
-        logger.error(
-            f"Event handler error: {handler_name} failed on {event.event_type}: {error}"
-        )
+        logger.error(f"Event handler error: {handler_name} failed on {event.event_type}: {error}")
 
     def get_history(self, limit: int = 50, event_type: str | None = None) -> list[dict]:
         """Return recent event history, optionally filtered by type."""
@@ -274,26 +280,11 @@ class EventBus:
     def get_metrics(self) -> dict:
         """Return event bus metrics for monitoring dashboard."""
         return {
-            "total_events": sum(
-                v for k, v in self._metrics.items()
-                if not k.endswith(".ms")
-            ),
-            "event_counts": {
-                k: v for k, v in self._metrics.items()
-                if not k.endswith(".ms")
-            },
-            "handler_latencies_ms": {
-                k: v for k, v in self._metrics.items()
-                if k.endswith(".ms")
-            },
-            "registered_handlers": {
-                event_type: len(handlers)
-                for event_type, handlers in self._sync_handlers.items()
-            },
-            "async_handlers": {
-                event_type: len(handlers)
-                for event_type, handlers in self._async_handlers.items()
-            },
+            "total_events": sum(v for k, v in self._metrics.items() if not k.endswith(".ms")),
+            "event_counts": {k: v for k, v in self._metrics.items() if not k.endswith(".ms")},
+            "handler_latencies_ms": {k: v for k, v in self._metrics.items() if k.endswith(".ms")},
+            "registered_handlers": {event_type: len(handlers) for event_type, handlers in self._sync_handlers.items()},
+            "async_handlers": {event_type: len(handlers) for event_type, handlers in self._async_handlers.items()},
             "error_count": len(self._handler_errors),
             "recent_errors": self._handler_errors[-5:],
         }

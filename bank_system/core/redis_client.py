@@ -166,11 +166,11 @@ class FakeRedis:
 
     def lrange(self, key, start, end):
         lst = self._get_list(key)
-        return lst[start:end + 1]
+        return lst[start : end + 1]
 
     def ltrim(self, key, start, end):
         lst = self._get_list(key)
-        self._store[key] = lst[start:end + 1]
+        self._store[key] = lst[start : end + 1]
 
     # ── Extended Sorted Set operations (for Redis DSA PriorityQueue) ──
 
@@ -187,7 +187,7 @@ class FakeRedis:
     def zrange(self, key, start, end, withscores=False):
         ss = self._sorted_sets.get(key, {})
         sorted_items = sorted(ss.items(), key=lambda x: float(x[1]))
-        sliced = sorted_items[start:end + 1] if end >= 0 else sorted_items[start:]
+        sliced = sorted_items[start : end + 1] if end >= 0 else sorted_items[start:]
         if withscores:
             return [(m, float(s)) for m, s in sliced]
         return [m for m, _ in sliced]

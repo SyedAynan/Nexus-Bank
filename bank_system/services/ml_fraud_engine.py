@@ -10,7 +10,6 @@ Replaces the pure rule-based FraudEngine with an ML-augmented ensemble.
 Models are trained on synthetic banking data and updated via the retrain pipeline.
 """
 
-import hashlib
 import json
 import logging
 import math
@@ -151,6 +150,7 @@ class FeatureExtractor:
 # Isolation Forest (Anomaly Detection)
 # ---------------------------------------------------------------------------
 
+
 class SimpleIsolationForest:
     """
     Lightweight Isolation Forest implementation for real-time anomaly detection.
@@ -245,6 +245,7 @@ class SimpleIsolationForest:
 # Gradient Boosted Classifier (uses sklearn if available, else stub)
 # ---------------------------------------------------------------------------
 
+
 class GradientBoostClassifier:
     """
     Wrapper around sklearn's GradientBoostingClassifier for fraud classification.
@@ -258,6 +259,7 @@ class GradientBoostClassifier:
 
         try:
             from sklearn.ensemble import GradientBoostingClassifier as GBC
+
             self.model = GBC(
                 n_estimators=100,
                 max_depth=5,
@@ -293,8 +295,8 @@ class GradientBoostClassifier:
             # Use z-score (idx 13), balance_ratio (idx 14), night (idx 8), velocity (idx 9)
             score = (
                 min(x[13], 4) * 15  # zscore capped at 4 → 60 max
-                + x[14] * 20        # balance ratio → 20 max
-                + x[8] * 10         # night flag → 10
+                + x[14] * 20  # balance ratio → 20 max
+                + x[8] * 10  # night flag → 10
                 + min(x[9], 5) * 2  # velocity count → 10 max
             )
             return round(min(100.0, max(0.0, score)), 2)
@@ -352,52 +354,56 @@ class MLFraudEngine:
         n_fraud = 50
 
         # Normal transactions: moderate amounts, business hours, low velocity
-        normal = np.column_stack([
-            np.random.lognormal(mean=6, sigma=1.5, size=n_normal),    # amount
-            np.random.normal(6, 1.5, size=n_normal),                   # amount_log
-            np.random.binomial(1, 0.3, size=n_normal),                 # is_round_100
-            np.random.binomial(1, 0.1, size=n_normal),                 # is_round_1000
-            np.random.binomial(1, 0.02, size=n_normal),                # is_round_5000
-            np.random.normal(14, 3, size=n_normal).clip(8, 20),        # hour (business)
-            np.random.randint(0, 7, size=n_normal),                    # day_of_week
-            np.zeros(n_normal),                                        # is_weekend
-            np.zeros(n_normal),                                        # is_night
-            np.random.poisson(1.5, size=n_normal),                     # txn_count_1h
-            np.random.poisson(8, size=n_normal),                       # txn_count_24h
-            np.random.lognormal(6, 1, size=n_normal),                  # amount_sum_1h
-            np.random.lognormal(8, 1, size=n_normal),                  # amount_sum_24h
-            np.random.normal(0.5, 0.5, size=n_normal).clip(0, 2),     # zscore
-            np.random.uniform(0, 0.3, size=n_normal),                  # balance_ratio
-            np.random.exponential(1, size=n_normal),                   # days_since_last
-            np.random.poisson(3, size=n_normal),                       # out_degree
-            np.random.poisson(3, size=n_normal),                       # in_degree
-            np.random.uniform(0, 20, size=n_normal),                   # neighbor_risk
-            np.zeros((n_normal, 3)),                                   # padding
-        ]).astype(np.float64)[:, :N_FEATURES]
+        normal = np.column_stack(
+            [
+                np.random.lognormal(mean=6, sigma=1.5, size=n_normal),  # amount
+                np.random.normal(6, 1.5, size=n_normal),  # amount_log
+                np.random.binomial(1, 0.3, size=n_normal),  # is_round_100
+                np.random.binomial(1, 0.1, size=n_normal),  # is_round_1000
+                np.random.binomial(1, 0.02, size=n_normal),  # is_round_5000
+                np.random.normal(14, 3, size=n_normal).clip(8, 20),  # hour (business)
+                np.random.randint(0, 7, size=n_normal),  # day_of_week
+                np.zeros(n_normal),  # is_weekend
+                np.zeros(n_normal),  # is_night
+                np.random.poisson(1.5, size=n_normal),  # txn_count_1h
+                np.random.poisson(8, size=n_normal),  # txn_count_24h
+                np.random.lognormal(6, 1, size=n_normal),  # amount_sum_1h
+                np.random.lognormal(8, 1, size=n_normal),  # amount_sum_24h
+                np.random.normal(0.5, 0.5, size=n_normal).clip(0, 2),  # zscore
+                np.random.uniform(0, 0.3, size=n_normal),  # balance_ratio
+                np.random.exponential(1, size=n_normal),  # days_since_last
+                np.random.poisson(3, size=n_normal),  # out_degree
+                np.random.poisson(3, size=n_normal),  # in_degree
+                np.random.uniform(0, 20, size=n_normal),  # neighbor_risk
+                np.zeros((n_normal, 3)),  # padding
+            ]
+        ).astype(np.float64)[:, :N_FEATURES]
 
         # Fraudulent transactions: large amounts, odd hours, high velocity
-        fraud = np.column_stack([
-            np.random.lognormal(mean=9, sigma=1, size=n_fraud),        # large amounts
-            np.random.normal(9, 1, size=n_fraud),                      # amount_log
-            np.random.binomial(1, 0.7, size=n_fraud),                  # round numbers
-            np.random.binomial(1, 0.5, size=n_fraud),                  # round 1000
-            np.random.binomial(1, 0.3, size=n_fraud),                  # round 5000
-            np.random.normal(3, 2, size=n_fraud).clip(0, 5),           # odd hours
-            np.random.randint(0, 7, size=n_fraud),                     # day
-            np.random.binomial(1, 0.5, size=n_fraud),                  # weekend
-            np.ones(n_fraud),                                          # is_night
-            np.random.poisson(8, size=n_fraud),                        # high velocity
-            np.random.poisson(25, size=n_fraud),                       # high 24h count
-            np.random.lognormal(9, 1, size=n_fraud),                   # high sum_1h
-            np.random.lognormal(11, 1, size=n_fraud),                  # high sum_24h
-            np.random.normal(3, 1, size=n_fraud).clip(2, 6),           # high zscore
-            np.random.uniform(0.5, 1.0, size=n_fraud),                 # high balance_ratio
-            np.random.exponential(0.1, size=n_fraud),                  # rapid txns
-            np.random.poisson(8, size=n_fraud),                        # high out_degree
-            np.random.poisson(2, size=n_fraud),                        # low in_degree
-            np.random.uniform(40, 80, size=n_fraud),                   # high neighbor risk
-            np.zeros((n_fraud, 3)),                                    # padding
-        ]).astype(np.float64)[:, :N_FEATURES]
+        fraud = np.column_stack(
+            [
+                np.random.lognormal(mean=9, sigma=1, size=n_fraud),  # large amounts
+                np.random.normal(9, 1, size=n_fraud),  # amount_log
+                np.random.binomial(1, 0.7, size=n_fraud),  # round numbers
+                np.random.binomial(1, 0.5, size=n_fraud),  # round 1000
+                np.random.binomial(1, 0.3, size=n_fraud),  # round 5000
+                np.random.normal(3, 2, size=n_fraud).clip(0, 5),  # odd hours
+                np.random.randint(0, 7, size=n_fraud),  # day
+                np.random.binomial(1, 0.5, size=n_fraud),  # weekend
+                np.ones(n_fraud),  # is_night
+                np.random.poisson(8, size=n_fraud),  # high velocity
+                np.random.poisson(25, size=n_fraud),  # high 24h count
+                np.random.lognormal(9, 1, size=n_fraud),  # high sum_1h
+                np.random.lognormal(11, 1, size=n_fraud),  # high sum_24h
+                np.random.normal(3, 1, size=n_fraud).clip(2, 6),  # high zscore
+                np.random.uniform(0.5, 1.0, size=n_fraud),  # high balance_ratio
+                np.random.exponential(0.1, size=n_fraud),  # rapid txns
+                np.random.poisson(8, size=n_fraud),  # high out_degree
+                np.random.poisson(2, size=n_fraud),  # low in_degree
+                np.random.uniform(40, 80, size=n_fraud),  # high neighbor risk
+                np.zeros((n_fraud, 3)),  # padding
+            ]
+        ).astype(np.float64)[:, :N_FEATURES]
 
         X = np.vstack([normal, fraud])
         y = np.concatenate([np.zeros(n_normal), np.ones(n_fraud)])
@@ -406,10 +412,7 @@ class MLFraudEngine:
         self.isolation_forest.fit(X)
         self.gbt_classifier.fit(X, y)
 
-        logger.info(
-            f"ML fraud models trained: {n_normal} normal + {n_fraud} fraud samples, "
-            f"{N_FEATURES} features"
-        )
+        logger.info(f"ML fraud models trained: {n_normal} normal + {n_fraud} fraud samples, {N_FEATURES} features")
 
     def score_transaction(
         self,
@@ -450,7 +453,6 @@ class MLFraudEngine:
             try:
                 risk_scores = self.bank.compliance_graph.compute_risk_scores()
                 graph_info = self.bank.compliance_graph.get_graph_data()
-                nodes = graph_info.get("nodes", [])
                 edges = graph_info.get("edges", [])
 
                 out_deg = sum(1 for e in edges if e.get("from") == account_id)
@@ -530,16 +532,18 @@ class MLFraudEngine:
 
     def _log_prediction(self, result: dict):
         """Store prediction for ML audit trail and model monitoring."""
-        self.predictions_log.append({
-            "timestamp": result["timestamp"],
-            "account_id": result["account_id"],
-            "amount": result["amount"],
-            "ensemble_score": result["ensemble_score"],
-            "model_scores": result["model_scores"],
-            "decision": result["decision"],
-            "latency_ms": result["latency_ms"],
-            "model_version": result["model_version"],
-        })
+        self.predictions_log.append(
+            {
+                "timestamp": result["timestamp"],
+                "account_id": result["account_id"],
+                "amount": result["amount"],
+                "ensemble_score": result["ensemble_score"],
+                "model_scores": result["model_scores"],
+                "decision": result["decision"],
+                "latency_ms": result["latency_ms"],
+                "model_version": result["model_version"],
+            }
+        )
         # Keep last 1000 predictions in memory
         if len(self.predictions_log) > 1000:
             self.predictions_log = self.predictions_log[-1000:]
