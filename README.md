@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="./docs/assets/banner.png" alt="NEXA — Beyond Fintech" width="100%" />
+
 # 🏛️ NEXA — Beyond Fintech
 
 ### Next-Generation Enterprise Digital Banking Platform
