@@ -76,6 +76,7 @@ class OAuthAuthRequest(BaseModel):
         if self.redirect_uri:
             return self.redirect_uri
         import os
+
         frontend = os.environ.get("FRONTEND_URL", "http://localhost:5173")
         return f"{frontend}/auth/callback"
 
@@ -101,6 +102,7 @@ class OAuthExchangeRequest(BaseModel):
         if self.redirect_uri:
             return self.redirect_uri
         import os
+
         frontend = os.environ.get("FRONTEND_URL", "http://localhost:5173")
         return f"{frontend}/auth/callback"
 

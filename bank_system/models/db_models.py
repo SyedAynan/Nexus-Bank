@@ -55,7 +55,6 @@ from sqlalchemy.orm import relationship
 
 from bank_system.core.db import Base
 
-
 # ══════════════════════════════════════════════════════════════════════════
 # Core Models (v1-v2) — User Authentication & Banking
 # ══════════════════════════════════════════════════════════════════════════
@@ -73,6 +72,7 @@ class UserRole(StrEnum):
         Migrated to StrEnum for type safety — IDE catches typos like "admn"
         at development time rather than runtime.
     """
+
     admin = "admin"
     analyst = "analyst"
     user = "user"
@@ -91,6 +91,7 @@ class User(Base):
         Early login bug: query used `User.email` but frontend sent `username`.
         Fixed by querying `User.username` and adding email as fallback.
     """
+
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -125,6 +126,7 @@ class SessionToken(Base):
         from localStorage. This meant stolen tokens remained valid until
         expiration. Added this table to enable server-side revocation.
     """
+
     __tablename__ = "session_tokens"
 
     id = Column(Integer, primary_key=True)
@@ -157,6 +159,7 @@ class Account(Base):
         directly mutating `balance`, we now record debit/credit entries and
         compute balance from the ledger. This provides a complete audit trail.
     """
+
     __tablename__ = "accounts"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -201,6 +204,7 @@ class Transaction(Base):
         account IDs, then 1 query for transactions). Refactored to a single
         JOIN query for 2x performance improvement.
     """
+
     __tablename__ = "transactions"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -305,6 +309,7 @@ class SecurityEvent(Base):
     The username field is stored separately from user_id because failed
     login attempts may reference usernames that don't exist in the system.
     """
+
     __tablename__ = "security_events"
 
     id = Column(Integer, primary_key=True)
@@ -474,9 +479,7 @@ class TransactionEvent(Base):
     correlation_id = Column(String(64), nullable=True)  # Links related events across services
     created_at = Column(DateTime, default=lambda: datetime.now(UTC), index=True)
 
-    __table_args__ = (
-        UniqueConstraint("aggregate_id", "sequence_num", name="uq_event_aggregate_seq"),
-    )
+    __table_args__ = (UniqueConstraint("aggregate_id", "sequence_num", name="uq_event_aggregate_seq"),)
 
 
 class PaymentFrequency(StrEnum):
@@ -543,4 +546,3 @@ class ScheduledPayment(Base):
     max_runs = Column(Integer, nullable=True)  # NULL = unlimited
     status = Column(String(20), default="active")  # active, paused, completed, cancelled
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
-

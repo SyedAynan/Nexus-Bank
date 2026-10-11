@@ -189,6 +189,7 @@ def role_required(*roles: UserRole):
         This was error-prone — easy to forget in new endpoints.
         role_required() makes it declarative and impossible to forget.
     """
+
     def _wrapper(
         current_user: Annotated[User, Depends(get_current_active_user)],
     ) -> User:

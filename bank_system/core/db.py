@@ -54,10 +54,10 @@ engine_kwargs = {
 if not settings.database_url.startswith("sqlite"):
     engine_kwargs.update(
         {
-            "pool_size": 10,       # Maintain 10 persistent connections
-            "max_overflow": 20,    # Allow 20 additional connections under load
+            "pool_size": 10,  # Maintain 10 persistent connections
+            "max_overflow": 20,  # Allow 20 additional connections under load
             "pool_recycle": 3600,  # Recycle connections every hour
-            "pool_timeout": 30,    # Wait max 30s for a connection from the pool
+            "pool_timeout": 30,  # Wait max 30s for a connection from the pool
         }
     )
 else:

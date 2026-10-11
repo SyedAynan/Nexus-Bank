@@ -57,8 +57,8 @@ except ImportError:
     get_event_bus = None
 
 try:
-    from bank_system.core.redis_dsa import create_redis_dsa
     from bank_system.core.redis_client import get_redis
+    from bank_system.core.redis_dsa import create_redis_dsa
 except ImportError:
     create_redis_dsa = None
     get_redis = None
@@ -396,11 +396,8 @@ class BankingService:
         if self.ml_fraud_engine:
             try:
                 # Get rule-based score first
-                from bank_system.services.fraud_engine import FraudEngine
-                if hasattr(self, '_fraud_engine'):
-                    rule_result = self._fraud_engine.score_transaction(
-                        from_id, amount, "transfer"
-                    )
+                if hasattr(self, "_fraud_engine"):
+                    rule_result = self._fraud_engine.score_transaction(from_id, amount, "transfer")
                     rule_score = rule_result.get("composite_score", 0)
                     rule_signals = rule_result.get("signals", {})
                 else:

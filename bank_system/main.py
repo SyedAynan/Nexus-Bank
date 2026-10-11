@@ -49,6 +49,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+# Core imports
+from bank_system import __version__
 from bank_system.api.routes import admin as admin_routes
 from bank_system.api.routes import analytics as analytics_routes
 
@@ -59,9 +61,6 @@ from bank_system.api.routes import dsa_admin as dsa_admin_routes
 from bank_system.api.routes import intelligence as intelligence_routes
 from bank_system.api.routes import notifications as notifications_routes
 from bank_system.api.routes import services as services_routes
-
-# Core imports
-from bank_system import __version__
 from bank_system.core.config import get_settings
 from bank_system.core.db import Base, engine
 from bank_system.core.exceptions import register_exception_handlers
@@ -273,8 +272,9 @@ def healthcheck() -> dict:
 
     # Check PostgreSQL
     try:
-        from bank_system.core.db import SessionLocal
         from sqlalchemy import text
+
+        from bank_system.core.db import SessionLocal
 
         db = SessionLocal()
         db.execute(text("SELECT 1"))

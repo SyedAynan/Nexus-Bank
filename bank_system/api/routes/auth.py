@@ -50,7 +50,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -138,11 +138,7 @@ def login(
     logger.info(f"[LOGIN] Attempt for username='{form_data.username}' from ip={ip}")
 
     # Look up user by username OR email (supports both login methods)
-    user = (
-        db.query(User)
-        .filter((User.username == form_data.username) | (User.email == form_data.username))
-        .first()
-    )
+    user = db.query(User).filter((User.username == form_data.username) | (User.email == form_data.username)).first()
 
     if not user:
         logger.warning(f"[LOGIN] User NOT FOUND: '{form_data.username}'")
@@ -718,11 +714,7 @@ def forgot_password(
         return {"success": True, "detail": "If an account exists, a reset code has been sent."}
 
     # Look up user by username OR email
-    user = (
-        db.query(User)
-        .filter((User.username == payload.email) | (User.email == payload.email))
-        .first()
-    )
+    user = db.query(User).filter((User.username == payload.email) | (User.email == payload.email)).first()
 
     if user:
         otp = _generate_otp()
@@ -770,11 +762,7 @@ def reset_password(
     ip, ua = get_ip_ua(request)
 
     # Look up user
-    user = (
-        db.query(User)
-        .filter((User.username == payload.email) | (User.email == payload.email))
-        .first()
-    )
+    user = db.query(User).filter((User.username == payload.email) | (User.email == payload.email)).first()
 
     if not user:
         raise HTTPException(status_code=400, detail="Invalid request")
