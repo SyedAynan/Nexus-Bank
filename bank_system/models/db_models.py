@@ -250,6 +250,7 @@ class FraudAlertSeverity(StrEnum):
     low = "low"
     medium = "medium"
     high = "high"
+    critical = "critical"
 
 
 class FraudAlert(Base):
@@ -484,6 +485,39 @@ class PaymentFrequency(StrEnum):
     biweekly = "biweekly"
     monthly = "monthly"
     quarterly = "quarterly"
+
+
+class NotificationType(StrEnum):
+    """Notification categories shown in the frontend notification center.
+
+    The values double as the frontend tab keys (all, transaction, security,
+    ai, alert) plus a generic `info` fallback for system announcements.
+    """
+
+    info = "info"
+    transaction = "transaction"
+    security = "security"
+    ai = "ai"
+    alert = "alert"
+
+
+class Notification(Base):
+    """In-app notification delivered to a single user.
+
+    Created by admins (single-user or broadcast) via
+    `api/routes/notifications.py`. Users can list and mark-read their own
+    notifications; only admins can create or delete them.
+    """
+
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    message = Column(Text, nullable=False)
+    type = Column(SAEnum(NotificationType), default=NotificationType.info, nullable=False)
+    is_read = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), index=True)
 
 
 class ScheduledPayment(Base):

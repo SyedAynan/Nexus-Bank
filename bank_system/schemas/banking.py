@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from bank_system.models.db_models import LoanStatus, TransactionType
 
@@ -20,8 +20,7 @@ class AccountRead(BaseModel):
     status: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TransactionCreate(BaseModel):
@@ -44,8 +43,7 @@ class TransactionRead(BaseModel):
     fraud_score: float
     risk_level: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class LoanCreate(BaseModel):
@@ -71,5 +69,4 @@ class LoanRead(BaseModel):
     emi_amount: float
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

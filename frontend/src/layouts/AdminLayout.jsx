@@ -1,5 +1,6 @@
 import { Outlet, NavLink, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { LayoutDashboard, Users, ArrowLeftRight, Shield, FileCheck, ScrollText, Settings, ArrowLeft, Bell, Sun, Moon, ShieldCheck, AlertTriangle, Activity, CheckCircle, Database, Gauge, BarChart3, Flag, Globe, HardDrive, Map, Code2, Menu, X } from 'lucide-react'
@@ -60,10 +61,10 @@ function NotificationCenter() {
 }
 
 function ThemeToggle() {
-    const [dark, setDark] = useState(true)
+    const { isDark, toggleTheme } = useTheme()
     return (
-        <motion.div className="nx-theme-toggle" onClick={() => setDark(!dark)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} title={dark ? 'Light mode' : 'Dark mode'}>
-            {dark ? <Moon size={15} /> : <Sun size={15} color="#fbbf24" />}
+        <motion.div className="nx-theme-toggle" onClick={toggleTheme} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
+            {isDark ? <Moon size={15} /> : <Sun size={15} color="#d97706" />}
         </motion.div>
     )
 }

@@ -22,17 +22,15 @@ def _auth_header(username: str = "admin", role: str = "admin") -> dict:
 
 class TestHealthEndpoint:
     def test_health_check(self):
-        """Health endpoint should always return ok."""
+        """Health endpoint returns 200 with a status payload."""
         from fastapi.testclient import TestClient
-        try:
-            from bank_system.main import app
-            client = TestClient(app)
-            response = client.get("/health")
-            assert response.status_code == 200
-            data = response.json()
-            assert data["status"] == "ok"
-        except Exception:
-            pytest.skip("Cannot initialize app without full dependencies")
+        from bank_system.main import app
+        client = TestClient(app)
+        response = client.get("/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] in ("healthy", "degraded")
+        assert "services" in data
 
 
 class TestBankingSchemas:

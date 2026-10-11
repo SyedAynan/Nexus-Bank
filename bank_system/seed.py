@@ -45,6 +45,8 @@ from bank_system.models.db_models import (
     Account,
     FraudAlert,
     Loan,
+    Notification,
+    NotificationType,
     SecurityEvent,
     SecurityEventType,
     Transaction,
@@ -309,6 +311,56 @@ def seed_if_empty() -> None:
                 details=details,
             )
             db.add(event)
+
+        db.commit()
+
+        # ── Notifications (user inboxes) ──
+        welcome_notes = [
+            (
+                "admin",
+                "Welcome to NEXA",
+                "Your admin console is ready. Review the open fraud alerts to get started.",
+                "security",
+            ),
+            (
+                "john_doe",
+                "Deposit received",
+                "+$3,200.00 — Freelance payment from Acme Corp",
+                "transaction",
+            ),
+            (
+                "john_doe",
+                "Login from new device",
+                "Windows 11 · Chrome 124 · New York, US",
+                "security",
+            ),
+            (
+                "emily_chen",
+                "Savings milestone reached!",
+                "Your Emergency Fund is now 75% funded — $7,500 of $10,000 goal.",
+                "ai",
+            ),
+            (
+                "marcus_williams",
+                "Weekly spending report",
+                "You spent $1,842 this week — 8% less than last week.",
+                "alert",
+            ),
+        ]
+
+        for username, title, message, ntype in welcome_notes:
+            if username not in users:
+                continue
+            db.add(
+                Notification(
+                    user_id=users[username].id,
+                    title=title,
+                    message=message,
+                    type=NotificationType(ntype),
+                    is_read=False,
+                    created_at=now - timedelta(hours=random.randint(1, 48)),
+                )
+            )
 
         db.commit()
 

@@ -43,7 +43,7 @@ from bank_system.data_structures.sorting import (
 from bank_system.data_structures.trie import Trie
 from bank_system.models.db_models import Account, Transaction, UserRole
 
-router = APIRouter(prefix="/api/admin/dsa", tags=["dsa-admin"])
+router = APIRouter(prefix="/api/admin/dsa", tags=["dsa"])
 
 # Shared DSA instances (populated from DB on request)
 _trie = Trie()

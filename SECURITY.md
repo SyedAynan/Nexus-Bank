@@ -18,15 +18,16 @@ Expect an acknowledgement within 7 days.
 
 ## Must-fix before any public deployment
 
-- [ ] **`.env.production` is tracked in git** (see `git ls-files | grep env`).
-  It must be removed from history, rotated (every secret in it is exposed),
-  and replaced with platform env vars (Render/Vercel dashboard). Keep only
-  `.env.example` in the repo.
+- [x] **`.env.production` untracked** — removed from the git index (root +
+  `frontend/`) and `.gitignore` now excludes all `.env*` except `.env.example`.
+- [ ] **History purge + secret rotation** — `.env.production` still exists in
+  git history. Purge it (`git filter-repo`) and rotate every secret it
+  contained before any public deployment.
 - [ ] **Demo credentials** (`admin`/`admin123`) are seeded when `DEMO_MODE=true`
   and documented in `DEPLOY.md`. Set `DEMO_MODE=false` and create real users
   (`create_admin.py` / register endpoint) in production.
-- [ ] **Swagger/ReDoc** (`/docs`, `/redoc`) are enabled by default in
-  `bank_system/main.py` — disable or gate them in production.
+- [x] **Swagger/ReDoc** (`/docs`, `/redoc`) are disabled when
+  `ENVIRONMENT=production` (`bank_system/main.py`).
 - [ ] Confirm `DEBUG=false`, `ENVIRONMENT=production`, a persistent
   `SECRET_KEY`, and Postgres `DATABASE_URL` (never SQLite on Render —
   its filesystem is ephemeral). See `DEPLOY.md`.

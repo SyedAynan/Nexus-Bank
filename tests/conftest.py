@@ -12,6 +12,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/1")
 os.environ.setdefault("SECRET_KEY", "test-secret-key-for-testing-only")
 os.environ.setdefault("ENVIRONMENT", "testing")
+os.environ.setdefault("DEMO_MODE", "true")
 
 from bank_system.core.db import Base
 from bank_system.models.db_models import User, Account, UserRole

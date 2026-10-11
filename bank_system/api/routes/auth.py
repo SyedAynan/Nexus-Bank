@@ -51,7 +51,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import ORJSONResponse
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -84,6 +84,7 @@ from bank_system.schemas.auth import (
     UserCreate,
     UserRead,
 )
+from bank_system.services.email_service import email_service
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 settings = get_settings()
@@ -210,6 +211,11 @@ def login(
         redis.set(f"otp:{user.username}", otp, ex=OTP_EXPIRY_SECONDS)
         logger.info(f"[LOGIN] MFA challenge issued for '{user.username}'")
 
+        try:
+            email_service.send_otp(user.email, otp, purpose="login")
+        except Exception as e:
+            logger.warning(f"[LOGIN] OTP email failed for '{user.username}': {e}")
+
         log_security_event(
             db,
             user=user,
@@ -220,9 +226,10 @@ def login(
             details="MFA OTP challenge issued",
         )
 
-        return ORJSONResponse(
+        channel = "email" if email_service.provider != "console" else "otp_simulated"
+        return JSONResponse(
             status_code=202,
-            content={"mfa": True, "mfa_required": True, "delivery_channel": "otp_simulated"},
+            content={"mfa": True, "mfa_required": True, "delivery_channel": channel},
         )
 
     # ── No MFA: issue tokens directly ──
@@ -268,7 +275,7 @@ def login(
     redis.sadd("live_users", user.username)
 
     # Set httpOnly cookies + return JSON body (dual delivery for backward compat)
-    response = ORJSONResponse(
+    response = JSONResponse(
         content={
             "access_token": access,
             "refresh_token": refresh,
@@ -379,7 +386,7 @@ def verify_otp(
     redis.sadd("live_users", user.username)
 
     # Set httpOnly cookies + return JSON body
-    response = ORJSONResponse(
+    response = JSONResponse(
         content={
             "access_token": access,
             "refresh_token": refresh,
@@ -404,7 +411,7 @@ async def refresh_token(
     Implements token rotation: old refresh token is invalidated and a new
     pair (access + refresh) is issued. This prevents refresh token reuse attacks.
     """
-    import orjson
+    import json
 
     refresh_str = None
 
@@ -415,7 +422,7 @@ async def refresh_token(
     if not refresh_str:
         try:
             body_bytes = await request.body()
-            body = orjson.loads(body_bytes)
+            body = json.loads(body_bytes)
             refresh_str = body.get("refresh_token")
         except Exception:
             pass
@@ -487,7 +494,7 @@ async def refresh_token(
     db.commit()
 
     # Set httpOnly cookies + return JSON body
-    response = ORJSONResponse(
+    response = JSONResponse(
         content={
             "access_token": new_access,
             "refresh_token": new_refresh,
@@ -534,7 +541,7 @@ def logout(
             pass  # Token decode failure — still allow logout
 
     # Clear httpOnly cookies
-    response = ORJSONResponse(content={"success": True})
+    response = JSONResponse(content={"success": True})
     clear_auth_cookies(response)
     return response
 
@@ -733,8 +740,10 @@ def forgot_password(
             details="Password reset OTP issued",
         )
 
-        # TODO: Send real email via SendGrid/Resend
-        # email_service.send_reset_otp(user.email, otp)
+        try:
+            email_service.send_otp(user.email, otp, purpose="password-reset")
+        except Exception as e:
+            logger.warning(f"[RESET] Reset OTP email failed for '{user.username}': {e}")
     else:
         # Set rate limit even for non-existent users to prevent enumeration
         redis.set(rate_key, "1", ex=RESET_RATE_LIMIT_SECONDS)
