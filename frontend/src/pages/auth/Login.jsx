@@ -100,6 +100,8 @@ export default function Login() {
     const [loading, setLoading] = useState(false)
     const [rememberMe, setRememberMe] = useState(false)
     const [loginSuccess, setLoginSuccess] = useState(false)
+    const [mfaRequired, setMfaRequired] = useState(false)
+    const [otp, setOtp] = useState('')
     const { login, verifyOtp } = useAuth()
     const navigate = useNavigate()
 
@@ -110,31 +112,30 @@ export default function Login() {
         try {
             const result = await login(username, password)
             if (result.mfa_required) {
-                // MFA required — auto-verify with demo OTP (backend uses '000000' in demo/dev mode)
-                // Small delay to ensure OTP is stored in Redis (handles Render cold-start race condition)
-                const delay = (ms) => new Promise(r => setTimeout(r, ms))
-                try {
-                    await delay(500)
-                    await verifyOtp(username, '000000')
-                    setLoginSuccess(true)
-                    setTimeout(() => navigate('/dashboard'), 600)
-                } catch (mfaErr) {
-                    // Retry once after longer delay (cold-start may need more time)
-                    try {
-                        await delay(1500)
-                        await verifyOtp(username, '000000')
-                        setLoginSuccess(true)
-                        setTimeout(() => navigate('/dashboard'), 600)
-                    } catch {
-                        setError('MFA verification failed. Please try again.')
-                    }
-                }
+                // MFA required — show the OTP step. The backend emails the code
+                // in production; demo/dev mode uses the fixed code 000000.
+                setMfaRequired(true)
             } else {
                 setLoginSuccess(true)
                 setTimeout(() => navigate('/dashboard'), 600)
             }
         } catch (err) {
             setError(err.response?.data?.detail || 'Invalid credentials')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleVerifyOtp = async (e) => {
+        e.preventDefault()
+        setLoading(true)
+        setError('')
+        try {
+            await verifyOtp(username, otp)
+            setLoginSuccess(true)
+            setTimeout(() => navigate('/dashboard'), 600)
+        } catch {
+            setError('Invalid verification code. Please try again.')
         } finally {
             setLoading(false)
         }
@@ -240,7 +241,7 @@ export default function Login() {
                         )}
                     </AnimatePresence>
 
-                    {!loginSuccess && (
+                    {!loginSuccess && !mfaRequired && (
                         <>
                             {/* Error Alert */}
                             <AnimatePresence>
@@ -419,6 +420,54 @@ export default function Login() {
                             <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--nx-border)', textAlign: 'center', fontSize: 13, color: 'var(--nx-text-muted)' }}>
                                 Don't have an account? <Link to="/register" style={{ color: 'var(--nx-cyan)', textDecoration: 'none', fontWeight: 600 }}>Create one</Link>
                             </div>
+                        </>
+                    )}
+
+                    {/* MFA OTP step — shown when the backend returns a 202 challenge */}
+                    {!loginSuccess && mfaRequired && (
+                        <>
+                            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                                <motion.div
+                                    className="glow-breathe"
+                                    style={{
+                                        width: 52, height: 52, borderRadius: 14,
+                                        background: 'radial-gradient(circle, rgba(34,211,238,0.2), rgba(15,23,62,0.8))',
+                                        border: '1px solid rgba(34,211,238,0.3)',
+                                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+                                    }}
+                                >
+                                    <Shield size={22} color="#22d3ee" style={{ filter: 'drop-shadow(0 0 8px rgba(34,211,238,0.5))' }} />
+                                </motion.div>
+                                <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--nx-text)', fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}>
+                                    VERIFY IDENTITY
+                                </h3>
+                                <p style={{ fontSize: 12, color: 'var(--nx-text-muted)', marginTop: 6 }}>
+                                    Enter the 6-digit code sent to your email
+                                </p>
+                            </div>
+                            <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                <input
+                                    type="text" inputMode="numeric" maxLength={6}
+                                    id="login-otp" className="nx-input" placeholder="000000"
+                                    value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                    required autoFocus autoComplete="one-time-code"
+                                    style={{ textAlign: 'center', letterSpacing: '0.4em', fontSize: 18, fontWeight: 700 }}
+                                />
+                                <p style={{ fontSize: 11, color: 'var(--nx-text-dim)', textAlign: 'center' }}>
+                                    Demo code: <span className="nx-mono" style={{ color: 'var(--nx-cyan)' }}>000000</span>
+                                </p>
+                                <motion.button
+                                    type="submit" disabled={loading || otp.length < 6}
+                                    className="nx-btn nx-btn-primary"
+                                    style={{ width: '100%', padding: '0.85rem', opacity: otp.length < 6 ? 0.5 : 1 }}
+                                    whileHover={otp.length >= 6 ? { scale: 1.02 } : {}} whileTap={otp.length >= 6 ? { scale: 0.98 } : {}}>
+                                    {loading ? 'Verifying...' : 'Verify & Sign In'}
+                                </motion.button>
+                                <button type="button" onClick={() => { setMfaRequired(false); setOtp(''); setError('') }}
+                                    style={{ background: 'none', border: 'none', color: 'var(--nx-text-muted)', fontSize: 13, cursor: 'pointer' }}>
+                                    ← Use a different account
+                                </button>
+                            </form>
                         </>
                     )}
                 </div>

@@ -27,7 +27,7 @@ Production Notes:
 import secrets
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 from pydantic_settings import BaseSettings
 
 
@@ -123,13 +123,17 @@ class Settings(BaseSettings):
     frontend_url: str = Field(default="")
     demo_mode: bool = Field(default=False)
 
+    # ── Admin IP Whitelist ──
+    # When true, /api/admin/* requests are checked against the ip_whitelist
+    # table (see middleware/ip_whitelist.py). Disabled by default — enabling
+    # it in production with an empty whitelist BLOCKS all admin access.
+    ip_whitelist_enabled: bool = Field(default=False)
+
     # PORT — Render assigns a dynamic port via this env var.
     # The backend must bind to this port. Defaults to 8000 for local development.
     port: int = Field(default=8000)
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 
 @lru_cache(maxsize=1)

@@ -21,8 +21,7 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`.
 
 ## Backend (`bank_system/`, FastAPI)
 
-- Entry point is `bank_system/main.py` — new routers must be `include_router`'d there
-  (note: `api/routes/notifications.py` exists but is currently **not wired**).
+- Entry point is `bank_system/main.py` — new routers must be `include_router`'d there.
 - Auth: JWT via `core/security.py`; never roll your own token logic.
 - DB: SQLAlchemy models in `models/db_models.py`; schema changes go through
   `alembic/` migrations, not `create_all` hacks.

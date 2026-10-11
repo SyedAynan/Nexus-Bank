@@ -88,7 +88,7 @@ Expected response:
 {
   "status": "healthy",
   "environment": "production",
-  "version": "4.0.0",
+  "version": "3.0.0",
   "services": {
     "database": "connected",
     "redis": "fallback (in-memory)"

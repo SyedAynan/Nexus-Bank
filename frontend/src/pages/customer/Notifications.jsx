@@ -1,22 +1,34 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, Shield, TrendingUp, CreditCard, Sparkles, AlertTriangle, CheckCircle, X, Check, Trash2, Settings, Filter, Eye } from 'lucide-react'
+import api from '../../api'
 
-/* ═══════ Simulated Notifications ═══════ */
-const NOTIFICATIONS = [
-    { id: 1, type: 'transaction', title: 'Deposit received', desc: '+$3,200.00 — Freelance payment from Acme Corp', time: '2 min ago', date: 'Today', unread: true, icon: CreditCard, color: '#34d399' },
-    { id: 2, type: 'security', title: 'Login from new device', desc: 'Windows 11 · Chrome 124 · New York, US', time: '15 min ago', date: 'Today', unread: true, icon: Shield, color: '#22d3ee' },
-    { id: 3, type: 'ai', title: 'Portfolio rebalance recommended', desc: 'Tech sector allocation at 64% — exceeds target by 9%. Consider diversifying into bonds.', time: '32 min ago', date: 'Today', unread: true, icon: Sparkles, color: '#a78bfa' },
-    { id: 4, type: 'alert', title: 'Unusual spending detected', desc: '$1,200 at Electronics Store — above your typical spending pattern in this category', time: '1h ago', date: 'Today', unread: true, icon: AlertTriangle, color: '#fbbf24' },
-    { id: 5, type: 'transaction', title: 'Transfer completed', desc: '$500.00 to Savings Account (NB-002) — Auto-save rule triggered', time: '2h ago', date: 'Today', unread: false, icon: CheckCircle, color: '#34d399' },
-    { id: 6, type: 'ai', title: 'Savings milestone reached!', desc: 'Your Emergency Fund is now 75% funded — $7,500 of $10,000 goal', time: '4h ago', date: 'Today', unread: false, icon: Sparkles, color: '#a78bfa' },
-    { id: 7, type: 'security', title: 'Password changed successfully', desc: 'Your account password was updated. If this wasn\'t you, contact support immediately.', time: '6h ago', date: 'Yesterday', unread: false, icon: Shield, color: '#22d3ee' },
-    { id: 8, type: 'transaction', title: 'Bill payment processed', desc: '$89.99 — Netflix, Spotify, iCloud subscriptions auto-renewed', time: '18h ago', date: 'Yesterday', unread: false, icon: CreditCard, color: '#34d399' },
-    { id: 9, type: 'alert', title: 'Credit score updated', desc: 'Your credit score increased by 12 points to 754. Keep up the great work!', time: '1 day ago', date: 'Yesterday', unread: false, icon: TrendingUp, color: '#22d3ee' },
-    { id: 10, type: 'ai', title: 'Weekly spending report', desc: 'You spent $1,842 this week — 8% less than last week. Food & Dining down 15%.', time: '2 days ago', date: 'This Week', unread: false, icon: Sparkles, color: '#a78bfa' },
-    { id: 11, type: 'security', title: 'Session expired', desc: 'Your session on iPad Pro was automatically logged out after 24h of inactivity.', time: '3 days ago', date: 'This Week', unread: false, icon: Shield, color: '#22d3ee' },
-    { id: 12, type: 'transaction', title: 'International transfer received', desc: '+€2,400.00 (≈$2,592) — Wire from Deutsche Bank, Frankfurt', time: '4 days ago', date: 'This Week', unread: false, icon: CreditCard, color: '#34d399' },
-]
+/* Type → icon/color mapping shared with the backend NotificationType values */
+const TYPE_META = {
+    transaction: { icon: CreditCard, color: '#34d399' },
+    security: { icon: Shield, color: '#22d3ee' },
+    ai: { icon: Sparkles, color: '#a78bfa' },
+    alert: { icon: AlertTriangle, color: '#fbbf24' },
+    info: { icon: Bell, color: '#22d3ee' },
+}
+
+function toUi(n) {
+    const meta = TYPE_META[n.type] || TYPE_META.info
+    const created = n.created_at ? new Date(n.created_at) : null
+    const sameDay = created && new Date().toDateString() === created.toDateString()
+    const yesterday = created && new Date(Date.now() - 86400000).toDateString() === created.toDateString()
+    return {
+        id: n.id,
+        type: n.type in TYPE_META ? n.type : 'info',
+        title: n.title,
+        desc: n.message,
+        time: created ? created.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+        date: sameDay ? 'Today' : yesterday ? 'Yesterday' : 'This Week',
+        unread: !n.is_read,
+        icon: meta.icon,
+        color: meta.color,
+    }
+}
 
 const TABS = [
     { key: 'all', label: 'All', icon: Bell },
@@ -27,15 +39,30 @@ const TABS = [
 ]
 
 export default function Notifications() {
-    const [items, setItems] = useState(NOTIFICATIONS)
+    const [items, setItems] = useState([])
     const [activeTab, setActiveTab] = useState('all')
     const [showSettings, setShowSettings] = useState(false)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        api.get('/notifications/')
+            .then(r => setItems((r.data || []).map(toUi)))
+            .catch(() => { })
+            .finally(() => setLoading(false))
+    }, [])
 
     const filtered = activeTab === 'all' ? items : items.filter(n => n.type === activeTab)
     const unreadCount = items.filter(n => n.unread).length
 
-    const markAllRead = () => setItems(items.map(n => ({ ...n, unread: false })))
-    const markRead = (id) => setItems(items.map(n => n.id === id ? { ...n, unread: false } : n))
+    const markAllRead = () => {
+        api.patch('/notifications/read-all').catch(() => { })
+        setItems(items.map(n => ({ ...n, unread: false })))
+    }
+    const markRead = (id) => {
+        api.patch(`/notifications/${id}/read`).catch(() => { })
+        setItems(items.map(n => n.id === id ? { ...n, unread: false } : n))
+    }
+    // Dismiss only hides locally — deletion is an admin operation on the backend
     const deleteNotif = (id) => setItems(items.filter(n => n.id !== id))
     const clearAll = () => setItems([])
 

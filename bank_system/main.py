@@ -24,10 +24,11 @@ Architecture:
 
     Middleware execution order (last added = first executed):
     1. RequestLoggerMiddleware — logs request/response metadata
-    2. GZipMiddleware — compresses responses > 500 bytes
-    3. RateLimiterMiddleware — Redis-backed sliding window rate limiting
-    4. SecurityHeadersMiddleware — HSTS, CSP, X-Frame-Options headers
-    5. CORSMiddleware — Cross-Origin Resource Sharing for frontend
+    2. IPWhitelistMiddleware — gates /api/admin/* by client IP (only when IP_WHITELIST_ENABLED=true)
+    3. GZipMiddleware — compresses responses > 500 bytes
+    4. RateLimiterMiddleware — Redis-backed sliding window rate limiting
+    5. SecurityHeadersMiddleware — HSTS, CSP, X-Frame-Options headers
+    6. CORSMiddleware — Cross-Origin Resource Sharing for frontend
 
 Startup Lifecycle (lifespan):
     1. validate_environment() — fail fast on missing config
@@ -40,13 +41,11 @@ Startup Lifecycle (lifespan):
 import logging
 import os
 from contextlib import asynccontextmanager
-from typing import Any
 
-import orjson
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import HTMLResponse, ORJSONResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -58,9 +57,11 @@ from bank_system.api.routes import auth as auth_routes
 from bank_system.api.routes import banking as banking_routes
 from bank_system.api.routes import dsa_admin as dsa_admin_routes
 from bank_system.api.routes import intelligence as intelligence_routes
+from bank_system.api.routes import notifications as notifications_routes
 from bank_system.api.routes import services as services_routes
 
 # Core imports
+from bank_system import __version__
 from bank_system.core.config import get_settings
 from bank_system.core.db import Base, engine
 from bank_system.core.exceptions import register_exception_handlers
@@ -70,6 +71,7 @@ from bank_system.core.security import decode_token
 from bank_system.core.startup_checks import validate_environment
 
 # Middleware imports
+from bank_system.middleware.ip_whitelist import IPWhitelistMiddleware
 from bank_system.middleware.rate_limiter import RateLimiterMiddleware
 from bank_system.middleware.request_logger import RequestLoggerMiddleware
 from bank_system.middleware.security_headers import SecurityHeadersMiddleware
@@ -88,10 +90,6 @@ settings = get_settings()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_DIR = os.path.join(BASE_DIR, "frontend", "templates")
 STATIC_DIR = os.path.join(BASE_DIR, "frontend", "static")
-
-
-def orjson_dumps(v: Any, *, default) -> str:
-    return orjson.dumps(v, default=default).decode()
 
 
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
@@ -156,6 +154,10 @@ OPENAPI_TAGS = [
         "name": "services",
         "description": "Integrated services — OAuth, WebAuthn, Email, BillPay, FX, Feature Flags, Export",
     },
+    {
+        "name": "notifications",
+        "description": "In-app notifications — user inbox, mark-read, admin broadcast",
+    },
 ]
 
 app = FastAPI(
@@ -173,14 +175,13 @@ app = FastAPI(
         "- 📨 Bill Pay, Feature Flags, Export (CSV/PDF)\n"
         "- 🔌 WebSocket real-time dashboard updates\n"
     ),
-    version="3.0.0",
-    default_response_class=ORJSONResponse,
+    version=__version__,
     lifespan=lifespan,
     openapi_tags=OPENAPI_TAGS,
     contact={"name": "NEXA Engineering", "email": "engineering@nexa.dev"},
     license_info={"name": "Proprietary", "identifier": "LicenseRef-NEXA"},
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url="/docs" if settings.environment != "production" else None,
+    redoc_url="/redoc" if settings.environment != "production" else None,
 )
 
 # Register centralized exception handlers
@@ -244,6 +245,11 @@ app.add_middleware(RateLimiterMiddleware)
 # GZip compression for responses > 500 bytes
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
+# Admin IP whitelist — disabled by default (IP_WHITELIST_ENABLED=true to enable).
+# WARNING: enabling in production with an empty whitelist blocks ALL admin access.
+if settings.ip_whitelist_enabled:
+    app.add_middleware(IPWhitelistMiddleware)
+
 # Structured request logging
 app.add_middleware(RequestLoggerMiddleware)
 
@@ -261,7 +267,7 @@ def healthcheck() -> dict:
     health = {
         "status": "healthy",
         "environment": settings.environment,
-        "version": "4.0.0",
+        "version": __version__,
         "services": {},
     }
 
@@ -393,3 +399,4 @@ app.include_router(admin_routes.router)
 app.include_router(intelligence_routes.router)
 app.include_router(dsa_admin_routes.router)  # Admin-only DSA visualization
 app.include_router(services_routes.router)  # OAuth, WebAuthn, Email, BillPay, FX, Flags, Export
+app.include_router(notifications_routes.router)  # In-app notification inbox + admin broadcast
