@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/SyedAynan/Nexus-Bank/main/docs/assets/banner.png" alt="NEXA — Beyond Fintech" width="100%" />
+<img src="docs/assets/banner.png" alt="NEXA — Beyond Fintech" width="100%" />
 
 # 🏛️ NEXA — Beyond Fintech
 
