@@ -19,7 +19,10 @@ class AMLEngine:
         for tx in txs:
             if not tx.counterparty_account_id:
                 continue
-            edge_weights[(tx.account_id, tx.counterparty_account_id)] += abs(tx.amount)
+            # tx.amount is a SQLAlchemy Numeric → returns decimal.Decimal.
+            # edge_weights holds floats, so coerce — otherwise `+=` raises
+            # TypeError: unsupported operand for float and Decimal.
+            edge_weights[(tx.account_id, tx.counterparty_account_id)] += abs(float(tx.amount))
 
         nodes: dict[int, AMLNode] = {}
 

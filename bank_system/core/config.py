@@ -133,7 +133,12 @@ class Settings(BaseSettings):
     # The backend must bind to this port. Defaults to 8000 for local development.
     port: int = Field(default=8000)
 
-    model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8")
+    # extra="ignore" is REQUIRED for cloud deployment. PaaS platforms
+    # (Railway, Render, Vercel) inject their own env vars (e.g. PORT, RAILWAY_*,
+    # DATABASE_PRIVATE_URL) and .env.example mixes in frontend vars (VITE_*).
+    # With the default extra="forbid", any unlisted env var crashes the app at
+    # startup with a pydantic ValidationError before it can serve a single request.
+    model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 
 @lru_cache(maxsize=1)

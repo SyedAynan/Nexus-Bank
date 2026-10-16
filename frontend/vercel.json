@@ -1,20 +1,17 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://nexus-server-kvyh.onrender.com/api/:path*"
+      "destination": "https://YOUR_RAILWAY_BACKEND.up.railway.app/api/:path*"
+    },
+    {
+      "source": "/ws/:path*",
+      "destination": "https://YOUR_RAILWAY_BACKEND.up.railway.app/ws/:path*"
     },
     {
       "source": "/(.*)",
       "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "X-Forwarded-Host", "value": "{{VERCEL_URL}}" }
-      ]
     }
   ]
 }

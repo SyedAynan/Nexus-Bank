@@ -1,0 +1,37 @@
+# ============================================================
+# File: railway.toml
+#
+# Purpose:
+#     Railway deployment configuration for the NEXA backend API.
+#     Railway reads this file to determine how to build and run the service.
+#
+# Why this file exists:
+#     Railway's Nixpacks builder auto-detects Python apps, but without
+#     explicit config it can pick the wrong Python version or start command.
+#     This file pins the build to nixpacks.toml and the runtime to a single
+#     uvicorn worker bound to Railway's injected $PORT.
+#
+# Docs: https://docs.railway.app/reference/config-as-code
+# ============================================================
+
+[build]
+builder = "NIXPACKS"
+# nixpacks.toml defines the Python version + install steps
+buildCommand = "pip install -r bank_system/requirements.txt"
+
+[deploy]
+# Railway injects $PORT — the app must bind to it.
+# --workers 1: A single worker is REQUIRED here because:
+#   1. Session revocation (JWT JTI denylist) is held in-process per worker —
+#      with multiple workers, a revoked token could still validate on a
+#      different worker process.
+#   2. FakeRedis fallback and in-memory rate limiting are per-process.
+#   3. The background simulation_loop() would run once per worker.
+# Scale horizontally with more REPLICAS, not more workers per replica.
+startCommand = "uvicorn bank_system.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"
+# Railway pings this to confirm the app is live before routing traffic.
+healthcheckPath = "/api/health"
+healthcheckTimeout = 120
+# Restart on failure — keeps the service self-healing.
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

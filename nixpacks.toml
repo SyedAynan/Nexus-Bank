@@ -1,0 +1,30 @@
+# ============================================================
+# File: nixpacks.toml
+#
+# Purpose:
+#     Tells Railway's Nixpacks builder exactly which Python version to use
+#     and how to install dependencies. Without this, Nixpacks guesses —
+#     and may pick a Python version incompatible with pinned deps (e.g.
+#     psycopg2-binary, bcrypt 4.0.1 which need Python <= 3.12).
+#
+# Docs: https://nixpacks.com/docs/configuration/file
+# ============================================================
+
+[phases.setup]
+# Pin to Python 3.11 — matches runtime.txt and the Dockerfile base image.
+nixPkgs = ["python311"]
+
+[phases.install]
+# Upgrade pip first so it can resolve modern wheels (manylinux2014 etc.),
+# then install the backend requirements. Root requirements.txt is only a
+# shim that re-includes bank_system/requirements.txt — install it directly
+# so the path works regardless of Nixpacks' working directory.
+cmds = [
+    "python -m pip install --upgrade pip",
+    "python -m pip install -r bank_system/requirements.txt",
+]
+
+[start]
+# Redundant with railway.toml's startCommand, but kept as a fallback so the
+# app still starts correctly if railway.toml is ever removed.
+cmd = "uvicorn bank_system.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"

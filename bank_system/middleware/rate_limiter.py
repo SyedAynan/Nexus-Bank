@@ -68,6 +68,15 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
 
         path = request.url.path.lower()
 
+        # ── Health/docs exemption ──
+        # Railway/Render ping /api/health continuously to verify the service is
+        # live. Rate-limiting these probes is dangerous: during a deploy, a
+        # burst of probe + cold-start traffic can exceed the unauthenticated
+        # quota, the probe gets 429, and the platform kills a healthy service.
+        # /docs and /redoc are developer surfaces with the same problem.
+        if path in ("/api/health", "/health", "/docs", "/redoc", "/openapi.json"):
+            return await call_next(request)
+
         # Determine rate limit tier
         if "/api/auth/login" in path or "/api/auth/verify-otp" in path:
             limit, window = RATE_LIMITS["login"]

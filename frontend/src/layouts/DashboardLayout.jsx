@@ -134,7 +134,16 @@ export default function DashboardLayout() {
 
     useEffect(() => {
         try {
-            const ws = new WebSocket(`ws://${window.location.host}/ws/dashboard`)
+            // Derive the WS scheme from the page protocol: https:// pages MUST
+            // use wss:// — browsers block ws:// from HTTPS pages as mixed
+            // content, which silently kills the dashboard socket on Vercel.
+            // Same-origin path (proxied to the backend via vercel.json's
+            // /ws rewrite), with the auth token attached as a query param.
+            const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
+            // Backend requires ?token=<jwt> or it closes with 4001. The token is
+            // in localStorage (set on login) — attach it here.
+            const token = localStorage.getItem('access_token') || ''
+            const ws = new WebSocket(`${wsScheme}://${window.location.host}/ws/dashboard?token=${token}`)
             wsRef.current = ws
             ws.onmessage = (e) => {
                 setWsNotifs(prev => [...prev.slice(-4), e.data])

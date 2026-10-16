@@ -46,6 +46,7 @@ Financial Integrity:
 
 import uuid
 from datetime import UTC, timedelta
+from decimal import Decimal
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -70,6 +71,18 @@ from bank_system.schemas.banking import (
 )
 
 router = APIRouter(prefix="/api/banking", tags=["banking"])
+
+
+def _to_amount(value: float) -> Decimal:
+    """Convert an API float amount to Decimal for Numeric-column arithmetic.
+
+    Account.balance and Transaction.amount are Numeric(19, 4) columns, so
+    SQLAlchemy returns them as decimal.Decimal. Plain `balance += float`
+    raises `TypeError: unsupported operand for Decimal and float`.
+    Converting via str() preserves the exact decimal the client sent
+    (Decimal(0.1) via float would carry binary noise: 0.1000000000000000055).
+    """
+    return Decimal(str(value))
 
 
 def _generate_account_number() -> str:
@@ -182,10 +195,10 @@ def create_transaction(
         raise HTTPException(status_code=400, detail="Insufficient funds")
 
     if payload.type in (TransactionType.deposit, TransactionType.interest):
-        account.balance += payload.amount
+        account.balance += _to_amount(payload.amount)
 
     elif payload.type in (TransactionType.withdrawal, TransactionType.emi):
-        account.balance -= payload.amount
+        account.balance -= _to_amount(payload.amount)
 
     elif payload.type == TransactionType.transfer:
         # Atomic transfer with both accounts locked (BUG-007 fix)
@@ -199,8 +212,8 @@ def create_transaction(
         if account.balance < payload.amount:
             raise HTTPException(status_code=400, detail="Insufficient funds")
 
-        account.balance -= payload.amount
-        counter.balance += payload.amount
+        account.balance -= _to_amount(payload.amount)
+        counter.balance += _to_amount(payload.amount)
 
     tx = Transaction(
         account_id=payload.account_id,
@@ -369,9 +382,9 @@ def create_user_transaction(
         raise HTTPException(status_code=400, detail="Insufficient funds")
 
     if payload.type == TransactionType.deposit:
-        account.balance += payload.amount
+        account.balance += _to_amount(payload.amount)
     elif payload.type == TransactionType.withdrawal:
-        account.balance -= payload.amount
+        account.balance -= _to_amount(payload.amount)
 
     tx = Transaction(
         account_id=payload.account_id,
@@ -437,8 +450,8 @@ def user_transfer(
         raise HTTPException(status_code=400, detail="Insufficient funds")
 
     # Atomic update — both operations in same DB transaction
-    source.balance -= payload.amount
-    target.balance += payload.amount
+    source.balance -= _to_amount(payload.amount)
+    target.balance += _to_amount(payload.amount)
 
     tx = Transaction(
         account_id=payload.account_id,
