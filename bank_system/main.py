@@ -47,7 +47,29 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+from fastapi.templating import Jinja2Templates as _Jinja2Templates
+
+
+class _CompatJinja2Templates(_Jinja2Templates):
+    """Jinja2Templates that accepts both old- and new-style TemplateResponse calls.
+
+    Old Starlette (<0.29):  TemplateResponse("page.html", {"request": request})
+    New Starlette (>=0.29): TemplateResponse(request, "page.html", {...})
+    Unpinned `fastapi`/`starlette` in requirements means Render may install a
+    newer Starlette than local dev — without this shim, every legacy HTML page
+    (/, /dashboard, ...) 500s with "cannot use 'tuple' as a dict key".
+    """
+
+    def TemplateResponse(self, name_or_request, context=None, *args, **kwargs):  # noqa: N802
+        if isinstance(name_or_request, str):
+            # Old-style call: TemplateResponse("page.html", {"request": request})
+            context = dict(context or {})
+            request = context.pop("request", None)
+            return super().TemplateResponse(request, name_or_request, context, *args, **kwargs)
+        return super().TemplateResponse(name_or_request, context, *args, **kwargs)
+
+
+Jinja2Templates = _CompatJinja2Templates
 
 # Core imports
 from bank_system import __version__
